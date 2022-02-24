@@ -36,12 +36,14 @@ class MyOwnPeer2PeerNode (Node):
         print("node is requested to stop (" + self.id + "): ")
 
 
-node_1 = MyOwnPeer2PeerNode("127.0.0.1", 8001, 1)
-node_2 = MyOwnPeer2PeerNode("127.0.0.1", 8002, 2)
-node_3 = MyOwnPeer2PeerNode("127.0.0.1", 8003, 3)
+node_1 = MyOwnPeer2PeerNode("127.0.0.1", 8001,3)
 
 time.sleep(1)
 
 node_1.start()
-node_2.start()
-node_3.start()
+time.sleep(1)   
+node_1.connect_with_node('127.0.0.1', 8002)
+node_1.send_to_nodes("Hi im node 1 nice to meet you all!")
+
+
+
