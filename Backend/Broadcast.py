@@ -1,6 +1,7 @@
 from p2pnetwork.node import Node
 import sys
 import time
+import socket
 
 
 
@@ -35,6 +36,35 @@ class MyOwnPeer2PeerNode (Node):
     def node_request_to_stop(self):
         print("node is requested to stop (" + self.id + "): ")
 
+    def PKI_init(self): 
+        print("I started PKI")
+        time.sleep(3)
+        totalnodes = self.nodes_inbound + self.nodes_outbound
+        word_to_sign = "Sign"
+        msg = ""
+        for i in range(len(totalnodes)):
+            print("Round: " + i)
+            if i == 0: # Round 0
+                msg = word_to_sign + self.host
+                for n in totalnodes :
+                    self.send_to_node(n, msg)
+            else:
+                msgList = []
+                for i in range(len(totalnodes)):
+                    rmsg = self.sock.recv()
+                    msgList.append(rmsg)
+                result = all(element == msgList[0] for element in msgList)
+                if result :
+                    print("All msges are equal")
+                else:
+                    for msg in msgList: 
+                        if self.host in msg: # if my signiture is in msg
+                            for p in totalnodes :
+                                self.send_to_node(p, msg)
+                        else: # If my signiture is NOT in msg
+                            msg = msg + self.host
+                            for p in totalnodes :
+                                self.send_to_node(p, msg)
 
 node_1 = MyOwnPeer2PeerNode("127.0.0.1", 8001, 1)
 node_2 = MyOwnPeer2PeerNode("127.0.0.1", 8002, 2)
@@ -45,3 +75,9 @@ time.sleep(1)
 node_1.start()
 node_2.start()
 node_3.start()
+
+time.sleep(1)
+
+node_1.PKI_init()
+node_2.PKI_init()
+node_3.PKI_init()
