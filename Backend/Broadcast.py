@@ -1,11 +1,11 @@
-from modules.p2pnetwork import FASTNode as Node
+from Fastnode import FASTnode as Node
 import sys
 import time
 import socket
 
-node_1 = Node("127.0.0.1", 8001)
-node_2 = Node("127.0.0.1", 8005)
-node_3 = Node("127.0.0.1", 8003)
+node_1 = Node("127.0.0.1", 8001,1)
+node_2 = Node("127.0.0.1", 8005,2)
+node_3 = Node("127.0.0.1", 8003,3)
 
 nodelist = [node_1,node_2,node_3]
 
