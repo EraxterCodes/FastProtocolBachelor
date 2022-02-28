@@ -1,9 +1,7 @@
-from p2pnetwork.node import Node
+from modules.p2pnetwork.p2pnetwork import Node
 import sys
 import time
 import socket
-
-
 
 class MyOwnPeer2PeerNode (Node):
 
