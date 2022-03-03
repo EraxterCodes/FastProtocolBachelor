@@ -80,9 +80,14 @@ class FASTnode (Node):
 
         splitString = self.received_nodes.strip("[]")
 
-        splitString.split(",")
+        splitaray = splitString.split(",")
 
-        print(splitString[0])
+        trimmmedarray = []
+
+        for i in splitaray:
+            trimmmedarray.append(i[1:-5])
+    
+        print(trimmmedarray[0])
 
         # self.print_connections()
 
