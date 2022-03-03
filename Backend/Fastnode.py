@@ -69,28 +69,51 @@ class FASTnode (Node):
                             for p in totalnodes :
                                 self.send_to_node(p, msg)
 
+    def connect_to_fastnode(self, nodes):
+        for i in range(len(nodes)):
+            client_address_info = nodes[i].split(" ")
+
+            print(client_address_info[1] + " " + str(self.port))
+
+            self.connect_with_node(client_address_info[0], int(client_address_info[1]))
+            if not i == len(nodes) - 1:
+                connection, client_address = self.sock.accept()
+
+                # Basic information exchange (not secure) of the id's of the nodes!
+                connected_node_id = connection.recv(4096).decode('utf-8')
+                connection.send(self.id.encode('utf-8'))
+
+                thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], client_address[1])
+                thread_client.start()
+
+                self.nodes_inbound.append(thread_client)
+                self.inbound_node_connected(thread_client)
+    
+    def get_trimmed_node_info(self):
+        splitArray = self.received_nodes.strip("[]").split(",")
+        trimmmedArray = []
+
+        for i in splitArray:
+            trimmmedArray.append(i.strip()[1:-5])
+
+        return trimmmedArray
+
     def run(self):
         self.connect_with_node("127.0.0.1",8001)
 
         msg = self.host + " " + str(self.port)
-
         self.send_to_nodes(msg)
 
         time.sleep(1)
 
-        splitString = self.received_nodes.strip("[]")
+        trimmed = self.get_trimmed_node_info()
 
-        splitaray = splitString.split(",")
+        self.connect_to_fastnode(trimmed)
 
-        trimmmedarray = []
+        time.sleep(1)
 
-        for i in splitaray:
-            trimmmedarray.append(i.strip()[1:-5])
+        self.print_connections()
+
     
-        print(trimmmedarray[1])
-
-        # self.print_connections()
-
-        
 
         
