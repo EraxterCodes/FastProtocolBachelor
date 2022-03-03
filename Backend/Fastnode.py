@@ -37,6 +37,51 @@ class FASTnode (Node):
     def node_request_to_stop(self):
         print("node is requested to stop (" + self.id + "): ")
 
+    def connect_with_node(self, host, port, reconnect=False):
+        """ Make a connection with another node that is running on host with port. When the connection is made, 
+            an event is triggered outbound_node_connected. When the connection is made with the node, it exchanges
+            the id's of the node. First we send our id and then we receive the id of the node we are connected to.
+            When the connection is made the method outbound_node_connected is invoked. If reconnect is True, the
+            node will try to reconnect to the code whenever the node connection was closed."""
+
+        if host == self.host and port == self.port:
+            # print("connect_with_node: Cannot connect with yourself!!")
+            return False
+
+        for node in self.nodes_outbound:
+            if node.host == host and node.port == port:
+                # print("connect_with_node: Already connected with this node (" + node.id + ").")
+                return True
+
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.debug_print("connecting to %s port %s" % (host, port))
+            sock.connect((host, port))
+
+            sock.send(self.id.encode('utf-8')) 
+            connected_node_id = sock.recv(4096).decode('utf-8') 
+
+            for node in self.nodes_inbound:
+                if node.host == host and node.id == connected_node_id:
+                    # print("connect_with_node: This node (" + node.id + ") is already connected with us.")
+                    return True
+
+            thread_client = self.create_new_connection(sock, connected_node_id, host, port)
+            thread_client.start()
+
+            self.nodes_outbound.append(thread_client)
+            self.outbound_node_connected(thread_client)
+
+            # If reconnection to this host is required, it will be added to the list!
+            if reconnect:
+                self.debug_print("connect_with_node: Reconnection check is enabled on node " + host + ":" + str(port))
+                self.reconnect_to_nodes.append({
+                    "host": host, "port": port, "tries": 0
+                })
+
+        except Exception as e:
+            self.debug_print("TcpServer.connect_with_node: Could not connect with node. (" + str(e) + ")")
+
     def signature_share_init(self): 
         print( str(self.id) + " Started sharing")
         time.sleep(2)
@@ -61,10 +106,10 @@ class FASTnode (Node):
                     print("All msges are equal")
                 else:
                     for msg in msgList: 
-                        if str(self.port) in msg: # if my signiture is in msg
+                        if str(self.port) in msg:
                             for p in totalnodes :
                                 self.send_to_node(p, msg)
-                        else: # If my signiture is NOT in msg
+                        else: 
                             msg = msg + str(self.port)
                             for p in totalnodes :
                                 self.send_to_node(p, msg)
@@ -77,7 +122,6 @@ class FASTnode (Node):
             if not i == len(nodes) - 1:
                 connection, client_address = self.sock.accept()
 
-                # Basic information exchange (not secure) of the id's of the nodes!
                 connected_node_id = connection.recv(4096).decode('utf-8')
                 connection.send(self.id.encode('utf-8'))
 
@@ -86,8 +130,6 @@ class FASTnode (Node):
 
                 self.nodes_inbound.append(thread_client)
                 self.inbound_node_connected(thread_client)
-
-                
     
     def get_trimmed_node_info(self):
         splitArray = self.received_nodes.strip("[]").split(",")
@@ -110,10 +152,7 @@ class FASTnode (Node):
 
         self.connect_to_fastnode(trimmed)
 
-        time.sleep(1)
-
-        self.print_connections()
-
+        print("Finished Round 0 for " + str(self.port))
     
 
         
