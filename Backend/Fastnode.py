@@ -85,9 +85,9 @@ class FASTnode (Node):
         trimmmedarray = []
 
         for i in splitaray:
-            trimmmedarray.append(i[1:-5])
+            trimmmedarray.append(i.strip()[1:-5])
     
-        print(trimmmedarray[0])
+        print(trimmmedarray[1])
 
         # self.print_connections()
 
