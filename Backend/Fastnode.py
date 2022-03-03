@@ -8,8 +8,9 @@ class FASTnode (Node):
     # Python class constructor
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(FASTnode, self).__init__(host, port, id, callback, max_connections)
-        self.connections = 2
-        print("MyPeer2PeerNode: Started")
+        self.connections = []
+        self.received_nodes = ""
+        print(str(port) + " Started")
 
     # all the methods below are called when things happen in the network.
     # implement your network node behavior to create the required functionality.
@@ -28,6 +29,7 @@ class FASTnode (Node):
 
     def node_message(self, node, data):
         print("node_message (" + str(self.id) + ") from " + node.id + ": " + str(data))
+        self.received_nodes = data
         
     def node_disconnect_with_outbound_node(self, node):
         print("node wants to disconnect with oher outbound node: (" + self.id + "): " + node.id)
@@ -66,54 +68,24 @@ class FASTnode (Node):
                             msg = msg + str(self.port)
                             for p in totalnodes :
                                 self.send_to_node(p, msg)
+
     def run(self):
         self.connect_with_node("127.0.0.1",8001)
-        while not self.terminate_flag.is_set():  # Check whether the thread needs to be closed
-            try:
-                connection, client_address = self.sock.accept()
 
-                self.debug_print("Total inbound connections:" + str(len(self.nodes_inbound)))
-                
-                # Basic information exchange (not secure) of the id's of the nodes!
-                connected_node_id = connection.recv(4096).decode('utf-8') # When a node is connected, it sends it id!
-                connection.send(self.id.encode('utf-8')) # Send my id to the connected node!
+        msg = self.host + " " + str(self.port)
 
-                thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], client_address[1])
-                thread_client.start()
-
-                self.nodes_inbound.append(thread_client)
-                self.inbound_node_connected(thread_client)
-                
-
-
-
-            
-            except socket.timeout:
-                self.debug_print('Node: Connection timeout!')
-
-            except Exception as e:
-                raise e
-
-            self.reconnect_nodes()
-
-            time.sleep(0.01)
-
-        print("Node stopping...")
-        for t in self.nodes_inbound:
-            t.stop()
-
-        for t in self.nodes_outbound:
-            t.stop()
+        self.send_to_nodes(msg)
 
         time.sleep(1)
 
-        for t in self.nodes_inbound:
-            t.join()
+        splitString = self.received_nodes.strip("[]")
 
-        for t in self.nodes_outbound:
-            t.join()
+        splitString.split(",")
 
-        self.sock.settimeout(None)   
+        print(splitString[0])
+
+        # self.print_connections()
+
         
-        self.sock.close()
-        print("Node stopped")
+
+        
