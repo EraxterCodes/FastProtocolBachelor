@@ -73,8 +73,6 @@ class FASTnode (Node):
         for i in range(len(nodes)):
             client_address_info = nodes[i].split(" ")
 
-            print(client_address_info[1] + " " + str(self.port))
-
             self.connect_with_node(client_address_info[0], int(client_address_info[1]))
             if not i == len(nodes) - 1:
                 connection, client_address = self.sock.accept()
@@ -88,6 +86,8 @@ class FASTnode (Node):
 
                 self.nodes_inbound.append(thread_client)
                 self.inbound_node_connected(thread_client)
+
+                
     
     def get_trimmed_node_info(self):
         splitArray = self.received_nodes.strip("[]").split(",")
