@@ -1,13 +1,7 @@
-from Modules.p2pnetwork.node import Node
+from Backend.Nodes.FastNode import FastNode
 import time
 
-class FASTnode (Node):              
-
-    # Python class constructor
-    def __init__(self, host, port, id=None, callback=None, max_connections=0):
-        super(FASTnode, self).__init__(host, port, id, callback, max_connections)
-        print(str(port) + " Started")
-
+class ClientNode (FastNode):              
     def signature_share_init(self): 
         print( str(self.id) + " Started sharing")
         time.sleep(2)

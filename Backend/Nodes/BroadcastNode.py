@@ -1,9 +1,6 @@
-from Modules.p2pnetwork.node import Node
+from Backend.Nodes.FastNode import FastNode
 
-class BroadcastNode (Node):              
-    def __init__(self, host, port, id=None, callback=None, max_connections=0):
-        super(BroadcastNode, self).__init__(host, port, id, callback, max_connections)
-
+class BroadcastNode (FastNode):              
     def run(self):
         while not self.terminate_flag.is_set():
             connection, client_address = self.sock.accept()

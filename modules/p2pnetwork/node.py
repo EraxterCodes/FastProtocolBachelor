@@ -4,12 +4,16 @@ import threading
 import random
 import hashlib
 
-from p2pnetwork.nodeconnection import NodeConnection
+from Modules.p2pnetwork.nodeconnection import NodeConnection
 
 """
+
 Author: Maurice Snoeren <macsnoeren(at)gmail.com>
 Version: 0.3 beta (use at your own risk)
 Date: 7-5-2020
+
+Edited by FAST
+Date: 3/3-2022
 
 Python package p2pnet for implementing decentralized peer-to-peer network applications
 
@@ -81,6 +85,9 @@ class Node(threading.Thread):
 
         # Debugging on or off!
         self.debug = False
+
+        self.connections = []
+        self.received_nodes = ""
 
     @property
     def all_nodes(self):
@@ -308,12 +315,14 @@ class Node(threading.Thread):
     def outbound_node_connected(self, node):
         """This method is invoked when a connection with a outbound node was successfull. The node made
            the connection itself."""
+        print("outbound_node_connected: " + node.id)
         self.debug_print("outbound_node_connected: " + node.id)
         if self.callback is not None:
             self.callback("outbound_node_connected", self, node, {})
 
     def inbound_node_connected(self, node):
         """This method is invoked when a node successfully connected with us."""
+        print("inbound_node_connected: " + node.id)
         self.debug_print("inbound_node_connected: " + node.id)
         if self.callback is not None:
             self.callback("inbound_node_connected", self, node, {})
@@ -335,6 +344,7 @@ class Node(threading.Thread):
     def inbound_node_disconnected(self, node):
         """This method is invoked when a node, that was previously connected with us, is in a disconnected
            state."""
+        print("inbound_node_disconnected: " + node.id)
         self.debug_print("inbound_node_disconnected: " + node.id)
         if self.callback is not None:
             self.callback("inbound_node_disconnected", self, node, {})
@@ -342,12 +352,17 @@ class Node(threading.Thread):
     def outbound_node_disconnected(self, node):
         """This method is invoked when a node, that we have connected to, is in a disconnected state."""
         self.debug_print("outbound_node_disconnected: " + node.id)
+        print("outbound_node_disconnected: " + node.id)
+
         if self.callback is not None:
             self.callback("outbound_node_disconnected", self, node, {})
 
     def node_message(self, node, data):
         """This method is invoked when a node send us a message."""
         self.debug_print("node_message: " + node.id + ": " + str(data))
+        print("node_message from " + node.id + ": " + str(data))
+
+        self.received_nodes = data
         if self.callback is not None:
             self.callback("node_message", self, node, data)
 
@@ -355,6 +370,8 @@ class Node(threading.Thread):
         """This method is invoked just before the connection is closed with the outbound node. From the node
            this request is created."""
         self.debug_print("node wants to disconnect with oher outbound node: " + node.id)
+        print("node wants to disconnect with oher outbound node: " + node.id)
+
         if self.callback is not None:
             self.callback("node_disconnect_with_outbound_node", self, node, {})
 
@@ -362,6 +379,8 @@ class Node(threading.Thread):
         """This method is invoked just before we will stop. A request has been given to stop the node and close
            all the node connections. It could be used to say goodbey to everyone."""
         self.debug_print("node is requested to stop!")
+        print("node is requested to stop!")
+
         if self.callback is not None:
             self.callback("node_request_to_stop", self, {}, {})
 
