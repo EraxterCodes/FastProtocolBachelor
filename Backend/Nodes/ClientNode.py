@@ -72,7 +72,6 @@ class ClientNode (FastNode):
         self.connect_to_fastnode(trimmed)
 
         print("Finished Round 0 for " + str(self.port))
-    
         self.print_connections()
 
         time.sleep(1)

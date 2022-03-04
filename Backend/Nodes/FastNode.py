@@ -19,6 +19,7 @@ class FastNode (Node):
         print("outbound_node_disconnected: " + connected_node.id)
 
     def node_message(self, connected_node, data):
+        self.received_nodes = data
         print("node_message from " + connected_node.id + ": " + str(data))
         
     def node_disconnect_with_outbound_node(self, connected_node):

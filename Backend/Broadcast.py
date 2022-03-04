@@ -1,5 +1,5 @@
-from Backend.Fastnode import FASTnode as ClientNode
-from Backend.BroadcastNode import BroadcastNode as BroadcastNode
+from Backend.Nodes.ClientNode import ClientNode
+from Backend.Nodes.BroadcastNode import BroadcastNode
 import time
 
 class Broadcast:
