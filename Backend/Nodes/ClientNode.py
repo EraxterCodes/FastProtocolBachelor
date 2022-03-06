@@ -1,15 +1,15 @@
 from Backend.Nodes.FastNode import FastNode
 import time
 
-class ClientNode (FastNode):              
+class ClientNode (FastNode):    
     def signature_share_init(self): 
-        print( str(self.id) + " Started sharing")
+        print( str(self.port) + " Started sharing")
         time.sleep(2)
         totalnodes = self.nodes_inbound + self.nodes_outbound 
         word_to_sign = "Sign"
         msg = ""
         for i in range(len(totalnodes)):    
-            print(str(self.id) + " Started Round: " + str(i))
+            print(str(self.port) + " Started Round: " + str(i))
             if i == 0: # Round 0
                 msg = word_to_sign + str(self.port)
                 for n in totalnodes :
@@ -42,14 +42,8 @@ class ClientNode (FastNode):
             if not i == len(nodes) - 1:
                 connection, client_address = self.sock.accept()
 
-                connected_node_id = connection.recv(4096).decode('utf-8')
-                connection.send(self.id.encode('utf-8'))
-
-                thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], client_address[1])
-                thread_client.start()
-
-                self.nodes_inbound.append(thread_client)
-                self.inbound_node_connected(thread_client)
+                connected_node_id = self.exchange_id(connection)
+                self.start_thread_connection(connection, connected_node_id, client_address)
     
     def get_trimmed_node_info(self):
         splitArray = self.received_nodes.strip("[]").split(",")
@@ -77,3 +71,5 @@ class ClientNode (FastNode):
         time.sleep(1)
 
         self.signature_share_init()
+
+        

@@ -5,17 +5,12 @@ class BroadcastNode (FastNode):
         while not self.terminate_flag.is_set():
             connection, client_address = self.sock.accept()
 
-            connected_node_id = connection.recv(4096).decode('utf-8')
-            connection.send(self.id.encode('utf-8'))
+            connected_node_id = self.exchange_id(connection)
 
             connected_node_msg = connection.recv(4096).decode('utf-8')
             print(connected_node_msg)
 
-            thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], client_address[1])
-            thread_client.start()
-
-            self.nodes_inbound.append(thread_client)
-            self.inbound_node_connected(thread_client)
+            self.start_thread_connection(connection, connected_node_id, client_address)
 
             self.connections.append(connected_node_msg)
 
