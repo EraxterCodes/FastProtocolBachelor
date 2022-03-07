@@ -1,10 +1,10 @@
 from p2pnetwork.node import Node
+from Backend.Nodes.FastNodeConnection import FastNodeConnection
 import socket
 
 class FastNode (Node):
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(FastNode, self).__init__(host, port, id, callback, max_connections)
-        self.connections = []
         self.received_nodes = ""
 
     def init_server(self):
@@ -13,6 +13,24 @@ class FastNode (Node):
         self.sock.bind((self.host, self.port))
         self.sock.settimeout(20.0)
         self.sock.listen(1)
+
+    def create_new_connection(self, connection, id, host, port):
+        return FastNodeConnection(self, connection, id, host, port)
+
+    def node_disconnected(self, node):
+        """While the same nodeconnection class is used, the class itself is not able to
+           determine if it is a inbound or outbound connection. This function is making
+           sure the correct method is used."""
+        print("This function was called :)")
+        # self.debug_print("node_disconnected: " + node.id)
+        # if node in self.nodes_inbound:
+        #     del self.nodes_inbound[self.nodes_inbound.index(node)]
+        #     self.inbound_node_disconnected(node)
+
+        # if node in self.nodes_outbound:
+        #     del self.nodes_outbound[self.nodes_outbound.index(node)]
+        #     self.outbound_node_disconnected(node)
+
 
     def outbound_node_connected(self, connected_node):
         print("outbound_node_connected: " + connected_node.id)
