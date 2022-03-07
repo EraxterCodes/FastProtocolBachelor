@@ -1,22 +1,31 @@
 from Backend.Nodes.FastNode import FastNode
 import time
+import pyDH
+import ecdsa
 
-class ClientNode (FastNode):    
+class ClientNode (FastNode): 
+    def __init__(self, host, port, id=None, callback=None, max_connections=0):
+        super(ClientNode, self).__init__(host, port, id, callback, max_connections)
+        self.connections = []
+        self.received_nodes = ""
+        self.secret_key = ecdsa.SigningKey.generate()
+        self.public_key = self.secret_key.verifying_key
+
     def signature_share_init(self): 
-        print( str(self.port) + " Started sharing")
+        print(str(self.port) + " Started sharing")
         time.sleep(2)
         totalnodes = self.nodes_inbound + self.nodes_outbound 
         word_to_sign = "Sign"
+
         msg = ""
         for i in range(len(totalnodes)):    
-            print(str(self.port) + " Started Round: " + str(i))
+            print(self.id + " Started Round: " + str(i))
             if i == 0: # Round 0
-                msg = word_to_sign + str(self.port)
-                for n in totalnodes :
-                    print (n)
-                    self.send_to_node(n, msg)
-                    time.sleep(1)
+                signed_msg = self.secret_key.sign(b"Sign")
+                msg = word_to_sign + " " + str(signed_msg) + " Public key: " + str(self.public_key.to_string())
+                self.send_to_nodes(msg)
             else:
+                print("Made it to round 1")
                 msgList = []
                 for i in range(len(totalnodes)):
                     rmsg = self.sock.recvfrom(4096)
@@ -65,8 +74,7 @@ class ClientNode (FastNode):
         trimmed = self.get_trimmed_node_info()
         self.connect_to_fastnode(trimmed)
 
-        print("Finished Round 0 for " + str(self.port))
-        self.print_connections()
+        print("Finished Round 0 for " + self.id)
 
         time.sleep(1)
 
