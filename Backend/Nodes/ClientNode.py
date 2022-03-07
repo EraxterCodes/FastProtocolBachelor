@@ -12,30 +12,24 @@ class ClientNode (FastNode):
 
     def signature_share_init(self): 
         print(str(self.port) + " Started sharing")
-        time.sleep(2)
+        time.sleep(0.1)
         totalnodes = self.nodes_inbound + self.nodes_outbound 
         word_to_sign = "Sign"
 
-        msg = ""
+        msg = "Hello"
         for i in range(len(totalnodes)):    
             print(self.id + " Started Round: " + str(i))
             if i == 0: # Round 0
                 signed_msg = self.secret_key.sign(b"Sign")
-                msg = word_to_sign + " " + str(signed_msg) + " Public key: " + str(self.public_key.to_string())
+                msg += word_to_sign + " " + str(signed_msg) + " Public key: " + str(self.public_key.to_string())
                 self.send_to_nodes(msg)
-                self.reconnect_nodes()
-                print(self.connectionList)
             else:
                 self.reconnect_nodes()
-                time.sleep(2)
-                print("Made it to round 1")
-                print(self.connectionList)
-                time.sleep(4)
+                time.sleep(0.1)
                 for connection in self.connectionList: 
                     rmsg = connection.recv(4096).decode('utf-8')
-                    print(rmsg)
+                    print("This is the msg " + rmsg)
 
-                print("Made it even further")
                 # result = all(element == msgList[0] for element in msgList)
                 # if result :
                 # #     print("All msges are equal")
@@ -76,14 +70,12 @@ class ClientNode (FastNode):
         msg = self.host + " " + str(self.port)
         self.send_to_nodes(msg)
 
-        time.sleep(1)
+        time.sleep(0.5)
 
         trimmed = self.get_trimmed_node_info()
         self.connect_to_fastnode(trimmed)
 
         print("Finished Round 0 for " + self.id)
-
-        time.sleep(1)
 
         self.signature_share_init()
 
