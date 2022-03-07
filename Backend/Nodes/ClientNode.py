@@ -7,6 +7,7 @@ class ClientNode (FastNode):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
         self.connectionList = []
         self.received_nodes = ""
+        
         self.secret_key = ecdsa.SigningKey.generate()
         self.public_key = self.secret_key.verifying_key
 

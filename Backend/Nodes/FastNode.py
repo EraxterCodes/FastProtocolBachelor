@@ -14,6 +14,25 @@ class FastNode (Node):
         self.sock.settimeout(20.0)
         self.sock.listen(1)
 
+    #TODO
+    # Implement logic for when sending to a node, we want to send it to the Corresponding echo server
+    def send_to_nodes_echoserver(self, data, exclude=[]):
+        """ Send a message to all the nodes that are connected with this node. data is a python variable which is
+            converted to JSON that is send over to the other node. exclude list gives all the nodes to which this
+            data should not be sent."""
+        self.message_count_send = self.message_count_send + 1
+        for n in self.nodes_inbound:
+            if n in exclude:
+                self.debug_print("Node send_to_nodes: Excluding node in sending the message")
+            else:
+                self.send_to_node(n, data)
+
+        for n in self.nodes_outbound:
+            if n in exclude:
+                self.debug_print("Node send_to_nodes: Excluding node in sending the message")
+            else:
+                self.send_to_node(n, data)
+
     def create_new_connection(self, connection, id, host, port):
         return FastNodeConnection(self, connection, id, host, port)
 
