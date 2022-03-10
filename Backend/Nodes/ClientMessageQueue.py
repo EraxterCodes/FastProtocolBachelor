@@ -23,16 +23,19 @@ class ClientMessageQueue(FastNode):
             
         
         while True:
+            # Current problem, we don't know how to receive messages from all connection
+
             msg = self.connection.recv(4096).decode('utf-8')
             # send to client
-            print(str(self.message_queue) + "This one" + self.id)
-            if "send" in msg: 
+            # print(str(self.message_queue) + "This one" + self.id)
+            if "getmessage" in msg: 
                 self.send_to_nodes(self.message_queue[0])
                 self.message_queue.pop()
 
-            if "send" not in msg and msg != "" :
+            if "send" not in msg and msg != "":
                 print(self.id + " This is msg: " + msg)
                 self.message_queue.append(msg)
+                print(str(self.message_queue))
             
             
    

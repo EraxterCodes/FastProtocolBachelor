@@ -11,7 +11,7 @@ class FastNode (Node):
         print("Initialisation of the Node on port: " + str(self.port) + " on node (" + self.id + ")")
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
-        self.sock.settimeout(20.0)
+        self.sock.settimeout(10.0)
         self.sock.listen(1)
 
     #TODO
@@ -37,19 +37,19 @@ class FastNode (Node):
         return FastNodeConnection(self, connection, id, host, port)
 
     def outbound_node_connected(self, connected_node):
-        print()
+        pass
         # print("outbound_node_connected: " + connected_node.id)
         
     def inbound_node_connected(self, connected_node):
-        print()
+        pass
         # print("inbound_node_connected: " + connected_node.id)
 
     def inbound_node_disconnected(self, connected_node):
-        print()
+        pass
         # print("inbound_node_disconnected: " + connected_node.id)
 
     def outbound_node_disconnected(self, connected_node):
-        print()
+        pass
         # print("outbound_node_disconnected: " + connected_node.id)
 
     def node_message(self, connected_node, data):
@@ -57,11 +57,11 @@ class FastNode (Node):
         print(str(self.id) + " node_message from " + connected_node.id + ": " + str(data))
         
     def node_disconnect_with_outbound_node(self, connected_node):
-        print()
+        pass
         # print("node wants to disconnect with oher outbound node: " + connected_node.id)
         
     def node_request_to_stop(self):
-        print()
+        pass
         # print("node is requested to stop!")
 
     def start_thread_connection(self, connection, connected_node_id, client_address):
