@@ -1,0 +1,1 @@
+start cmd /c "main.py"

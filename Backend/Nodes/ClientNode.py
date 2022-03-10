@@ -1,7 +1,7 @@
 from Backend.Nodes.FastNode import FastNode
+from Backend.Nodes.ClientMessageQueue import ClientMessageQueue
 import time
 import ecdsa
-import ClientMessageQueue
 
 class ClientNode (FastNode): 
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
@@ -11,8 +11,7 @@ class ClientNode (FastNode):
         
         self.secret_key = ecdsa.SigningKey.generate()
         self.public_key = self.secret_key.verifying_key
-        self.msg_q = ClientMessageQueue(self)
-        self.connect_with_node(msg_q)
+
 
     def signature_share_init(self): 
         print(str(self.port) + " Started sharing")
@@ -32,7 +31,7 @@ class ClientNode (FastNode):
                 for connection in self.connectionList: 
                     rmsg = connection.recv(4096).decode('utf-8')
                     print("This is the msg " + rmsg)
-
+                    
                 # result = all(element == msgList[0] for element in msgList)
                 # if result :
                 # #     print("All msges are equal")
@@ -50,13 +49,7 @@ class ClientNode (FastNode):
         for i in range(len(nodes)):
             client_address_info = nodes[i].split(" ")
 
-            self.connect_with_node(client_address_info[0], int(client_address_info[1]))
-            if not i == len(nodes) - 1:
-                connection, client_address = self.sock.accept()
-                self.connectionList.append(connection)
-
-                connected_node_id = self.exchange_id(connection)
-                self.start_thread_connection(connection, connected_node_id, client_address)
+            self.connect_with_node(client_address_info[0], int(client_address_info[1]) + 100)
     
     def get_trimmed_node_info(self):
         splitArray = self.received_nodes.strip("[]").split(",")
@@ -76,6 +69,12 @@ class ClientNode (FastNode):
         time.sleep(0.5)
 
         trimmed = self.get_trimmed_node_info()
+        
+        print(trimmed)
+        
+        self.msg_q = ClientMessageQueue(self.host, self.port + 100, len(trimmed))
+        self.msg_q.start()
+        self.connect_with_node(self.host,self.port + 100)
         self.connect_to_fastnode(trimmed)
 
         print("Finished Round 0 for " + self.id)
