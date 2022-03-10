@@ -8,44 +8,49 @@ class ClientNode (FastNode):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
         self.connectionList = []
         self.received_nodes = ""
+        self.mq_connection = None
         
         self.secret_key = ecdsa.SigningKey.generate()
         self.public_key = self.secret_key.verifying_key
+        
+        self.broadcast_node = None
+
+    def get_msg_q_connection(self):
+        for i in self.nodes_outbound:
+            if str(self.msg_q.port) in str(i):
+                return i
+        return None
 
 
     def signature_share_init(self): 
         print(str(self.port) + " Started sharing")
         time.sleep(0.1)
         totalnodes = self.nodes_inbound + self.nodes_outbound 
-        word_to_sign = "Sign"
-
-        msg = "Hello"
+        
+        excluded_nodes = [self.get_msg_q_connection(), self.nodes_outbound[0]]
+        
         for i in range(len(totalnodes)):    
             print(self.id + " Started Round: " + str(i))
+            
+            
+            
             if i == 0: # Round 0
                 signed_msg = self.secret_key.sign(b"Sign")
-                msg += word_to_sign + " " + str(signed_msg) + " Public key: " + str(self.public_key.to_string())
-                self.send_to_nodes(msg)
+                #msg = str(signed_msg) + " Public key: " + str(self.public_key.to_string())
+                msg = "Message"
+                msg_q = self.get_msg_q_connection()
+                self.send_to_nodes(msg,exclude=excluded_nodes)
+                print(self.id + "Has sent to following connections:" + str(self.nodes_outbound))
+                time.sleep(1)
             else:
-                time.sleep(0.1)
-                for connection in self.connectionList: 
-                    rmsg = connection.recv(4096).decode('utf-8')
-                    print("This is the msg " + rmsg)
-                    
-                # result = all(element == msgList[0] for element in msgList)
-                # if result :
-                # #     print("All msges are equal")
-                # else:
-                #     for msg in msgList: 
-                #         if str(self.port) in msg:
-                #             for p in totalnodes :
-                #                 self.send_to_node(p, msg)
-                #         else: 
-                #             msg = msg + str(self.port)
-                #             for p in totalnodes :
-                #                 self.send_to_node(p, msg)
+                time.sleep(1)
+                self.send_to_nodes("send", exclude=excluded_nodes)
+                msg = self.sock.recv(4096).decode('utf-8')
+                print("This was recived : " + msg)
 
-    def connect_to_fastnode(self, nodes):
+                
+
+    def connect_to_msgQueues(self, nodes):
         for i in range(len(nodes)):
             client_address_info = nodes[i].split(" ")
 
@@ -70,15 +75,13 @@ class ClientNode (FastNode):
 
         trimmed = self.get_trimmed_node_info()
         
-        print(trimmed)
+        print(trimmed) 
         
-        self.msg_q = ClientMessageQueue(self.host, self.port + 100, len(trimmed))
+        
+        self.msg_q = ClientMessageQueue(self.host, self.port + 100, len(trimmed),self.id + "q")
         self.msg_q.start()
         self.connect_with_node(self.host,self.port + 100)
-        self.connect_to_fastnode(trimmed)
-
-        print("Finished Round 0 for " + self.id)
-
+        self.connect_to_msgQueues(trimmed)
         self.signature_share_init()
 
         

@@ -9,7 +9,7 @@ class BroadcastNode (FastNode):
     def run(self):
         while not self.terminate_flag.is_set():
             connection, client_address = self.sock.accept()
-
+            
             connected_node_id = self.exchange_id(connection)
 
             connected_node_msg = connection.recv(4096).decode('utf-8')

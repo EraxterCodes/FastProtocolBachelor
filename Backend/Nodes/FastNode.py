@@ -37,26 +37,32 @@ class FastNode (Node):
         return FastNodeConnection(self, connection, id, host, port)
 
     def outbound_node_connected(self, connected_node):
-        print("outbound_node_connected: " + connected_node.id)
+        print()
+        # print("outbound_node_connected: " + connected_node.id)
         
     def inbound_node_connected(self, connected_node):
-        print("inbound_node_connected: " + connected_node.id)
+        print()
+        # print("inbound_node_connected: " + connected_node.id)
 
     def inbound_node_disconnected(self, connected_node):
-        print("inbound_node_disconnected: " + connected_node.id)
+        print()
+        # print("inbound_node_disconnected: " + connected_node.id)
 
     def outbound_node_disconnected(self, connected_node):
-        print("outbound_node_disconnected: " + connected_node.id)
+        print()
+        # print("outbound_node_disconnected: " + connected_node.id)
 
     def node_message(self, connected_node, data):
         self.received_nodes = data #Modified this to send all nodes to broadcastnode
-        print("node_message from " + connected_node.id + ": " + str(data))
+        print(str(self.id) + " node_message from " + connected_node.id + ": " + str(data))
         
     def node_disconnect_with_outbound_node(self, connected_node):
-        print("node wants to disconnect with oher outbound node: " + connected_node.id)
+        print()
+        # print("node wants to disconnect with oher outbound node: " + connected_node.id)
         
     def node_request_to_stop(self):
-        print("node is requested to stop!")
+        print()
+        # print("node is requested to stop!")
 
     def start_thread_connection(self, connection, connected_node_id, client_address):
         thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], client_address[1])

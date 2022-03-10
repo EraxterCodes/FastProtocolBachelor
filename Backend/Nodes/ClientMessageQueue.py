@@ -23,15 +23,17 @@ class ClientMessageQueue(FastNode):
             
         
         while True:
-            print(str(self.connection_count) + " i was a MQ")
             msg = self.connection.recv(4096).decode('utf-8')
             # send to client
+            print(str(self.message_queue) + "This one" + self.id)
             if "send" in msg: 
-                self.send_to_node(self.connection, self.message_queue[0])
+                self.send_to_nodes(self.message_queue[0])
                 self.message_queue.pop()
 
             if "send" not in msg and msg != "" :
+                print(self.id + " This is msg: " + msg)
                 self.message_queue.append(msg)
+            
             
    
 
