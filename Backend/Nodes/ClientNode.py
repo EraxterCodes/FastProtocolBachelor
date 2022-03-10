@@ -1,6 +1,7 @@
 from Backend.Nodes.FastNode import FastNode
 import time
 import ecdsa
+import ClientMessageQueue
 
 class ClientNode (FastNode): 
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
@@ -10,6 +11,8 @@ class ClientNode (FastNode):
         
         self.secret_key = ecdsa.SigningKey.generate()
         self.public_key = self.secret_key.verifying_key
+        self.msg_q = ClientMessageQueue(self)
+        self.connect_with_node(msg_q)
 
     def signature_share_init(self): 
         print(str(self.port) + " Started sharing")
@@ -25,7 +28,6 @@ class ClientNode (FastNode):
                 msg += word_to_sign + " " + str(signed_msg) + " Public key: " + str(self.public_key.to_string())
                 self.send_to_nodes(msg)
             else:
-                self.reconnect_nodes()
                 time.sleep(0.1)
                 for connection in self.connectionList: 
                     rmsg = connection.recv(4096).decode('utf-8')
