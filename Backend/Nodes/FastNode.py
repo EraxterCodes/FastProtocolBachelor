@@ -8,6 +8,7 @@ class FastNode (Node):
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(FastNode, self).__init__(host, port, id, callback, max_connections)
         self.clients = []
+        self.messages = []
         
         self.coding_type = 'utf-8'
         

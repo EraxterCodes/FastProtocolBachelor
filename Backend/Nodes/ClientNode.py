@@ -55,20 +55,26 @@ class ClientNode (FastNode):
     def signature_share_init(self):
         print(f"{self.id} started sharing")
         
-        for i in range(len(self.clients)):
-            if i == 0:
-                print(f"{self.id} started round 0")
+        for i in range(len(self.clients)+1):
+            print(f"{self.id} started round {i}")
+            
+            self.send_to_nodes(f"Round {i} from {self.id}")    
                 
-                self.send_to_nodes(f"Hello from {self.id}")    
-                    
-                time.sleep(1)
-                
+            time.sleep(0.1)
+            
+            #Should wait until all have received
+            while len(self.messages) != len(self.clients):
                 for i in self.all_nodes:
-                    if(i.get_node_message() != ""):
-                        print(i.get_node_message())
-                        i.reset_node_message()
+                    msg = i.get_node_message()
                     
-                  
+                    if(msg != ""):
+                        print(msg)
+                        self.messages.append(msg)
+                        i.reset_node_message()
+                time.sleep(0.1)
+            
+            print(self.messages)
+            self.messages = []
         
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
