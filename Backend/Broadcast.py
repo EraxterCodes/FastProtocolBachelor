@@ -12,7 +12,6 @@ class Broadcast:
         nodeList = [Node1, Node2, Node3]
 
         broadcastNode.start()
-        time.sleep(1)
 
         for n in nodeList:
             n.start()
