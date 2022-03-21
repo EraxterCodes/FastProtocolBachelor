@@ -1,8 +1,9 @@
-from Backend.Nodes.FastNode import FastNode
+from Infrastructure.Nodes.FastNode import FastNode
 
 class BroadcastNode (FastNode): 
-    def __init__(self, host, port, id=None, callback=None, max_connections=0):
+    def __init__(self, host, port, id=None, nodes=list, callback=None, max_connections=0):
         super(BroadcastNode, self).__init__(host, port, id, callback, max_connections)
+        self.nodes = nodes
 
     def accept_connections(self):
         while not self.terminate_flag.is_set():
@@ -22,7 +23,7 @@ class BroadcastNode (FastNode):
             
             self.clients.append(node_info)
 
-            if len(self.clients) == 3:
+            if len(self.clients) == len(self.nodes):
                 break
             
         self.send_to_nodes(str(self.clients))

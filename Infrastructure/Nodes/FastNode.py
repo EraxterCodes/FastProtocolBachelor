@@ -1,7 +1,6 @@
-import threading
-import time
 from p2pnetwork.node import Node
 from Backend.Nodes.FastNodeConnection import FastNodeConnection
+import time
 import socket
 
 class FastNode (Node):

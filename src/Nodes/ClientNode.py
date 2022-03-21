@@ -1,4 +1,5 @@
-from Backend.Nodes.FastNode import FastNode
+from pydoc import cli
+from Infrastructure.Nodes.FastNode import FastNode
 import threading
 import time
 from ecdsa import SigningKey, SECP256k1 #Bitcoin curve
@@ -73,6 +74,19 @@ class ClientNode (FastNode):
             print(f"{self.id} has crashed when connecting to all nodes")
             self.sock.close()
             
+    def get_conflicting_messages(self):
+        pass
+         
+    def get_all_messages(self, num_messages):
+        while len(self.messages) != num_messages:
+            for node in self.all_nodes:
+                msg = node.get_node_message()
+                
+                if msg != "":
+                    self.messages.append(msg)
+                    node.reset_node_message()
+                time.sleep(0.1)
+           
     # TODO - This is always happy case with honest parties. 
     # TODO - When do we stop signing?!     
     def signature_share_init(self):
@@ -91,18 +105,10 @@ class ClientNode (FastNode):
                 time.sleep(0.1)
                           
             else:
-                client_len = len(self.clients) * i
-                                      
                 time.sleep(0.1)
-                                    
-                while len(self.messages) != client_len:
-                    for node in self.all_nodes:
-                        msg = node.get_node_message()
-                        
-                        if msg != "":
-                            self.messages.append(msg)
-                            node.reset_node_message()
-                        time.sleep(0.1)
+                
+                client_len = len(self.clients) * i                 
+                self.get_all_messages(client_len)
                 
                 print(f"Messages received for {self.id} in round {i-1}: {str(self.messages)}")        
                                                     
@@ -127,17 +133,9 @@ class ClientNode (FastNode):
                 time.sleep(0.1)
            
         time.sleep(0.1)
-        print("Finished signing loop")     
-        client_len = len(self.clients) * (len(self.clients) + 1)
-                                    
-        while len(self.messages) != client_len:
-            for node in self.all_nodes:
-                msg = node.get_node_message()
-                
-                if msg != "":
-                    self.messages.append(msg)
-                    node.reset_node_message()
-                time.sleep(0.1)        
+        
+        client_len = len(self.clients) * (len(self.clients) + 1)                            
+        self.get_all_messages(client_len)        
         
         print(f"Messages for {self.id}: {str(self.messages)}")
         
@@ -152,7 +150,7 @@ class ClientNode (FastNode):
                 
         time.sleep(0.2)
                 
-        print("Finished signature sharing")
+        print(f"{self.id} finished signature sharing")
         
         time.sleep(0.1)
         

@@ -8,6 +8,7 @@ The best Bachelor since EMBA's Bachelor
 - [ ]: See if messages are equal when signature sharing
 
 ### Implementation steps for Off-Chain-Messaging:
+![pki](/imgs/pki.png)
 ![off-chain message exchange](/imgs/off-chain_message_exchange_protocol.png)
 Establish Peer-to-Peer network among participants, to allow messages to be exchanged off-chain.
 
