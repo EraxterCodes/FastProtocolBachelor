@@ -9,6 +9,7 @@ class Broadcast:
         Node2 = ClientNode("127.0.0.1",8007,3)
         Node3 = ClientNode("127.0.0.1",8003,4)
 
+
         nodeList = [Node1, Node2, Node3]
 
         broadcastNode.start()

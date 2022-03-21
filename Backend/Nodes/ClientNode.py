@@ -71,7 +71,7 @@ class ClientNode (FastNode):
             self.sock.close()
             
     def signature_share_init(self):
-        print(f"{self.id} started sharing")
+        print(f"{self.id} started sharing {len(self.clients)}")
         
         for i in range(len(self.clients)+1):
             print(f"{self.id} started round {i}")
@@ -81,8 +81,10 @@ class ClientNode (FastNode):
                 self.send_to_nodes(msg) 
                 time.sleep(0.1)
                           
-            elif i == 1:
-                while len(self.messages) != len(self.clients):
+            else:
+                client_len = len(self.clients) * 1
+                                    
+                while len(self.messages) != client_len:
                     for node in self.all_nodes:
                         msg = node.get_node_message()
                         
@@ -95,15 +97,14 @@ class ClientNode (FastNode):
                 
                 signed_messages = []
                                 
-                for msg in self.messages:
-                    signed_msg = f"s{self.id} {msg}"
+                for message in self.messages:
+                    signed_msg = self.sk.sign(b"{i}")
+                    msg = f"{i} {signed_msg} {message}"
+                    
                     signed_messages.append(signed_msg)
                 
-                
                 self.send_to_nodes(str(signed_messages))
-                    
-                
-                
+                time.sleep(0.1)
             
             # sending_msg = b"Round {i}"
             # signature = self.sk.sign(sending_msg)
