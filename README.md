@@ -1,10 +1,11 @@
-# FASTProtocol
+# 🏃🏽 FASTProtocol
 
 _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
 
-### TODO:
-
+#### TODO:
+- []: Implement logic for security parameters
+- []: See if messages are equal when signature sharing
 
 ### Implementation step 1:
 Establish Peer-to-Peer network among participants, to allow messages to be exchanged off-chain.
