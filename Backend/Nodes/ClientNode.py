@@ -1,10 +1,14 @@
 from Backend.Nodes.FastNode import FastNode
 import threading
 import time
+import ecdsa
 
 class ClientNode (FastNode): 
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
+        
+        self.sk = ecdsa.SigningKey.generate()
+        self.vk = self.sk.verifying_key
     
     def get_trimmed_info(self, node_info=str):
         try:
@@ -56,6 +60,8 @@ class ClientNode (FastNode):
             
             self.disconnect_with_node(self.all_nodes[0])
             self.nodes_outbound.remove(self.all_nodes[0])
+               
+            time.sleep(0.1)
                     
             for node in trimmed_info:
                 self.connect_to_clients(node)
@@ -69,22 +75,54 @@ class ClientNode (FastNode):
         
         for i in range(len(self.clients)+1):
             print(f"{self.id} started round {i}")
-            
-            self.send_to_nodes(f"Round {i} from {self.id}")    
-            
-            #Should wait until all have received
-            client_len = len(self.clients) * (i+1)
-            while len(self.messages) != client_len:
-                for i in self.all_nodes:
-                    msg = i.get_node_message()
+            if i == 0:
+                signed_msg = self.sk.sign(b"init")
+                msg = f"init {signed_msg}" 
+                self.send_to_nodes(msg) 
+                time.sleep(0.1)
+                          
+            elif i == 1:
+                while len(self.messages) != len(self.clients):
+                    for node in self.all_nodes:
+                        msg = node.get_node_message()
+                        
+                        if msg != "":
+                            self.messages.append(msg)
+                            node.reset_node_message()
+                        time.sleep(0.1)
+                        
+                print(f"Messages for {self.id}: {str(self.messages)}")
+                
+                signed_messages = []
+                                
+                for msg in self.messages:
+                    signed_msg = f"s{self.id} {msg}"
+                    signed_messages.append(signed_msg)
+                
+                
+                self.send_to_nodes(str(signed_messages))
                     
-                    if(msg != ""):
-                        print(msg)
-                        self.messages.append(msg)
-                        i.reset_node_message()
-                time.sleep(0.05)
+                
+                
             
-            print(f"Messages for {self.id}: {self.messages}")
+            # sending_msg = b"Round {i}"
+            # signature = self.sk.sign(sending_msg)
+            # converted_sig = f"{signature}"
+            
+            # self.send_to_nodes(f"Round {i} from {self.id}")    
+            
+            # #Should wait until all have received
+            # client_len = len(self.clients) * (i+1)
+            # while len(self.messages) != client_len:
+            #     for i in self.all_nodes:
+            #         msg = i.get_node_message()
+                    
+            #         if(msg != ""):
+            #             self.messages.append(msg)
+            #             i.reset_node_message()
+            #     time.sleep(0.05)
+            
+            # print(f"Messages for {self.id}: {self.messages}")
         
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
