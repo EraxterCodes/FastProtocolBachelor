@@ -57,7 +57,7 @@ class FastNodeConnection(NodeConnection):
 
                 #Has a lot of print statements for debugging
                 if chunk != "":
-                    self.main_node.node_message( self, chunk)
+                    # self.main_node.node_message( self, chunk)
                     self.message = chunk
                     
                 #Doesn't have a lot of print statements

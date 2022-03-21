@@ -3,6 +3,9 @@
 _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
 
+### TODO:
+
+
 ### Implementation step 1:
 Establish Peer-to-Peer network among participants, to allow messages to be exchanged off-chain.
 
