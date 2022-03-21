@@ -1,5 +1,5 @@
-from Backend.Nodes.ClientNode import ClientNode
-from Backend.Nodes.BroadcastNode import BroadcastNode
+from src.Nodes.ClientNode import ClientNode
+from src.Nodes.BroadcastNode import BroadcastNode
 import time
 
 class Broadcast:

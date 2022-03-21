@@ -1,4 +1,4 @@
-from Backend.Broadcast import Broadcast
+from src.Broadcast import Broadcast
 
 broadcast = Broadcast
 broadcast.main()

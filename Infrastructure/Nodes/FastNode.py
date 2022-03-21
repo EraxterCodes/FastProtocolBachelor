@@ -1,5 +1,5 @@
 from p2pnetwork.node import Node
-from Backend.Nodes.FastNodeConnection import FastNodeConnection
+from Infrastructure.Nodes.FastNodeConnection import FastNodeConnection
 import time
 import socket
 
