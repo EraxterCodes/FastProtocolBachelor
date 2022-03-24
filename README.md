@@ -17,6 +17,14 @@ The best Bachelor since EMBA's Bachelor
 - [ ] For off-chain-messaging, check if messages are equal. Check for conflicting messages
 - [ ] Implement Smart contract logic for pedersen commitments and messaging from client nodes
 - [ ] Add own pki to smart contract instead of generating new sk and vk
+- [ ] Add smart contract integration
+  - [ ] Create smart contract
+  - [ ] "Broadcast" clients to all clients
+  - [ ] Fields
+    - [ ] List of bidders
+    - [ ] List of clients connected
+  - [ ] Methods
+    - [ ] Add bids
 
 
 ## Implementation steps
