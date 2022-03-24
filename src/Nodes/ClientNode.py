@@ -1,11 +1,11 @@
 from pydoc import cli
 from Infrastructure.Nodes.FastNode import FastNode
+from Infrastructure.PedersenCommit.Pedersen import Pedersen
+
 import threading
 import time
 from ecdsa import SigningKey, SECP256k1 #Bitcoin curve
 import random 
-import cryptography
-
 
 class ClientNode (FastNode): 
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
@@ -13,10 +13,14 @@ class ClientNode (FastNode):
         
         self.debugPrint = False
         self.easy_signatures = True
-        self.bid = random.randint(0,420) # random bid
         
         self.sk = SigningKey.generate()
         self.vk = self.sk.verifying_key
+        
+        self.bid = random.randint(0,420) # random bid
+        self.pd = Pedersen(10)
+        self.bit_commitments = []
+
             
     def get_trimmed_info(self, node_info=str):
         try:
@@ -42,6 +46,10 @@ class ClientNode (FastNode):
     def bid_decomposition(self):
         bits = [int(digit) for digit in bin(self.bid)[2:]]
         
+        for bit in bits:
+            self.bit_commitments.append(self.pd.p.commit(self.pd.param, bit))
+        
+        print(self.bit_commitments)
     
     def connect_to_clients(self, node_info):
         try:
@@ -170,4 +178,5 @@ class ClientNode (FastNode):
             print(str(sorted(sorted_1)) + " DIFFERENCE " + str(sorted(sorted_2)))
             
             print(sorted(sorted_1) == sorted(sorted_2))
-
+        
+        self.bid_decomposition()
