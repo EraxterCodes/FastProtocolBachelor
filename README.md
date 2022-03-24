@@ -49,5 +49,5 @@ When all nodes are connected, the signature exchange is started with n rounds.
 
 The implementation uses the python library ECDSA (Elliptic Curve Digital Signature Algorithm) to create a public and private key (Signing key + Verifying key). The signature sharing algorithm goes through n+1 number of rounds. For each round a message and a signed message is send to the other nodes.
 
-### Bid compomposition
+### Bid decomposition
 ![setup-phase bid decomposition](/img/setup-phase.png)
