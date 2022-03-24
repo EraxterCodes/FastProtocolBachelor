@@ -11,7 +11,7 @@ class ClientNode (FastNode):
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
         
-        self.debugPrint = True
+        self.debugPrint = False
         self.easy_signatures = True
         
         self.sk = SigningKey.generate()
@@ -55,6 +55,9 @@ class ClientNode (FastNode):
         
         if self.debugPrint:
             print(f"Bit commits for {self.id}: {str(self.bit_commitments)}")
+            
+        for i in range(len(self.bit_commitments)):
+            print(f"{str(self.bit_commitments[i][0])} open val {self.pd.v.openBool(self.pd.param, self.bit_commitments[i][0], bits[i], self.bit_commitments[i][1])}")
     
     def connect_to_clients(self, node_info):
         try:

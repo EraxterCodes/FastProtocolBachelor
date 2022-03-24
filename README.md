@@ -2,15 +2,14 @@
 
 _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
-
 - [🏃🏽 FASTProtocol](#-fastprotocol)
-    - [TODO:](#todo)
+  - [TODO:](#todo)
   - [Implementation steps](#implementation-steps)
     - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
     - [Bid decomposition](#bid-decomposition)
 
 
-### TODO:
+## TODO:
 - [x] Get library for P2P
 - [x] P2P network with reliable messaging
 - [x] Find library for Pedersen commitments

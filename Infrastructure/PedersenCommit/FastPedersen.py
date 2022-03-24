@@ -1,5 +1,3 @@
-#From https://github.com/lorenzogentile404/pedersen-commitment
-
 from modules.Crypto.Util import number
 from modules.Crypto.Random import random
 from modules.Crypto import Random
@@ -48,7 +46,7 @@ class verifier:
            
         return q,g,h
 
-    def openBool(self, param, c, m, *r):
+    def open(self, param, c, m, *r):
         q, g, h = param
 
         rSum = 0
