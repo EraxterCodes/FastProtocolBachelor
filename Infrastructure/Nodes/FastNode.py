@@ -1,4 +1,4 @@
-from p2pnetwork.node import Node
+from modules.p2pnetwork.node import Node
 from Infrastructure.Nodes.FastNodeConnection import FastNodeConnection
 import time
 import socket

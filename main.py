@@ -15,4 +15,4 @@ broadcastNode.start()
 for n in nodeList:
     n.start()
     time.sleep(0.1)
-    
+

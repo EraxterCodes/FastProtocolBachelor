@@ -1,4 +1,4 @@
-from p2pnetwork.nodeconnection import NodeConnection
+from modules.p2pnetwork.nodeconnection import NodeConnection
 import time
 import socket
 import json

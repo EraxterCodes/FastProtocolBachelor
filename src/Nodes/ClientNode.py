@@ -3,6 +3,9 @@ from Infrastructure.Nodes.FastNode import FastNode
 import threading
 import time
 from ecdsa import SigningKey, SECP256k1 #Bitcoin curve
+import random 
+import cryptography
+
 
 class ClientNode (FastNode): 
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
@@ -10,10 +13,11 @@ class ClientNode (FastNode):
         
         self.debugPrint = False
         self.easy_signatures = True
+        self.bid = random.randint(0,420) # random bid
         
         self.sk = SigningKey.generate()
         self.vk = self.sk.verifying_key
-    
+            
     def get_trimmed_info(self, node_info=str):
         try:
             info_array = []
@@ -34,6 +38,10 @@ class ClientNode (FastNode):
         except:
             print(f"{self.id} has crashed when splitting node_info")
             self.sock.close()     
+    
+    def bid_decomposition(self):
+        bits = [int(digit) for digit in bin(self.bid)[2:]]
+        
     
     def connect_to_clients(self, node_info):
         try:
@@ -139,6 +147,9 @@ class ClientNode (FastNode):
         
         if self.debugPrint:
             print(f"Messages for {self.id}: {str(self.messages)}")
+            
+        print(f"{self.id} finished signature sharing")
+
         
         
     def run(self):
@@ -148,11 +159,7 @@ class ClientNode (FastNode):
         self.connect_to_nodes()
         
         self.signature_share_init()            
-                
-        time.sleep(0.2)
-                
-        print(f"{self.id} finished signature sharing")
-        
+                                        
         time.sleep(0.1)
         
         if (self.debugPrint):
@@ -163,4 +170,4 @@ class ClientNode (FastNode):
             print(str(sorted(sorted_1)) + " DIFFERENCE " + str(sorted(sorted_2)))
             
             print(sorted(sorted_1) == sorted(sorted_2))
-    
+
