@@ -7,12 +7,17 @@ The best Bachelor since EMBA's Bachelor
     - [TODO:](#todo)
   - [Implementation steps](#implementation-steps)
     - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
-    - [Bid compomposition](#bid-compomposition)
+    - [Bid decomposition](#bid-decomposition)
 
 
 ### TODO:
-- [ ]: Implement logic for security parameters
-- [ ]: For off-chain-messaging, check if messages are equal
+- [x] Get library for P2P
+- [x] P2P network with reliable messaging
+- [x] Find library for Pedersen commitments
+- [ ] Implement logic for security parameters
+- [ ] For off-chain-messaging, check if messages are equal. Check for conflicting messages
+- [ ] Implement Smart contract logic for pedersen commitments and messaging from client nodes
+- [ ] Add own pki to smart contract instead of generating new sk and vk
 
 
 ## Implementation steps

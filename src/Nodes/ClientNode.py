@@ -11,13 +11,13 @@ class ClientNode (FastNode):
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
         
-        self.debugPrint = False
+        self.debugPrint = True
         self.easy_signatures = True
         
         self.sk = SigningKey.generate()
         self.vk = self.sk.verifying_key
         
-        self.bid = random.randint(0,420) # random bid
+        self.bid = random.randint(0,4294967296) # random bid
         self.pd = Pedersen(10)
         self.bit_commitments = []
 
@@ -46,10 +46,15 @@ class ClientNode (FastNode):
     def bid_decomposition(self):
         bits = [int(digit) for digit in bin(self.bid)[2:]]
         
+        numtoprepend = 32  - len(bits)        
+        for i in range(numtoprepend):
+            bits.insert(0, 0)
+        
         for bit in bits:
             self.bit_commitments.append(self.pd.p.commit(self.pd.param, bit))
         
-        print(self.bit_commitments)
+        if self.debugPrint:
+            print(f"Bit commits for {self.id}: {str(self.bit_commitments)}")
     
     def connect_to_clients(self, node_info):
         try:
@@ -155,6 +160,13 @@ class ClientNode (FastNode):
         
         if self.debugPrint:
             print(f"Messages for {self.id}: {str(self.messages)}")
+            sorted_1 = str(self.messages[-1])
+            sorted_2 = str(self.messages[-2])
+            
+            # print(f"Diffences for {self.id}")
+            # print(str(sorted(sorted_1)) + " DIFFERENCE " + str(sorted(sorted_2)))
+            
+            # print(sorted(sorted_1) == sorted(sorted_2))
             
         print(f"{self.id} finished signature sharing")
 
@@ -167,16 +179,5 @@ class ClientNode (FastNode):
         self.connect_to_nodes()
         
         self.signature_share_init()            
-                                        
-        time.sleep(0.1)
-        
-        if (self.debugPrint):
-            sorted_1 = str(self.messages[-1])
-            sorted_2 = str(self.messages[-2])
-            
-            print(f"Diffences for {self.id}")
-            print(str(sorted(sorted_1)) + " DIFFERENCE " + str(sorted(sorted_2)))
-            
-            print(sorted(sorted_1) == sorted(sorted_2))
         
         self.bid_decomposition()
