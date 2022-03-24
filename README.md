@@ -3,13 +3,23 @@
 _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
 
-#### TODO:
+- [🏃🏽 FASTProtocol](#-fastprotocol)
+    - [TODO:](#todo)
+  - [Implementation steps](#implementation-steps)
+    - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
+    - [Bid compomposition](#bid-compomposition)
+
+
+### TODO:
 - [ ]: Implement logic for security parameters
-- [ ]: See if messages are equal when signature sharing
+- [ ]: For off-chain-messaging, check if messages are equal
+
+
+## Implementation steps
 
 ### Implementation steps for Off-Chain-Messaging:
-![pki](/imgs/pki.png)
-![off-chain message exchange](/imgs/off-chain_message_exchange_protocol.png)
+![pki](/img/pki.png)
+![off-chain message exchange](/img/off-chain_message_exchange_protocol.png)
 Establish Peer-to-Peer network among participants, to allow messages to be exchanged off-chain.
 
 The P2P network uses a modified version of this repo [Macsnoeren Github python-p2p-network](https://github.com/macsnoeren/python-p2p-network). The repository gives a *Node* and a *NodeConnection* which are extended in the *FastNode* and *FastNodeConnection* classes. Changes to these classes are as follow:
@@ -38,3 +48,6 @@ The client connects to the broadcastnode, exchanges ID's and then sends the clie
 When all nodes are connected, the signature exchange is started with n rounds.
 
 The implementation uses the python library ECDSA (Elliptic Curve Digital Signature Algorithm) to create a public and private key (Signing key + Verifying key). The signature sharing algorithm goes through n+1 number of rounds. For each round a message and a signed message is send to the other nodes.
+
+### Bid compomposition
+![setup-phase bid decomposition](/img/setup-phase.png)
