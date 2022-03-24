@@ -8,7 +8,7 @@ class ClientNode (FastNode):
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
         
-        self.debugPrint = True
+        self.debugPrint = False
         self.easy_signatures = True
         
         self.sk = SigningKey.generate()
@@ -110,7 +110,7 @@ class ClientNode (FastNode):
                 client_len = len(self.clients) * i                 
                 self.get_all_messages(client_len)
                 
-                print(f"Messages received for {self.id} in round {i-1}: {str(self.messages)}")        
+                # print(f"Messages received for {self.id} in round {i-1}: {str(self.messages)}")        
                                                     
                 signed_messages = []
                                 
@@ -125,10 +125,10 @@ class ClientNode (FastNode):
                     
                     signed_messages.append(msg)
                 
-                # print(f"Messages for {self.id}: {str(self.messages)}")
-
+                if self.debugPrint:
+                    print(f"Messages for {self.id}: {str(self.messages)}")
+                
                 removed_braces = str(signed_messages)[2:-2]
-
                 self.send_to_nodes(removed_braces)
                 time.sleep(0.1)
            
@@ -137,7 +137,8 @@ class ClientNode (FastNode):
         client_len = len(self.clients) * (len(self.clients) + 1)                            
         self.get_all_messages(client_len)        
         
-        print(f"Messages for {self.id}: {str(self.messages)}")
+        if self.debugPrint:
+            print(f"Messages for {self.id}: {str(self.messages)}")
         
         
     def run(self):
@@ -157,6 +158,9 @@ class ClientNode (FastNode):
         if (self.debugPrint):
             sorted_1 = str(self.messages[-1])
             sorted_2 = str(self.messages[-2])
+            
+            print(f"Diffences for {self.id}")
+            print(str(sorted(sorted_1)) + " DIFFERENCE " + str(sorted(sorted_2)))
             
             print(sorted(sorted_1) == sorted(sorted_2))
     
