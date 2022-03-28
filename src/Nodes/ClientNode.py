@@ -8,11 +8,12 @@ from ecdsa import SigningKey, SECP256k1 #Bitcoin curve
 import random 
 
 class ClientNode (FastNode): 
-    def __init__(self, host, port, id=None, callback=None, max_connections=0):
+    def __init__(self, host, port, bid, id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(host, port, id, callback, max_connections)
         
         self.debugPrint = False
         self.easy_signatures = True
+        self.bid = bid
         
         self.sk = SigningKey.generate()
         self.vk = self.sk.verifying_key

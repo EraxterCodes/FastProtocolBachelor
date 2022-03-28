@@ -1,18 +1,20 @@
+from operator import indexOf
 from src.Nodes.ClientNode import ClientNode
 from src.Nodes.BroadcastNode import BroadcastNode
 import time
 
-Node1 = ClientNode("127.0.0.1",8003,2)
-Node2 = ClientNode("127.0.0.1",8005,3)
-Node3 = ClientNode("127.0.0.1",8007,4)
-Node4 = ClientNode("127.0.0.1",8009,5)
+Client_Node_list = []
+Num_Client = input("How many clients?")
+for i in range(int(Num_Client)):
+    Bid_Input = input("Bid for party: " + str(i)) 
+    Client_Node_list.append(ClientNode("127.0.0.1",8000 + (i*2),Bid_Input,2))
 
-nodeList = [Node1, Node2, Node3]
+ 
 
-broadcastNode = BroadcastNode("127.0.0.1", 8001,1, nodeList)
+broadcastNode = BroadcastNode("127.0.0.1", 8001,1, Client_Node_list)
 broadcastNode.start()
 
-for n in nodeList:
+for n in Client_Node_list:
     n.start()
     time.sleep(0.1)
 
