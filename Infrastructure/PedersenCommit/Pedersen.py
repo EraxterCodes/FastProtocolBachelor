@@ -1,5 +1,5 @@
 #From https://github.com/lorenzogentile404/pedersen-commitment
-
+# uses pycryptodome, NOT pycrypto 
 from Crypto.Util import number
 from Crypto.Random import random
 from Crypto import Random
