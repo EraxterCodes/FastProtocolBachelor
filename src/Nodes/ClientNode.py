@@ -20,6 +20,8 @@ class ClientNode (FastNode):
         
         self.pd = Pedersen(10)
         self.bit_commitments = []
+        
+        self.broadcast_node = None
 
             
     def get_trimmed_info(self, node_info=str):
@@ -86,8 +88,10 @@ class ClientNode (FastNode):
                     
             trimmed_info = self.get_trimmed_info(node_info)
             
-            self.disconnect_with_node(self.all_nodes[0])
-            self.nodes_outbound.remove(self.all_nodes[0])
+            self.broadcast_node = self.all_nodes[0]
+            
+            # self.disconnect_with_node(self.all_nodes[0])
+            # self.nodes_outbound.remove(self.all_nodes[0])
                
             time.sleep(0.1)
                     
@@ -141,3 +145,6 @@ class ClientNode (FastNode):
         self.bid_decomposition()
         
         # print(f"Nodes for {self.id}: {str(self.all_nodes)}")
+        
+        time.sleep(2)
+        self.send_to_nodes(str(self.bid))
