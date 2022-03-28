@@ -12,19 +12,20 @@ The best Bachelor since EMBA's Bachelor
 ## TODO:
 - [x] Get library for P2P
 - [x] P2P network with reliable messaging
-- [x] Find library for Pedersen commitments
+- [x] Find library for Pedersen commitments (pycryptodome)
 - [ ] Implement logic for security parameters
 - [ ] For off-chain-messaging, check if messages are equal. Check for conflicting messages
 - [ ] Implement Smart contract logic for pedersen commitments and messaging from client nodes
 - [ ] Add own pki to smart contract instead of generating new sk and vk
 - [ ] Add smart contract integration
-  - [ ] Create smart contract
+  - [ ] Create smart contract (for now we use broastcastNode acting as SC)
   - [ ] "Broadcast" clients to all clients
   - [ ] Fields
     - [ ] List of bidders
     - [ ] List of clients connected
   - [ ] Methods
-    - [ ] Add bids
+    - [x] Add bids
+    - [ ] Use bids
 
 
 ## Implementation steps
