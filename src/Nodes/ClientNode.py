@@ -110,69 +110,7 @@ class ClientNode (FastNode):
                     self.messages.append(msg)
                     node.reset_node_message()
                 time.sleep(0.1)
-           
-    # TODO - This is always happy case with honest parties. 
-    # TODO - When do we stop signing?!     
-    def signature_share_init(self):
-        print(f"{self.id} started sharing {len(self.clients)}")
-        
-        for i in range(len(self.clients)+1):
-            print(f"{self.id} started round {i}")
-            if i == 0:
-                msg_to_sign = f"init"
-                if self.easy_signatures:
-                    msg = f"{msg_to_sign} s{self.id}-{msg_to_sign}" 
-                else:
-                    signed_msg = self.sk.sign(b"{msg_to_sign}")
-                    msg = f"{msg_to_sign} {signed_msg}" 
-                self.send_to_nodes(msg) 
-                time.sleep(0.1)
-                          
-            else:
-                time.sleep(0.1)
-                
-                client_len = len(self.clients) * i                 
-                self.get_all_messages(client_len)
-                
-                # print(f"Messages received for {self.id} in round {i-1}: {str(self.messages)}")        
-                                                    
-                signed_messages = []
-                                
-                for message in self.messages:
-                    msg_to_sign = f"{message}"
-
-                    if self.easy_signatures:
-                        msg = f"{message} s-{msg_to_sign}"
-                    else:
-                        signed_msg = self.sk.sign(b"{msg_to_sign}")
-                        msg = f"{msg_to_sign} {signed_msg}"
-                    
-                    signed_messages.append(msg)
-                
-                if self.debugPrint:
-                    print(f"Messages for {self.id}: {str(self.messages)}")
-                
-                removed_braces = str(signed_messages)[2:-2]
-                self.send_to_nodes(removed_braces)
-                time.sleep(0.1)
-           
-        time.sleep(0.1)
-        
-        client_len = len(self.clients) * (len(self.clients) + 1)                            
-        self.get_all_messages(client_len)        
-        
-        if self.debugPrint:
-            print(f"Messages for {self.id}: {str(self.messages)}")
-            sorted_1 = str(self.messages[-1])
-            sorted_2 = str(self.messages[-2])
-            
-            # print(f"Diffences for {self.id}")
-            # print(str(sorted(sorted_1)) + " DIFFERENCE " + str(sorted(sorted_2)))
-            
-            # print(sorted(sorted_1) == sorted(sorted_2))
-            
-        print(f"{self.id} finished signature sharing")
-
+               
     def setup(self):
         # change (secret)
         change = 0.1  
@@ -198,9 +136,7 @@ class ClientNode (FastNode):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
         accept_connections_thread.start()
         
-        self.connect_to_nodes()
-        
-        self.signature_share_init()            
+        self.connect_to_nodes()        
         
         self.bid_decomposition()
         
