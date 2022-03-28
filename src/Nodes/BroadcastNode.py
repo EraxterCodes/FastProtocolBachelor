@@ -7,7 +7,6 @@ class BroadcastNode (FastNode):
         super(BroadcastNode, self).__init__(host, port, id, callback, max_connections)
         self.nodes = nodes
         
-        
     def receive_bids(self, client):
         while(client.get_node_message() == ""):
             time.sleep(0.1)
@@ -26,15 +25,15 @@ class BroadcastNode (FastNode):
 
             thread_client = self.create_new_connection(connection, connected_node_id, client_address[0], client_address[1])
             thread_client.start()
+            
+            #For receiving bids
+            receive_bids_thread = threading.Thread(target=self.receive_bids, args=(thread_client, ))
+            receive_bids_thread.start()
 
             self.nodes_inbound.append(thread_client)
             self.inbound_node_connected(thread_client)
             
             self.clients.append(node_info)
-            
-            #For receiving bids
-            receive_bids_thread = threading.Thread(target=self.receive_bids, args=(thread_client, ))
-            receive_bids_thread.start()
 
             if len(self.clients) == len(self.nodes):
                 break

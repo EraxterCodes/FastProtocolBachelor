@@ -10,8 +10,10 @@ if selfinput:
     
     Num_Client = input("How many clients?: ")
     for i in range(int(Num_Client)):
-        Bid_Input = input(f"Bid for party: {str(i)}: ") 
-        Client_Node_list.append(ClientNode("127.0.0.1", 8000 + (i*2), int(Bid_Input), i+2))
+        id = i+2
+        
+        Bid_Input = input(f"Bid for party: ID {str(id)}: ") 
+        Client_Node_list.append(ClientNode("127.0.0.1", 8000 + (i*2), int(Bid_Input), id))
 
 else :
     Node1 = ClientNode("127.0.0.1",8003,69,2)
@@ -25,6 +27,6 @@ broadcastNode.start()
 
 for n in Client_Node_list:
     n.start()
-    time.sleep(0.1)
+    time.sleep(0.01)
 
 
