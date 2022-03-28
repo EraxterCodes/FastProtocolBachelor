@@ -1,8 +1,8 @@
 #From https://github.com/lorenzogentile404/pedersen-commitment
 
-from modules.Crypto.Util import number
-from modules.Crypto.Random import random
-from modules.Crypto import Random
+from Crypto.Util import number
+from Crypto.Random import random
+from Crypto import Random
 import sys
 
 class Pedersen:
