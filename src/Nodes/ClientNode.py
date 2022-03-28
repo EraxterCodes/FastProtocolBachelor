@@ -18,7 +18,6 @@ class ClientNode (FastNode):
         self.sk = SigningKey.generate()
         self.vk = self.sk.verifying_key
         
-        self.bid = random.randint(0,4294967296) # random bid
         self.pd = Pedersen(10)
         self.bit_commitments = []
 
@@ -57,8 +56,8 @@ class ClientNode (FastNode):
         if self.debugPrint:
             print(f"Bit commits for {self.id}: {str(self.bit_commitments)}")
             
-        for i in range(len(self.bit_commitments)):
-            print(f"{str(self.bit_commitments[i][0])} open val {self.pd.v.openBool(self.pd.param, self.bit_commitments[i][0], bits[i], self.bit_commitments[i][1])}")
+        # for i in range(len(self.bit_commitments)):
+        #     print(f"{str(self.bit_commitments[i][0])} open val {self.pd.v.openBool(self.pd.param, self.bit_commitments[i][0], bits[i], self.bit_commitments[i][1])}")
     
     def connect_to_clients(self, node_info):
         try:
@@ -174,6 +173,25 @@ class ClientNode (FastNode):
             
         print(f"{self.id} finished signature sharing")
 
+    def setup(self):
+        # change (secret)
+        change = 0.1  
+        # fee: work
+        work = 0.1
+        # build secret deposit 
+        param = [self.bid, change, work, self.id]
+        g = None # receive from smart contract, everyone gets same g + h
+        h = None # receive from smart contract, everyone gets same g + h 
+
+        # (a) send to smart contract (BroadcastNode)
+        self.send_to_node(self.broadcast_node, "msg")
+        # (b) compute bit commitments
+        # (c) build UTXO for confidential transaction - skippable
+        # (d) compute r_out, we think it's for range proof - skippable
+        # (e) 
+        
+        
+        pass 
         
         
     def run(self):
@@ -185,3 +203,5 @@ class ClientNode (FastNode):
         self.signature_share_init()            
         
         self.bid_decomposition()
+        
+        # print(f"Nodes for {self.id}: {str(self.all_nodes)}")
