@@ -35,7 +35,6 @@ class BroadcastNode (FastNode):
             #For receiving bids
             receive_bids_thread = threading.Thread(target=self.receive_bids, args=(thread_client, ))
             receive_bids_thread.start()
-            print("Made it")
 
             if len(self.clients) == len(self.nodes):
                 break

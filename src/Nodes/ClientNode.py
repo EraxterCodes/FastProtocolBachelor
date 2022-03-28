@@ -126,12 +126,11 @@ class ClientNode (FastNode):
         h = None # receive from smart contract, everyone gets same g + h 
 
         # (a) send to smart contract (BroadcastNode)
-        self.send_to_node(self.broadcast_node, "msg")
+        self.send_to_nodes(str(self.bid), exclude=[self.clients])
         # (b) compute bit commitments
         # (c) build UTXO for confidential transaction - skippable
         # (d) compute r_out, we think it's for range proof - skippable
         # (e) 
-        
         
         pass 
         
@@ -146,5 +145,4 @@ class ClientNode (FastNode):
         
         # print(f"Nodes for {self.id}: {str(self.all_nodes)}")
         
-        time.sleep(2)
-        self.send_to_nodes(str(self.bid))
+        self.setup()
