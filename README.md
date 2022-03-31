@@ -27,6 +27,10 @@ The best Bachelor since EMBA's Bachelor
     - [x] Add bids
     - [ ] Use bids
 
+## Security Concerns:
+Currently it is possible to listen on others connection like showcased below: p1 is somehow getting p2's bid
+![Listen-on-others-connections](/img/Listen-on-others-connection.png)
+
 
 ## Implementation steps
 

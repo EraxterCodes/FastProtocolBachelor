@@ -105,6 +105,15 @@ class ClientNode (FastNode):
     def get_conflicting_messages(self):
         pass
          
+    def get_message(self, node):
+        while node.get_node_message() == "":
+            time.sleep(0.1)
+
+        msg = node.get_node_message()
+        node.reset_node_message()
+
+        return msg
+
     def get_all_messages(self, num_messages):
         while len(self.messages) != num_messages:
             for node in self.all_nodes:
@@ -116,6 +125,7 @@ class ClientNode (FastNode):
                 time.sleep(0.1)
                
     def setup(self):
+
         # change (secret)
         change = 0.1  
         # fee: work
@@ -132,7 +142,10 @@ class ClientNode (FastNode):
         # (d) compute r_out, we think it's for range proof - skippable
         # (e) 
         
-        pass 
+        
+        msg = self.get_message(self.all_nodes[0])
+        print(self.all_nodes[0])
+        print(f"THIS IS THE MSG {msg}     {self.id}")
         
         
     def run(self):
