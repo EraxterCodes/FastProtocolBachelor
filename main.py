@@ -16,13 +16,13 @@ if selfinput:
         Client_Node_list.append(ClientNode("127.0.0.1", 8000 + (i*2), int(Bid_Input), id))
 
 else :
-    Node1 = ClientNode("127.0.0.1",8003,69,2)
-    Node2 = ClientNode("127.0.0.1",8005,420,3)
-    Node3 = ClientNode("127.0.0.1",8007,666,4)
+    Node1 = ClientNode("127.0.0.1",8003,69,1)
+    Node2 = ClientNode("127.0.0.1",8005,420,2)
+    Node3 = ClientNode("127.0.0.1",8007,666,3)
     Client_Node_list = [Node1, Node2, Node3]
 
 
-broadcastNode = BroadcastNode("127.0.0.1", 8001, 1, Client_Node_list)
+broadcastNode = BroadcastNode("127.0.0.1", 8001, "Broadcast", Client_Node_list)
 broadcastNode.start()
 
 for n in Client_Node_list:
