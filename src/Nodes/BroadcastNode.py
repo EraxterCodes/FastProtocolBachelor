@@ -21,6 +21,7 @@ class BroadcastNode (FastNode):
             time.sleep(0.1)
         
         self.received_bids.sort(key=lambda y: y[0]) # sort received bids by client id
+        
         param = self.received_bids[int(client.id) - 1]
         sid = client.id
         g = self.pd.param[1]

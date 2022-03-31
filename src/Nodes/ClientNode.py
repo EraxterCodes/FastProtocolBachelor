@@ -123,29 +123,72 @@ class ClientNode (FastNode):
                     self.messages.append(msg)
                     node.reset_node_message()
                 time.sleep(0.1)
-               
-    def setup(self):
 
+    def get_broadcast_node(self):
+        for x in self.all_nodes:
+            if "Broadcast" in str(x):
+                return x
+
+    #For refactoring, each step below:
+    # (a) send to smart contract (BroadcastNode)
+    def a(self):
+        pass
+
+    # (b) compute bit commitments
+    def b(self):
+        pass
+
+    # (c) build UTXO for confidential transaction - skippable
+    def c(self):
+        pass
+
+    # (d) compute r_out, we think it's for range proof - skippable
+    def d(self):
+        pass
+    
+    # (e) Uses stuff from C - SKIP
+    def e(self):
+        pass
+
+    def f(self):
+        pass
+
+    def g(self):
+        pass
+
+    def h(self):
+        pass
+
+    def i(self):
+        pass
+
+
+    def setup(self):
+        #Broadcast node
+        bc_node = self.get_broadcast_node()
         # change (secret)
         change = 0.1  
         # fee: work
         work = 0.1
         # build secret deposit 
-        param = [self.bid, change, work, self.id]
+        param = F"{self.bid};{change};{work}"
+        [self.bid, change, work, self.id]
         g = None # receive from smart contract, everyone gets same g + h
         h = None # receive from smart contract, everyone gets same g + h 
 
+
         # (a) send to smart contract (BroadcastNode)
-        self.send_to_nodes(str(self.bid), exclude=[self.clients])
+        self.send_to_nodes(param, exclude=[self.clients])
         # (b) compute bit commitments
+        self.bid_decomposition()
         # (c) build UTXO for confidential transaction - skippable
         # (d) compute r_out, we think it's for range proof - skippable
-        # (e) 
+        # (e) Uses stuff from C - SKIP
+        # (f)
         
-        
-        msg = self.get_message(self.all_nodes[0])
-        print(self.all_nodes[0])
-        print(f"THIS IS THE MSG {msg}     {self.id}")
+        msg = self.get_message(bc_node)
+
+        print(f"THIS IS THE MSG {msg}")
         
         
     def run(self):
@@ -153,8 +196,6 @@ class ClientNode (FastNode):
         accept_connections_thread.start()
         
         self.connect_to_nodes()        
-        
-        self.bid_decomposition()
         
         # print(f"Nodes for {self.id}: {str(self.all_nodes)}")
         

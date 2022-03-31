@@ -68,3 +68,6 @@ The implementation uses the python library ECDSA (Elliptic Curve Digital Signatu
 
 ### Bid decomposition
 ![setup-phase bid decomposition](/img/setup-phase.png)
+
+### Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)
+![Publicly Verifiable Secret Sharing](/img/public_verifiable_secret_sharing.png)
