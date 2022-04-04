@@ -187,24 +187,38 @@ class ClientNode (FastNode):
         q = int(self.contractparams[6])
         g = int(self.contractparams[4])
 
+        self.get_all_messages(len(self.clients))
+        time.sleep(0.1)
+
         for j in range(len(self.bit_commitments)): # Rounds
             # print("\nRound " + str(j))
             
-            # compute the random value x and broadcast that to all other nod    es
+            # compute the random value x and broadcast that to all other nodes
             # get random value from the field. 
             # Random elements of Z_q used for commitments
             x = random.randint(1,q - 1)
-            bigx = g**x
-            self.send_to_nodes(str(bigx),exclude=[self.get_broadcast_node()])
 
-            Bigx_r_array = self.get_all_messages_arr(len(self.clients))
-            print(str(Bigx_r_array) + "sadsapd")
-            x_r_array = []
-            #for x in Bigx_r_array:
-               # x_r_array.append(math.log(int(x))/math.log(g))
-            #time.sleep(5)
-            #print(x_r_array)
+            self.send_to_nodes(str(x), exclude=[self.get_broadcast_node()])
 
+            time.sleep(0.05)
+
+            x_r_array = self.get_all_messages_arr(len(self.clients))
+
+            time.sleep(0.05)
+ 
+            final_x = 1
+
+            for x in x_r_array:
+                # print("in xr array")
+                # new_x = int(x)
+                # print(new_x)
+                # final_x = final_x * (-new_x)
+                pass
+
+            # y = g**final_x
+            print(f"{self.id}: {final_x} round: {j}")
+
+            # time.sleep(0.5)
                 #print(f"This is messages for p{self.id} {len(messages)}")
                 #Time to compute either yi or rhat
 
