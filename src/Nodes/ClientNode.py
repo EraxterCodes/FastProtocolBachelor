@@ -202,7 +202,7 @@ class ClientNode (FastNode):
             # Random elements of Z_q used for commitments
             x = random.randint(1,q - 1)
 
-            self.send_to_nodes(str(x),exclude=[self.get_broadcast_node()])
+            self.send_to_nodes(str(x), exclude=[self.get_broadcast_node()])
 
             time.sleep(0.1)
 
