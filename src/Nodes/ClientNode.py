@@ -1,5 +1,3 @@
-from cmath import log
-from email import message
 from Infrastructure.Nodes.FastNode import FastNode
 from Infrastructure.PedersenCommit.Pedersen import Pedersen
 
@@ -119,6 +117,8 @@ class ClientNode (FastNode):
         msg = node.get_node_message()
         node.reset_node_message()
 
+        time.sleep(0.1)
+
         return msg
 
     def get_all_messages(self, num_messages):
@@ -129,9 +129,9 @@ class ClientNode (FastNode):
                 if msg != "":
                     self.messages.append(msg)
                     node.reset_node_message()
-                time.sleep(0.1)
+                time.sleep(0.05)
 
-    def get_all_messages_arr(self, num_messages):
+    def get_all_messages_arr(self, num_messages): # we get stuck here when there is no msg
         messages = []
 
         while len(messages) != num_messages:
@@ -140,9 +140,13 @@ class ClientNode (FastNode):
                 if msg != "":
                     messages.append(msg)
                     node.reset_node_message()
-                time.sleep(0.1)
+                time.sleep(0.05)
         
         return messages
+
+    def reset_all_node_msgs(self):
+        for node in self.all_nodes:
+            node.reset_node_message()
 
     def get_broadcast_node(self):
         for x in self.all_nodes:
@@ -187,29 +191,43 @@ class ClientNode (FastNode):
         q = int(self.contractparams[6])
         g = int(self.contractparams[4])
 
+        self.get_all_messages(len(self.clients))
+        time.sleep(0.1)
+
         for j in range(len(self.bit_commitments)): # Rounds
             # print("\nRound " + str(j))
             
-            # compute the random value x and broadcast that to all other nod    es
+            # compute the random value x and broadcast that to all other nodes
             # get random value from the field. 
             # Random elements of Z_q used for commitments
             x = random.randint(1,q - 1)
-            bigx = g**x
-            self.send_to_nodes(str(bigx),exclude=[self.get_broadcast_node()])
 
-            Bigx_r_array = self.get_all_messages_arr(len(self.clients))
-            print(str(Bigx_r_array) + "sadsapd")
-            x_r_array = []
-            #for x in Bigx_r_array:
-               # x_r_array.append(math.log(int(x))/math.log(g))
-            #time.sleep(5)
-            #print(x_r_array)
+            self.send_to_nodes(str(x),exclude=[self.get_broadcast_node()])
 
+            time.sleep(0.1)
+
+            x_r_array = self.get_all_messages_arr(len(self.clients))
+
+            time.sleep(0.1)
+ 
+            
+            final_x = 1
+
+            for x in x_r_array:
+                print("in xr array")
+                new_x = int(x)
+                final_x = final_x * (-new_x)
+
+            y = g**final_x
+            print(f"{self.id}: {y} round: {j}")
+
+            # time.sleep(0.5)
                 #print(f"This is messages for p{self.id} {len(messages)}")
                 #Time to compute either yi or rhat
 
                 #Y_i:
                 #Y = Fraction(self.prod(xk) , self.prod(xk))
+            
         
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
