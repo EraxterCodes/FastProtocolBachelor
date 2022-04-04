@@ -1,4 +1,5 @@
-from pydoc import cli
+from cmath import log
+from email import message
 from Infrastructure.Nodes.FastNode import FastNode
 from Infrastructure.PedersenCommit.Pedersen import Pedersen
 
@@ -6,6 +7,9 @@ import threading
 import time
 from ecdsa import SigningKey, SECP256k1 #Bitcoin curve
 import random 
+import math
+from fractions import Fraction
+import functools
 
 class ClientNode (FastNode): 
     def __init__(self, host, port, bid, id=None, callback=None, max_connections=0):
@@ -23,6 +27,8 @@ class ClientNode (FastNode):
         
         self.broadcast_node = None
         self.vetoarray= []
+
+        self.contractparams = None
 
             
     def get_trimmed_info(self, node_info=str):
@@ -125,6 +131,19 @@ class ClientNode (FastNode):
                     node.reset_node_message()
                 time.sleep(0.1)
 
+    def get_all_messages_arr(self, num_messages):
+        messages = []
+
+        while len(messages) != num_messages:
+            for node in self.all_nodes:
+                msg = node.get_node_message()
+                if msg != "":
+                    messages.append(msg)
+                    node.reset_node_message()
+                time.sleep(0.1)
+        
+        return messages
+
     def get_broadcast_node(self):
         for x in self.all_nodes:
             if "Broadcast" in str(x):
@@ -157,16 +176,40 @@ class ClientNode (FastNode):
         # (i) ? 
         # secret_key = 
         
-        msg = self.get_message(bc_node)
+        self.contractparams = self.get_message(bc_node).split(";")
 
-        print(f"THIS IS THE MSG {msg}")
+        print(f"THIS IS THE MSG {self.contractparams}")
+
+    def prod(vec):
+        return functools.reduce(lambda a, b: a*b, vec, 1)
 
     def veto(self):
+        q = int(self.contractparams[6])
+        g = int(self.contractparams[4])
+
         for j in range(len(self.bit_commitments)): # Rounds
-            print("\nRound " + str(j))
-            for i in range(len(self.clients)): # number of parties
-                # each parz
-                pass
+            # print("\nRound " + str(j))
+            
+            # compute the random value x and broadcast that to all other nod    es
+            # get random value from the field. 
+            # Random elements of Z_q used for commitments
+            x = random.randint(1,q - 1)
+            bigx = g**x
+            self.send_to_nodes(str(bigx),exclude=[self.get_broadcast_node()])
+
+            Bigx_r_array = self.get_all_messages_arr(len(self.clients))
+            print(str(Bigx_r_array) + "sadsapd")
+            x_r_array = []
+            #for x in Bigx_r_array:
+               # x_r_array.append(math.log(int(x))/math.log(g))
+            #time.sleep(5)
+            #print(x_r_array)
+
+                #print(f"This is messages for p{self.id} {len(messages)}")
+                #Time to compute either yi or rhat
+
+                #Y_i:
+                #Y = Fraction(self.prod(xk) , self.prod(xk))
         
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)

@@ -26,9 +26,9 @@ class BroadcastNode (FastNode):
         sid = client.id
         g = self.pd.param[1]
         h = self.pd.param[2]
-        
+        q = self.pd.param[0]
         pk_c_array = [] # We currently dont implement comittee sooo
-        composed_msg = f"{param};{sid};{g};{h};{pk_c_array}"
+        composed_msg = f"{param};{sid};{g};{h};{q};{pk_c_array}"
 
         self.send_to_node(client, composed_msg)
 
