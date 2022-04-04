@@ -71,3 +71,6 @@ The implementation uses the python library ECDSA (Elliptic Curve Digital Signatu
 
 ### Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)
 ![Publicly Verifiable Secret Sharing](/img/public_verifiable_secret_sharing.png)
+
+### VetoPhase
+![Veto](/img/VetoPhase.png)

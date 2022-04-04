@@ -22,6 +22,7 @@ class ClientNode (FastNode):
         self.bit_commitments = []
         
         self.broadcast_node = None
+        self.vetoarray= []
 
             
     def get_trimmed_info(self, node_info=str):
@@ -129,40 +130,6 @@ class ClientNode (FastNode):
             if "Broadcast" in str(x):
                 return x
 
-    #For refactoring, each step below:
-    # (a) send to smart contract (BroadcastNode)
-    def a(self):
-        pass
-
-    # (b) compute bit commitments
-    def b(self):
-        pass
-
-    # (c) build UTXO for confidential transaction - skippable
-    def c(self):
-        pass
-
-    # (d) compute r_out, we think it's for range proof - skippable
-    def d(self):
-        pass
-    
-    # (e) Uses stuff from C - SKIP
-    def e(self):
-        pass
-
-    def f(self):
-        pass
-
-    def g(self):
-        pass
-
-    def h(self):
-        pass
-
-    def i(self):
-        pass
-
-
     def setup(self):
         #Broadcast node
         bc_node = self.get_broadcast_node()
@@ -184,12 +151,22 @@ class ClientNode (FastNode):
         # (c) build UTXO for confidential transaction - skippable
         # (d) compute r_out, we think it's for range proof - skippable
         # (e) Uses stuff from C - SKIP
-        # (f)
+        # (f) Compute shares of g^bi and h^rbi, Use distribution from PVSS protocol with committee - skippable?
+        # (g) ?
+        # (h) ? 
+        # (i) ? 
+        # secret_key = 
         
         msg = self.get_message(bc_node)
 
         print(f"THIS IS THE MSG {msg}")
-        
+
+    def veto(self):
+        for j in range(len(self.bit_commitments)): # Rounds
+            print("\nRound " + str(j))
+            for i in range(len(self.clients)): # number of parties
+                # each parz
+                pass
         
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
@@ -200,3 +177,4 @@ class ClientNode (FastNode):
         # print(f"Nodes for {self.id}: {str(self.all_nodes)}")
         
         self.setup()
+        self.veto()
