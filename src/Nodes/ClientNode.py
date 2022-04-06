@@ -24,6 +24,7 @@ class ClientNode (FastNode):
         
         self.pd = Pedersen(10)
         self.bit_commitments = []
+        self.bits = []
         
         self.broadcast_node = None
         self.vetoarray= []
@@ -59,7 +60,9 @@ class ClientNode (FastNode):
         for i in range(numtoprepend):
             bits.insert(0, 0)
         
+
         for bit in bits:
+            self.bits.append(bit)
             self.bit_commitments.append(self.pd.p.commit(self.pd.param, bit))
         
         if self.debugPrint:
@@ -190,8 +193,20 @@ class ClientNode (FastNode):
         self.get_all_messages(len(self.clients))
         time.sleep(0.1)
 
+        
+        veto = None
+        out_of_running = False 
+        last_v_ir = None
+
         for j in range(len(self.bit_commitments)): # Rounds
-            # print("\nRound " + str(j))
+            print(j)
+            v_ir_array = []
+
+            if j != 0:
+                print("about to get v_irs")
+                v_ir_array = self.get_all_messages_arr(len(self.clients))
+                v_ir_array.append(last_v_ir)
+                print(v_ir_array)
             
             # compute the random value x and broadcast that to all other nodes
             # get random value from the field. 
@@ -209,20 +224,53 @@ class ClientNode (FastNode):
             for x in x_r_array:
                 e = e*(-int(x))
 
-            veto = None
-            # Compute V_ir 
-            if (self.bits[j] == 0):
-                # Case for no veto:
-                # Y = g^(negative of other x's)
-                veto = g ** e
-            else:
-                # Case for veto:
-                r_hat = random.randint(1,q - 1)
-                veto = v ** r_hat
+            if self.hasAnyoneVetoed(v_ir_array) == False: # before first veto 
+                # Compute V_ir 
+                if (self.bits[j] == 0):
+                    print("bit is 0")
+                    # Case for no veto:
+                    # Y = g^(negative of other x's)
+                    print(f"g: {g}, e: {e}")
+                    veto = g ** e
+                    print(f"veto calc done: {veto}")
+                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                    print("veto sent")
+                else:
+                    # Case for veto:
+                    r_hat = random.randint(1,q - 1)
+                    veto = g ** r_hat
+                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                # Generate NIZK BV (before veto) for veto decision proof.
+            else: # after first veto 
+                if self.bits[j] == 0:
+                    veto = g ** e
+                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                     # should be out of running if and only if some other party has vetoed
+                elif out_of_running :
+                    veto = g ** e
+                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                else:
+                    #calc veto
+                    pass
+                
+          # send v_ir to all others
+          
+    def hasAnyoneVetoed(self, v_ir_array):
+        # we must know all others v_ir
 
-            # Generate NIZK BV (before veto) for veto decision proof.
-            
+        if len(v_ir_array) == 0: # First round case
+            return False
         
+        V = 1
+        for v_ir in v_ir_array:
+            V = V*(int(v_ir)) # V = product of all v_ir's
+
+        if V == 1: 
+            return False
+        else: 
+            return True
+        
+            
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
         accept_connections_thread.start()
