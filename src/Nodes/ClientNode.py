@@ -203,27 +203,25 @@ class ClientNode (FastNode):
             time.sleep(0.05)
 
             x_r_array = self.get_all_messages_arr(len(self.clients))
+            new_x_r_array = []
 
-            time.sleep(0.05)
- 
-            final_x = 1
-
+            e = 1
             for x in x_r_array:
-                # print("in xr array")
-                # new_x = int(x)
-                # print(new_x)
-                # final_x = final_x * (-new_x)
-                pass
+                e = e*(-int(x))
 
-            # y = g**final_x
-            print(f"{self.id}: {final_x} round: {j}")
+            veto = None
+            # Compute V_ir 
+            if (self.bits[j] == 0):
+                # Case for no veto:
+                # Y = g^(negative of other x's)
+                veto = g ** e
+            else:
+                # Case for veto:
+                r_hat = random.randint(1,q - 1)
+                veto = v ** r_hat
 
-            # time.sleep(0.5)
-                #print(f"This is messages for p{self.id} {len(messages)}")
-                #Time to compute either yi or rhat
-
-                #Y_i:
-                #Y = Fraction(self.prod(xk) , self.prod(xk))
+            # Generate NIZK BV (before veto) for veto decision proof.
+            
         
     def run(self):
         accept_connections_thread = threading.Thread(target=self.accept_connections)
