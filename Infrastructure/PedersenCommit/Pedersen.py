@@ -1,74 +1,62 @@
-#From https://github.com/lorenzogentile404/pedersen-commitment
-# uses pycryptodome, NOT pycrypto 
-from Crypto.Util import number
+# uses pycryptodome, NOT pycrypto
 from Crypto.Random import random
-from Crypto import Random
-import sys
+from ecpy.curves import Curve
+
+from modules.Crypto.Util import number
+
 
 class Pedersen:
-    def __init__(self, security):
-        self.v = verifier()
-        self.p = prover()
-        
-        self.security = security
-        
-        self.param = self.v.setup(self.security)
+    def __init__(self):
+        self.cp = None
+        self.param = self.setup()
 
-class verifier:
-    def setup(self, security):
-        # Pick p, q primes such that p | q - 1, that is equvalent to
-        # say that q = r*p + 1 for some r
-        p = number.getPrime(security, Random.new().read)
-        # print("p = ",p)
-        
-        r = 1
-        while True:
-            q = r*p + 1
-            if number.isPrime(q):
-                # print("q = ",q)
-                break
-            r += 1
-        
-        # Compute elements of G = {i^r mod q | i in Z_q*}
-        G = [] 
-        for i in range(1, q): # Z_q*
-            G.append(i**r % q)
+    def setup(self):
+        self.cp = Curve.get_curve("secp256k1")
 
-        G = list(set(G))
-        # print("Order of G = {i^r mod q | i in Z_q*} is " + str(len(G)) + " (must be equal to p).")
-        
-        # Since the order of G is prime, any element of G except 1 is a generator
-        g = random.choice(list(filter(lambda e: e != 1, G)))
-        # print("g = ",g)
-                
-        h = random.choice(list(filter(lambda e: e != 1 and e != g, G)))
-        # print("h = ",h)
-        
-        # g and h are elements of G such that nobody knows math.log(h, g) (log of h base g)
-           
-        return q,g,h
+        # 2^256
+        size = 2**self.cp.size
 
-    def openBool(self, param, c, m, *r):
-        q, g, h = param
+        # Order of the group to sample Z_p from
+        p = self.cp.order
 
-        rSum = 0
-        for rEl in r:
-            rSum += rEl
-       
-        return c == (pow(g,m,q) * pow(h,rSum,q)) % q  
+        # Generator of group
+        g = self.cp.generator
 
-    def add(self, param, *c):
-        q = param[0]
-        
-        cSum = 1
-        for cEl in c:
-            cSum *= cEl
-        return cSum % q
-        
-class prover: 
-    def commit(self, param, m):
-        q, g, h = param
-        
-        r = number.getRandomRange(1, q-1)
-        c = (pow(g,m,q) * pow(h,r,q)) % q
+        # Random scalar from G (Blinding factor)
+        r = random.randint(1, size)
+        # Random generator value
+        h = g * r
+
+        return p, g, h
+
+    # r is number.getRandomRange(1, p - 1)
+    def commit(self, m):
+        p, g, h = self.param
+
+        # Randomness of Z_p
+        r = number.getRandomRange(1, p-1)
+
+        # Create to scalar points on the curve
+        mg = self.cp.mul_point(m, g)
+        rh = self.cp.mul_point(r, h)
+
+        # Commitment which is the two points on the curve
+        c = self.cp.add_point(mg, rh)
+
         return c, r
+
+    def open(self, m, c, r):
+        _, g, h = self.param
+
+        # Compute the opening of the commitment
+        mg = self.cp.mul_point(m, g)
+        rh = self.cp.mul_point(r, h)
+
+        # Open the commitment
+        o = self.cp.add_point(mg, rh)
+
+        # Check if the commitment is valid
+        if o == c:
+            return True
+        else:
+            return False
