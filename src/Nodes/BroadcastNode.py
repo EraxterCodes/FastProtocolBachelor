@@ -10,6 +10,7 @@ class BroadcastNode (FastNode):
             host, port, id, callback, max_connections)
         self.nodes = nodes
         self.received_bids = []
+
         self.pd = Pedersen()
 
     def receive_bids(self, client):
@@ -29,9 +30,9 @@ class BroadcastNode (FastNode):
         sid = client.id
         g = self.pd.param[1]
         h = self.pd.param[2]
-        q = self.pd.param[0]
+        p = self.pd.param[0]
         pk_c_array = []  # We currently dont implement comittee sooo
-        composed_msg = f"{param};{sid};{g};{h};{q};{pk_c_array}"
+        composed_msg = f"{param};{sid};{g};{h};{p};{pk_c_array}"
 
         self.send_to_node(client, composed_msg)
 

@@ -14,6 +14,8 @@ class ClientNode (FastNode):
         super(ClientNode, self).__init__(
             host, port, id, callback, max_connections)
 
+        self.bc_node = None  # gets set in setup
+
         self.debugPrint = False
         self.easy_signatures = True
         self.bid = bid
@@ -57,7 +59,7 @@ class ClientNode (FastNode):
 
         for bit in bits:
             self.bits.append(bit)
-            self.bit_commitments.append(self.pd.p.commit(self.pd.param, bit))
+            self.bit_commitments.append(self.pd.commit(bit))
 
         if self.debugPrint:
             print(f"Bit commits for {self.id}: {str(self.bit_commitments)}")
@@ -149,23 +151,23 @@ class ClientNode (FastNode):
                 return x
 
     def setup(self):
-        # Broadcast node
-        bc_node = self.get_broadcast_node()
+        self.bc_node = self.get_broadcast_node()
+
         # change (secret)
         change = 0.1
         # fee: work
         work = 0.1
         # build secret deposit
-        param = F"{self.bid};{change};{work}"
+        bid_param = F"{self.bid};{change};{work}"
         [self.bid, change, work, self.id]
         g = None  # receive from smart contract, everyone gets same g + h
         h = None  # receive from smart contract, everyone gets same g + h
 
         # (a) send to smart contract (BroadcastNode)
-        self.send_to_nodes(param, exclude=[self.clients])
+        self.send_to_nodes(bid_param, exclude=[self.clients])
         # (b) compute bit commitments
 
-        # self.bid_decomposition()
+        self.bid_decomposition()
 
         # (c) build UTXO for confidential transaction - skippable
         # (d) compute r_out, we think it's for range proof - skippable
@@ -176,7 +178,7 @@ class ClientNode (FastNode):
         # (i) ?
         # secret_key =
 
-        self.contractparams = self.get_message(bc_node).split(";")
+        self.contractparams = self.get_message(self.bc_node).split(";")
 
         #print(f"THIS IS THE MSG {self.contractparams}")
 
@@ -273,12 +275,6 @@ class ClientNode (FastNode):
 
         self.connect_to_nodes()
 
-        # print(f"Nodes for {self.id}: {str(self.all_nodes)}")
+        self.setup()
 
-        m = 666
-
-        c, r = self.pd.commit(m)
-        print(self.pd.open(665, c, r))
-
-        # self.setup()
         # self.veto()
