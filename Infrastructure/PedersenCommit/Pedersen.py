@@ -7,12 +7,11 @@ from modules.Crypto.Util import number
 
 class Pedersen:
     def __init__(self):
-        self.cp = None
+        self.cp = Curve.get_curve("secp256k1")
+
         self.param = self.setup()
 
     def setup(self):
-        self.cp = Curve.get_curve("secp256k1")
-
         # 2^256
         size = 2**self.cp.size
 
@@ -29,12 +28,8 @@ class Pedersen:
 
         return p, g, h
 
-    # r is number.getRandomRange(1, p - 1)
-    def commit(self, m):
-        p, g, h = self.param
-
-        # Randomness of Z_p
-        r = number.getRandomRange(1, p-1)
+    def create_commit(self, m, r):
+        _, g, h = self.param
 
         # Create to scalar points on the curve
         mg = self.cp.mul_point(m, g)
@@ -45,15 +40,19 @@ class Pedersen:
 
         return c, r
 
+    # r is number.getRandomRange(1, p - 1)
+    def commit(self, m):
+        p, g, h = self.param
+
+        # Randomness of Z_p
+        r = number.getRandomRange(1, p-1)
+
+        c, _ = self.create_commit(m, r)
+
+        return c, r
+
     def open(self, m, c, r):
-        _, g, h = self.param
-
-        # Compute the opening of the commitment
-        mg = self.cp.mul_point(m, g)
-        rh = self.cp.mul_point(r, h)
-
-        # Open the commitment
-        o = self.cp.add_point(mg, rh)
+        o, _ = self.create_commit(m, r)
 
         # Check if the commitment is valid
         if o == c:
