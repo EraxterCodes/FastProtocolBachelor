@@ -118,14 +118,13 @@ class ClientNode (FastNode):
     def get_message(self, node):
         while node.get_node_message() == "":
             time.sleep(0.1)
-
         msg = node.get_node_message()
         node.reset_node_message()
 
         return msg
 
     def get_all_messages(self, num_messages):
-        while len(self.messages) != num_messages:
+        while (len(self.messages) != num_messages):
             for node in self.all_nodes:
                 msg = node.get_node_message()
                 
@@ -135,16 +134,19 @@ class ClientNode (FastNode):
                 time.sleep(0.1)
 
     def get_all_messages_arr(self, num_messages):
+        time.sleep(0.05)
+
         messages = []
 
-        while len(messages) != num_messages:
+        while (len(messages)) != num_messages:    
+           
             for node in self.all_nodes:
                 msg = node.get_node_message()
                 if msg != "":
                     messages.append(msg)
                     node.reset_node_message()
                 time.sleep(0.1)
-        
+                
         return messages
 
     def get_broadcast_node(self):
@@ -181,7 +183,7 @@ class ClientNode (FastNode):
         
         self.contractparams = self.get_message(bc_node).split(";")
 
-        print(f"THIS IS THE MSG {self.contractparams}")
+        #print(f"THIS IS THE MSG {self.contractparams}")
 
     def prod(vec):
         return functools.reduce(lambda a, b: a*b, vec, 1)
@@ -193,17 +195,17 @@ class ClientNode (FastNode):
         self.get_all_messages(len(self.clients))
         time.sleep(0.1)
 
+        bc_node = self.get_broadcast_node()
         
         veto = None
         out_of_running = False 
         last_v_ir = None
 
         for j in range(len(self.bit_commitments)): # Rounds
-            print(j)
+            print(f"{j} for: {self.id}")
             v_ir_array = []
 
             if j != 0:
-                print("about to get v_irs")
                 v_ir_array = self.get_all_messages_arr(len(self.clients))
                 v_ir_array.append(last_v_ir)
                 print(v_ir_array)
@@ -212,16 +214,14 @@ class ClientNode (FastNode):
             # get random value from the field. 
             # Random elements of Z_q used for commitments
             x = random.randint(1,q - 1)
+            self.send_to_nodes(str(x), exclude=[bc_node])
 
-            self.send_to_nodes(str(x), exclude=[self.get_broadcast_node()])
+            x_arr = self.get_all_messages_arr(len(self.clients))
 
-            time.sleep(0.05)
-
-            x_r_array = self.get_all_messages_arr(len(self.clients))
             new_x_r_array = []
 
             e = 1
-            for x in x_r_array:
+            for x in x_arr:
                 e = e*(-int(x))
 
             if self.hasAnyoneVetoed(v_ir_array) == False: # before first veto 
@@ -230,25 +230,28 @@ class ClientNode (FastNode):
                     print("bit is 0")
                     # Case for no veto:
                     # Y = g^(negative of other x's)
-                    print(f"g: {g}, e: {e}")
                     veto = g ** e
-                    print(f"veto calc done: {veto}")
-                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
-                    print("veto sent")
+                    last_v_ir = veto
+                    self.send_to_nodes(str(veto), exclude=[bc_node])
+                    time.sleep(0.05)
                 else:
                     # Case for veto:
+                    print("YO I VETOED G :" + self.id)
                     r_hat = random.randint(1,q - 1)
                     veto = g ** r_hat
-                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                    self.send_to_nodes(str(veto), exclude=[bc_node])
+
                 # Generate NIZK BV (before veto) for veto decision proof.
-            else: # after first veto 
+            else: # after first veto
+                print("Function returned true") 
                 if self.bits[j] == 0:
                     veto = g ** e
-                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                    self.send_to_nodes(str(veto), exclude=[bc_node])
+
                      # should be out of running if and only if some other party has vetoed
                 elif out_of_running :
                     veto = g ** e
-                    self.send_to_nodes(str(veto), exclude=[self.get_broadcast_node()])
+                    self.send_to_nodes(str(veto), exclude=[bc_node])
                 else:
                     #calc veto
                     pass
@@ -265,7 +268,7 @@ class ClientNode (FastNode):
         for v_ir in v_ir_array:
             V = V*(int(v_ir)) # V = product of all v_ir's
 
-        if V == 1: 
+        if V == 1:  
             return False
         else: 
             return True

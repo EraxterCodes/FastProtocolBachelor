@@ -8,7 +8,7 @@ class BroadcastNode (FastNode):
         super(BroadcastNode, self).__init__(host, port, id, callback, max_connections)
         self.nodes = nodes
         self.received_bids = []
-        self.pd = Pedersen(10)
+        self.pd = Pedersen(2)   
         
     def receive_bids(self, client):
         while(client.get_node_message() == ""):
