@@ -12,20 +12,21 @@ The best Bachelor since EMBA's Bachelor
 ## TODO:
 - [x] Get library for P2P
 - [x] P2P network with reliable messaging
-- [x] Find library for Pedersen commitments (pycryptodome)
+- [x] Find library for Pedersen commitments (pycryptodome + ECPy) - Elliptic curve implementation works!
 - [ ] Implement logic for security parameters
 - [ ] For off-chain-messaging, check if messages are equal. Check for conflicting messages
 - [ ] Implement Smart contract logic for pedersen commitments and messaging from client nodes
 - [ ] Add own pki to smart contract instead of generating new sk and vk
 - [ ] Add smart contract integration
-  - [ ] Create smart contract (for now we use broastcastNode acting as SC)
-  - [ ] "Broadcast" clients to all clients
-  - [ ] Fields
-    - [ ] List of bidders
-    - [ ] List of clients connected
+  - [X] Create smart contract (for now we use broastcastNode acting as SC)
+  - [X] "Broadcast" clients to all clients
   - [ ] Methods
     - [x] Add bids
     - [ ] Use bids
+- [ ] Working Veto
+  - [ ]  NIZK in Veto
+- [ ] using Token / UTXO 
+- [ ] GUI
 
 ## Security Concerns:
 Currently it is possible to listen on others connection like showcased below: p1 is somehow getting p2's bid
