@@ -112,13 +112,9 @@ class ClientNode (FastNode):
                     node.reset_node_message()
                 time.sleep(0.05)
 
-<<<<<<< HEAD
-    def get_all_messages_arr(self, num_messages): # we get stuck here when there is no msg
-=======
     def get_all_messages_arr(self, num_messages):
         time.sleep(0.05)
 
->>>>>>> a17d430f190d1090a02b7da17a2a2619d6d4c884
         messages = []
 
         while (len(messages)) != num_messages:
@@ -128,13 +124,8 @@ class ClientNode (FastNode):
                 if msg != "":
                     messages.append(msg)
                     node.reset_node_message()
-<<<<<<< HEAD
-                time.sleep(0.05)
-        
-=======
                 time.sleep(0.1)
 
->>>>>>> a17d430f190d1090a02b7da17a2a2619d6d4c884
         return messages
 
     def reset_all_node_msgs(self):
@@ -211,54 +202,12 @@ class ClientNode (FastNode):
         return Point(x, y, self.pd.cp)
 
     def veto(self):
-<<<<<<< HEAD
-        q = int(self.contractparams[6])
-        g = int(self.contractparams[4])
-=======
         p = int(self.contractparams[6])
         g = self.str_to_point(self.contractparams[4])
->>>>>>> a17d430f190d1090a02b7da17a2a2619d6d4c884
 
         self.get_all_messages(len(self.clients))
         time.sleep(0.1)
 
-<<<<<<< HEAD
-        for j in range(len(self.bit_commitments)): # Rounds
-            # print("\nRound " + str(j))
-            
-            # compute the random value x and broadcast that to all other nodes
-            # get random value from the field. 
-            # Random elements of Z_q used for commitments
-            x = random.randint(1,q - 1)
-
-            self.send_to_nodes(str(x), exclude=[self.get_broadcast_node()])
-
-            time.sleep(0.1)
-
-            x_r_array = self.get_all_messages_arr(len(self.clients))
-
-            time.sleep(0.1)
- 
-            
-            final_x = 1
-
-            for x in x_r_array:
-                print("in xr array")
-                new_x = int(x)
-                final_x = final_x * (-new_x)
-
-            y = g**final_x
-            print(f"{self.id}: {y} round: {j}")
-
-            # time.sleep(0.5)
-                #print(f"This is messages for p{self.id} {len(messages)}")
-                #Time to compute either yi or rhat
-
-                #Y_i:
-                #Y = Fraction(self.prod(xk) , self.prod(xk))
-            
-        
-=======
         veto = None
         out_of_running = False
         last_v_ir = None
@@ -327,7 +276,6 @@ class ClientNode (FastNode):
         else:
             return True
 
->>>>>>> a17d430f190d1090a02b7da17a2a2619d6d4c884
     def run(self):
         accept_connections_thread = threading.Thread(
             target=self.accept_connections)
