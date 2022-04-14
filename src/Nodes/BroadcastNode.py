@@ -41,10 +41,10 @@ class BroadcastNode (FastNode):
             connection, client_address = self.sock.accept()
             print(f"Broadcast connected with {str(client_address)}")
 
-            connected_node_id = connection.recv(4096).decode(self.coding_type)
+            connected_node_id = connection.recv(16384).decode(self.coding_type)
             connection.send(self.id.encode(self.coding_type))
 
-            node_info = connection.recv(4096).decode(self.coding_type)
+            node_info = connection.recv(16384).decode(self.coding_type)
 
             thread_client = self.create_new_connection(
                 connection, connected_node_id, client_address[0], client_address[1])

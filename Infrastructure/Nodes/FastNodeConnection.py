@@ -53,7 +53,7 @@ class FastNodeConnection(NodeConnection):
 
         while not self.terminate_flag.is_set():
             try:
-                chunk = self.sock.recv(4096).decode(self.coding_type)
+                chunk = self.sock.recv(16384).decode(self.coding_type)
 
                 #Has a lot of print statements for debugging
                 if chunk != "":

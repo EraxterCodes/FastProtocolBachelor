@@ -1,10 +1,11 @@
+from calendar import c
 from Infrastructure.Nodes.FastNode import FastNode
 from Infrastructure.PedersenCommit.Pedersen import Pedersen
 
 import threading
 import time
 from ecpy.curves import Point
-from modules.Crypto.Util import number
+from Crypto.Util import number
 
 
 class ClientNode (FastNode):
@@ -24,6 +25,10 @@ class ClientNode (FastNode):
 
         self.broadcast_node = None
         self.vetoarray = []
+
+        self.ext_bigxs = [[]]
+        self.ext_commitments = [[]]
+        self.ext_counter = 0
 
         self.contractparams = None
 
@@ -148,9 +153,32 @@ class ClientNode (FastNode):
             self.bits.append(bit)
             self.bit_commitments.append(self.pd.commit(bit))
 
+    def unpack_commitment_and_x(self, array):
+        counter = 0
+        for client in array: 
+            temparray = client.split(";")
+            temparray = temparray[:-1]
+            afterstrip = []
+            for x in temparray:
+                afterstrip.append(x.strip("()'").replace('(', '').replace(')', '')[1:])
+            afterstripsquared = []
+            for x in afterstrip :
+                afterstripsquared.append(x.split("|"))
+            # print(afterstripsquared[0][1])
+
+            for i in range(len(afterstripsquared)): 
+                print(i)
+                print(afterstripsquared[i][0])
+                self.ext_commitments[counter].append(self.str_to_point2(afterstripsquared[i][0].strip("'"))) # [R][0=commitment | 1=BigX]
+                print(self.str_to_point2(afterstripsquared[i][0]))
+                self.ext_bigxs[counter].append(self.str_to_point2(afterstripsquared[i][1])) # [R][0=commitment | 1=BigX]
+                
+            counter += 1
+        
+        
     def setup(self):
         self.bc_node = self.get_broadcast_node()
-
+        # Stage 1
         # change (secret)
         change = 0.1
         # fee: work
@@ -178,26 +206,51 @@ class ClientNode (FastNode):
         p = int(self.contractparams[6])
         g = self.str_to_point(self.contractparams[4])
 
-        # Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
+        # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
         commit_x_arr = []
         for i in range(len(self.bit_commitments)):
             x = number.getRandomRange(1, p - 1)
 
-            msg = self.bit_commitments[i][0], self.pd.cp.mul_point(x, g)
+            commit_and_big_x = self.bit_commitments[i][0].__str__() + "|" + self.pd.cp.mul_point(x, g).__str__()
 
-            commit_x_arr.append(msg)
+            commit_and_big_x = commit_and_big_x + ";"
+            commit_x_arr.append(commit_and_big_x)
+            
+            
 
-        self.send_to_nodes(str(commit_x_arr), exclude=[self.bc_node])
+        
+        self.send_to_nodes(str(commit_x_arr), exclude=[self.bc_node]) # maybe also send identification of yourself along ? 
+        #print(f"{self.id} has sent {len(commit_x_arr)} commitments and big X's to other nodes of size: {self.utf8len(str(commit_x_arr))} ")
 
-        arr = self.get_all_messages_arr(len(self.clients))
-        print(arr)
-        # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel itaagain
+        commit_and_X_array = self.get_all_messages_arr(len(self.clients))
+        #print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
+        
+        #print(commit_and_X_array)
+        if int(self.id) == 1:
+            self.unpack_commitment_and_x(commit_and_X_array)
+            print(self.ext_commitments)
+            print(self.ext_bigxs)
+        # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
+
+    def utf8len(self,s):
+        return len(s.encode('utf-8'))
 
     def str_to_point(self, s):
         temp_x, temp_y = s.split(",")
 
         x = int(temp_x[1:-1], base=16)
         y = int(temp_y[1:-1], base=16)
+
+        return Point(x, y, self.pd.cp)
+
+
+    def str_to_point2(self, s):
+        temp_x, temp_y = s.split(",")
+        temp_x = temp_x.strip()
+        temp_y = temp_y.strip()
+
+        x = int(temp_x.strip("'"), base=16)
+        y = int(temp_y.strip("'"), base=16)
 
         return Point(x, y, self.pd.cp)
 
