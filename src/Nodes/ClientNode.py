@@ -26,8 +26,8 @@ class ClientNode (FastNode):
         self.broadcast_node = None
         self.vetoarray = []
 
-        self.ext_bigxs = [[]]
-        self.ext_commitments = [[]]
+        self.ext_bigxs = [] 
+        self.ext_commitments = []
         self.ext_counter = 0
 
         self.contractparams = None
@@ -153,10 +153,12 @@ class ClientNode (FastNode):
             self.bits.append(bit)
             self.bit_commitments.append(self.pd.commit(bit))
 
-    def unpack_commitment_and_x(self, array):
-        counter = 0
-        for client in array: 
-            temparray = client.split(";")
+    def unpack_commitment_and_x(self, array):    
+        for j in range(len(array)):
+            self.ext_commitments.append([]) # add room for another client
+            self.ext_bigxs.append([]) # add room for another client
+            temparray = array[j]
+            temparray = temparray.split(";")
             temparray = temparray[:-1]
             afterstrip = []
             for x in temparray:
@@ -165,15 +167,15 @@ class ClientNode (FastNode):
             for x in afterstrip :
                 afterstripsquared.append(x.split("|"))
             # print(afterstripsquared[0][1])
-
+            
             for i in range(len(afterstripsquared)): 
                 print(i)
                 print(afterstripsquared[i][0])
-                self.ext_commitments[counter].append(self.str_to_point2(afterstripsquared[i][0].strip("'"))) # [R][0=commitment | 1=BigX]
+                print("checking ext_commitments[j] after this")
+                self.ext_commitments[j].append(self.str_to_point2(afterstripsquared[i][0].strip("'"))) # [R][0=commitment | 1=BigX]
                 print(self.str_to_point2(afterstripsquared[i][0]))
-                self.ext_bigxs[counter].append(self.str_to_point2(afterstripsquared[i][1])) # [R][0=commitment | 1=BigX]
+                self.ext_bigxs[j].append(self.str_to_point2(afterstripsquared[i][1])) # [R][0=commitment | 1=BigX]
                 
-            counter += 1
         
         
     def setup(self):
