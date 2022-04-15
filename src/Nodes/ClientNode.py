@@ -135,6 +135,7 @@ class ClientNode (FastNode):
     def reset_all_node_msgs(self):
         for node in self.all_nodes:
             node.reset_node_message()
+        time.sleep(0.2)
 
     def get_broadcast_node(self):
         for x in self.all_nodes:
@@ -222,6 +223,8 @@ class ClientNode (FastNode):
             commit_and_big_x = commit_and_big_x + ";"
             commit_x_arr.append(commit_and_big_x)
 
+        self.reset_all_node_msgs()
+
         # maybe also send identification of yourself along ?
         self.send_to_nodes(str(commit_x_arr), exclude=[self.bc_node])
         #print(f"{self.id} has sent {len(commit_x_arr)} commitments and big X's to other nodes of size: {self.utf8len(str(commit_x_arr))} ")
@@ -237,20 +240,21 @@ class ClientNode (FastNode):
 
         n = len(self.clients) + 1
         j = n-1
-        k = len(commit_and_X_array)
-        sumpointsarray = []
-        point = Point(0x0, 0x0, self.pd.cp, check=False)
+        k = 32
 
-        for m in range(j):
-            if point == Point(0x0, 0x0, self.pd.cp, check=False):
-                sumpointsarray.append(point)
-            point = self.ext_bigxs[m][0]
-            for l in range(1, k):
-                point = self.pd.cp.add_point(point, self.ext_bigxs[m][l])
+        right_side_col = []
+        left_side_col = []
 
-        time.sleep(1)
-        print("THIS IS NEW")
-        print(sumpointsarray)
+        for i in range(k):
+            point = Point(0x0, 0x0, self.pd.cp, check=False)
+
+            left_side_col.append([])
+            for h in range(len(self.ext_bigxs)):
+                if(h == 0):
+                    point = self.ext_bigxs[h][0]
+                # print(f"{h}, {i}")
+                point = self.pd.cp.add_point(point, self.ext_bigxs[h][i])
+            left_side_col[i].append(point)
 
     def utf8len(self, s):
         return len(s.encode('utf-8'))
