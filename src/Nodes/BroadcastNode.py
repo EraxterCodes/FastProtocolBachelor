@@ -1,7 +1,7 @@
 import threading
 import time
 from Infrastructure.Nodes.FastNode import FastNode
-from Infrastructure.PedersenCommit.Pedersen import Pedersen
+from src.PedersenCommitment.Pedersen import Pedersen
 
 
 class BroadcastNode (FastNode):
@@ -10,8 +10,6 @@ class BroadcastNode (FastNode):
             host, port, id, callback, max_connections)
         self.nodes = nodes
         self.received_bids = []
-
-        self.pd = Pedersen()
 
     def receive_bids(self, client):
         while(client.get_node_message() == ""):

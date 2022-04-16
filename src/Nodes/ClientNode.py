@@ -1,11 +1,12 @@
-from calendar import c
 from Infrastructure.Nodes.FastNode import FastNode
-from Infrastructure.PedersenCommit.Pedersen import Pedersen
+from src.PedersenCommitment.Pedersen import Pedersen
+from src.utils.string import str_to_point, unpack_commitment_and_x
+from src.utils.node import reset_all_node_msgs, get_broadcast_node, get_trimmed_info, get_message, get_all_messages, get_all_messages_arr
+from ecpy.curves import Point
+from Crypto.Util import number
 
 import threading
 import time
-from ecpy.curves import Point
-from Crypto.Util import number
 
 
 class ClientNode (FastNode):
@@ -19,7 +20,6 @@ class ClientNode (FastNode):
         self.easy_signatures = True
         self.bid = bid
 
-        self.pd = Pedersen()
         self.bit_commitments = []
         self.bits = []
 
@@ -30,27 +30,6 @@ class ClientNode (FastNode):
         self.ext_commitments = []
 
         self.contractparams = None
-
-    def get_trimmed_info(self, node_info=str):
-        try:
-            info_array = []
-
-            remove_braces = node_info.strip("[]")
-            temp_info = remove_braces.split(" ")
-            for info in temp_info:
-                remove_commas = info.strip(',')
-                remove_ticks = remove_commas.strip("'")
-                host, port = remove_ticks.split(":")
-
-                converted_port = int(port)
-
-                info_tuple = (host, converted_port)
-                info_array.append(info_tuple)
-
-            return info_array
-        except:
-            print(f"{self.id} has crashed when splitting node_info")
-            self.sock.close()
 
     def connect_to_clients(self, node_info):
         try:
@@ -77,7 +56,7 @@ class ClientNode (FastNode):
             node_info = self.all_nodes[0].get_node_message()
             self.all_nodes[0].reset_node_message()
 
-            trimmed_info = self.get_trimmed_info(node_info)
+            trimmed_info = get_trimmed_info(self, node_info)
 
             self.broadcast_node = self.all_nodes[0]
 
@@ -93,55 +72,6 @@ class ClientNode (FastNode):
             print(f"{self.id} has crashed when connecting to all nodes")
             self.sock.close()
 
-    def get_conflicting_messages(self):
-        pass
-
-    def get_message(self, node):
-        while node.get_node_message() == "":
-            time.sleep(0.1)
-        msg = node.get_node_message()
-        node.reset_node_message()
-
-        time.sleep(0.1)
-
-        return msg
-
-    def get_all_messages(self, num_messages):
-        while (len(self.messages) != num_messages):
-            for node in self.all_nodes:
-                msg = node.get_node_message()
-
-                if msg != "":
-                    self.messages.append(msg)
-                    node.reset_node_message()
-                time.sleep(0.05)
-
-    def get_all_messages_arr(self, num_messages):
-        time.sleep(0.05)
-
-        messages = []
-
-        while (len(messages)) != num_messages:
-
-            for node in self.all_nodes:
-                msg = node.get_node_message()
-                if msg != "":
-                    messages.append(msg)
-                    node.reset_node_message()
-                time.sleep(0.1)
-
-        return messages
-
-    def reset_all_node_msgs(self):
-        for node in self.all_nodes:
-            node.reset_node_message()
-        time.sleep(0.2)
-
-    def get_broadcast_node(self):
-        for x in self.all_nodes:
-            if "Broadcast" in str(x):
-                return x
-
     def bid_decomposition(self):
         bits = [int(digit) for digit in bin(self.bid)[2:]]
 
@@ -153,37 +83,8 @@ class ClientNode (FastNode):
             self.bits.append(bit)
             self.bit_commitments.append(self.pd.commit(bit))
 
-    def unpack_commitment_and_x(self, array):
-        try:
-            for j in range(len(array)):
-                self.ext_commitments.append([])  # add room for another client
-                self.ext_bigxs.append([])  # add room for another client
-                temparray = array[j]
-                temparray = temparray.split(";")
-                temparray = temparray[:-1]
-                afterstrip = []
-                for x in temparray:
-                    afterstrip.append(x.strip("()'").replace(
-                        '(', '').replace(')', '')[1:])
-                afterstripsquared = []
-                for x in afterstrip:
-                    afterstripsquared.append(x.split("|"))
-                # print(afterstripsquared[0][1])
-
-                for i in range(len(afterstripsquared)):
-                    # print(i)
-                    # print(afterstripsquared[i][0])
-                    # print("checking ext_commitments[j] after this")
-                    self.ext_commitments[j].append(self.str_to_point2(
-                        afterstripsquared[i][0].strip("'")))  # [R][0=commitment | 1=BigX]
-                    # print(self.str_to_point2(afterstripsquared[i][0]))
-                    self.ext_bigxs[j].append(self.str_to_point2(
-                        afterstripsquared[i][1]))  # [R][0=commitment | 1=BigX]
-        except:
-            print(f"{self.id} has failed at unpack_commitment_and_x")
-
     def setup(self):
-        self.bc_node = self.get_broadcast_node()
+        self.bc_node = get_broadcast_node(self.all_nodes)
         # Stage 1
         # change (secret)
         change = 0.1
@@ -208,9 +109,9 @@ class ClientNode (FastNode):
         # (i) ?
         # secret_key =
 
-        self.contractparams = self.get_message(self.bc_node).split(";")
+        self.contractparams = get_message(self.bc_node).split(";")
         p = int(self.contractparams[6])
-        g = self.str_to_point(self.contractparams[4])
+        g = str_to_point(self.contractparams[4], self.pd.cp)
 
         # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
         commit_x_arr = []
@@ -223,17 +124,17 @@ class ClientNode (FastNode):
             commit_and_big_x = commit_and_big_x + ";"
             commit_x_arr.append(commit_and_big_x)
 
-        self.reset_all_node_msgs()
+        reset_all_node_msgs(self.all_nodes)
 
         # maybe also send identification of yourself along ?
         self.send_to_nodes(str(commit_x_arr), exclude=[self.bc_node])
         #print(f"{self.id} has sent {len(commit_x_arr)} commitments and big X's to other nodes of size: {self.utf8len(str(commit_x_arr))} ")
 
-        commit_and_X_array = self.get_all_messages_arr(len(self.clients))
+        commit_and_X_array = get_all_messages_arr(self, len(self.clients))
         #print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
 
         # print(commit_and_X_array)
-        self.unpack_commitment_and_x(commit_and_X_array)
+        unpack_commitment_and_x(self, commit_and_X_array)
 
         # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
         big_y_arr = []
@@ -256,35 +157,11 @@ class ClientNode (FastNode):
                 point = self.pd.cp.add_point(point, self.ext_bigxs[h][i])
             left_side_col[i].append(point)
 
-    def utf8len(self, s):
-        return len(s.encode('utf-8'))
-
-    def str_to_point(self, s):
-        temp_x, temp_y = s.split(",")
-
-        x = int(temp_x[1:-1], base=16)
-        y = int(temp_y[1:-1], base=16)
-
-        return Point(x, y, self.pd.cp)
-
-    def str_to_point2(self, s):
-        try:
-            temp_x, temp_y = s.split(",")
-            temp_x = temp_x.strip()
-            temp_y = temp_y.strip()
-
-            x = int(temp_x.strip("'"), base=16)
-            y = int(temp_y.strip("'"), base=16)
-
-            return Point(x, y, self.pd.cp)
-        except:
-            print(f"{self.id} has failed to convert {s} to a point")
-
     def veto(self):
         p = int(self.contractparams[6])
-        g = self.str_to_point(self.contractparams[4])
+        g = str_to_point(self.contractparams[4], self.pd.cp)
 
-        self.get_all_messages(len(self.clients))
+        get_all_messages(self, len(self.clients))
         time.sleep(0.1)
 
         veto = None
@@ -296,7 +173,7 @@ class ClientNode (FastNode):
             v_ir_array = []
 
             if j != 0:
-                v_ir_array = self.get_all_messages_arr(len(self.clients))
+                v_ir_array = get_all_messages_arr(self, len(self.clients))
                 v_ir_array.append(last_v_ir)
                 print(v_ir_array)
 
@@ -304,7 +181,7 @@ class ClientNode (FastNode):
             # get random value from the field.
             # Random elements of Z_p used for commitments
 
-            str_big_x_arr = self.get_all_messages_arr(len(self.clients))
+            str_big_x_arr = get_all_messages_arr(self, len(self.clients))
 
             # if self.hasAnyoneVetoed(v_ir_array) == False:  # before first veto
             #     # Compute V_ir
@@ -365,3 +242,5 @@ class ClientNode (FastNode):
         self.setup()
 
         self.veto()
+
+        print("finished")

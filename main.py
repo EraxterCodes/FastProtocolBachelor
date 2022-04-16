@@ -6,14 +6,13 @@ selfinput = False
 Client_Node_list = []
 
 if selfinput:
-
     Num_Client = input("How many clients?: ")
     for i in range(int(Num_Client)):
         id = i+1
 
         Bid_Input = input(f"Bid for party: ID {str(id)}: ")
         Client_Node_list.append(ClientNode(
-            "127.0.0.1", 8000 + (i*2), int(Bid_Input), id))
+            "127.0.0.1", 8003 + (i*2), int(Bid_Input), id))
 
 else:
     Node1 = ClientNode("127.0.0.1", 8003, 42, 1)
