@@ -4,28 +4,24 @@ _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
 - [🏃🏽 FASTProtocol](#-fastprotocol)
   - [TODO:](#todo)
+  - [Security Concerns:](#security-concerns)
   - [Implementation steps](#implementation-steps)
     - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
     - [Bid decomposition](#bid-decomposition)
+    - [Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)](#publicly-verifiable-secret-sharing-fig-12-phase-f-of-off-chain-messaging)
+    - [VetoPhase](#vetophase)
 
 
 ## TODO:
 - [x] Get library for P2P
 - [x] P2P network with reliable messaging
-- [x] Find library for Pedersen commitments (pycryptodome + ECPy) - Elliptic curve implementation works!
-- [ ] Implement logic for security parameters
-- [ ] For off-chain-messaging, check if messages are equal. Check for conflicting messages
-- [ ] Implement Smart contract logic for pedersen commitments and messaging from client nodes
-- [ ] Add own pki to smart contract instead of generating new sk and vk
-- [ ] Add smart contract integration
-  - [X] Create smart contract (for now we use broastcastNode acting as SC)
-  - [X] "Broadcast" clients to all clients
-  - [ ] Methods
-    - [x] Add bids
-    - [ ] Use bids
+- [x] Find library for Pedersen commitments (ECPy) - Elliptic curve implementation works!
 - [ ] Working Veto
   - [ ]  NIZK in Veto
-- [ ] using Token / UTXO 
+  - [ ]  Toggle for first or second price auction
+- [ ]  Paper
+- [ ] using ERC20 / UTXO 
+  - [ ] Class for UTXO model
 - [ ] GUI
 
 ## Security Concerns:
@@ -66,7 +62,7 @@ The client connects to the broadcastnode, exchanges ID's and then sends the clie
 When all nodes are connected, the signature exchange is started with n rounds.
 
 The implementation uses the python library ECDSA (Elliptic Curve Digital Signature Algorithm) to create a public and private key (Signing key + Verifying key). The signature sharing algorithm goes through n+1 number of rounds. For each round a message and a signed message is send to the other nodes.
-
+****
 ### Bid decomposition
 ![setup-phase bid decomposition](/img/setup-phase.png)
 

@@ -1,9 +1,10 @@
 from Infrastructure.Nodes.FastNode import FastNode
-from src.PedersenCommitment.Pedersen import Pedersen
 from src.utils.string import str_to_point, unpack_commitment_and_x
 from src.utils.node import reset_all_node_msgs, get_broadcast_node, get_trimmed_info, get_message, get_all_messages, get_all_messages_arr
-from ecpy.curves import Point
+from ecpy.curves import Point, Curve
 from Crypto.Util import number
+from ecpy.keys import ECPublicKey, ECPrivateKey
+from ecpy.ecdsa import ECDSA
 
 import threading
 import time
@@ -30,6 +31,8 @@ class ClientNode (FastNode):
         self.ext_commitments = []
 
         self.contractparams = None
+
+        self.utxos = []
 
     def connect_to_clients(self, node_info):
         try:
@@ -143,19 +146,11 @@ class ClientNode (FastNode):
         j = n-1
         k = 32
 
-        right_side_col = []
         left_side_col = []
+        right_side_col = []
 
         for i in range(k):
             point = Point(0x0, 0x0, self.pd.cp, check=False)
-
-            left_side_col.append([])
-            for h in range(len(self.ext_bigxs)):
-                if(h == 0):
-                    point = self.ext_bigxs[h][0]
-                # print(f"{h}, {i}")
-                point = self.pd.cp.add_point(point, self.ext_bigxs[h][i])
-            left_side_col[i].append(point)
 
     def veto(self):
         p = int(self.contractparams[6])
@@ -231,6 +226,9 @@ class ClientNode (FastNode):
             return False
         else:
             return True
+
+    def pay_to_public_key(self, utxo_arr, recepient):
+        pass
 
     def run(self):
         accept_connections_thread = threading.Thread(

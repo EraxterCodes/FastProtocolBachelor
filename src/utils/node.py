@@ -15,7 +15,7 @@ def reset_all_node_msgs(node_list):
 
 def get_message(node):
     while node.get_node_message() == "":
-        time.sleep(0.1)
+        time.sleep(0.01)
     msg = node.get_node_message()
     node.reset_node_message()
 
@@ -47,7 +47,7 @@ def get_all_messages_arr(self, num_messages):
             if msg != "":
                 messages.append(msg)
                 node.reset_node_message()
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     return messages
 
