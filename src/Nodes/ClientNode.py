@@ -131,26 +131,28 @@ class ClientNode (FastNode):
 
         # maybe also send identification of yourself along ?
         self.send_to_nodes(str(commit_x_arr), exclude=[self.bc_node])
-        #print(f"{self.id} has sent {len(commit_x_arr)} commitments and big X's to other nodes of size: {self.utf8len(str(commit_x_arr))} ")
+        # print(f"{self.id} has sent {len(commit_x_arr)} commitments and big X's to other nodes of size: {self.utf8len(str(commit_x_arr))} ")
+
+        unpack_commitment_and_x(self, [str(commit_x_arr)])
+
+        # self.ext_bigxs.append(unpack_commitment_and_x(self, str(commit_x_arr)))
 
         commit_and_X_array = get_all_messages_arr(self, len(self.clients))
-        #print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
+        # print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
 
         # print(commit_and_X_array)
         unpack_commitment_and_x(self, commit_and_X_array)
 
         # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
-        big_y_arr = []
-
         n = len(self.clients) + 1
-        j = n-1
-        k = 32
+        m = len(self.bit_commitments)
 
-        left_side_col = []
-        right_side_col = []
+        big_y = []
 
-        for i in range(k):
-            point = Point(0x0, 0x0, self.pd.cp, check=False)
+        for i in range(n):
+            big_y.append([])
+            for j in range(m):
+                pass
 
     def veto(self):
         p = int(self.contractparams[6])

@@ -7,7 +7,7 @@ The best Bachelor since EMBA's Bachelor
   - [Security Concerns:](#security-concerns)
   - [Implementation steps](#implementation-steps)
     - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
-    - [Bid decomposition](#bid-decomposition)
+    - [Setup Phase](#setup-phase)
     - [Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)](#publicly-verifiable-secret-sharing-fig-12-phase-f-of-off-chain-messaging)
     - [VetoPhase](#vetophase)
 
@@ -63,8 +63,30 @@ When all nodes are connected, the signature exchange is started with n rounds.
 
 The implementation uses the python library ECDSA (Elliptic Curve Digital Signature Algorithm) to create a public and private key (Signing key + Verifying key). The signature sharing algorithm goes through n+1 number of rounds. For each round a message and a signed message is send to the other nodes.
 ****
-### Bid decomposition
+### Setup Phase
 ![setup-phase bid decomposition](/img/setup-phase.png)
+
+For step 3 in stage 1 of the setup phase, each node has to calculate all the Y's for themselves and then broadcast them. 
+For a client to calculate the Y for each bid commitment, it has to take the product of all the X's (until the index of the client in the client list) and divide it with the rest of the X's.
+For the example the bid commitment will not be shown, but rather just an index:
+```math
+P_1 = [1, 2, 3] \\
+P_2 = [4, 5, 6] \\
+P_3 = [7, 8, 9] \\
+```
+Then the calculation has to be: *(First index is party and second is the bid. I.e. P_2,_2 = 5 (If the party is the first or last node, there will not be a product of any numbers, but instead just a 1 to avoid issues.))*
+```math
+Y_1,_1 = [] / [P_2,_1 * P_3,_1] = 1 / (4*7) \approx 0,0357 \\
+Y_2,_1 = P_1,_1 / P_3,_1 = 1 / 7 \approx 0,1428 \\
+Y_3,_1 = [P_1,_1 * P_2,_1] / [] = (1*4) / 1 \approx 4 \\~\\
+Y_1,_2 = [] / [P_2,_2 * P_3,_2] = 1 / (5*8) \approx 0,025 \\
+Y_2,_2 = P_1,_2 / P_3,_2 = 2/8 \approx 0,25 \\
+Y_3,_2 = [P_1,_2 * P_2,_2] / [] = (2*5) / 1 \approx 10 \\~\\
+Y_1,_3 = [] / [P_2,_3 * P_3,_3] = 1 / (6*9) \approx 0,0185 \\
+Y_2,_3 = P_1,_3 / P_3,_3 = 3 / 9 \approx 0,3333 \\
+Y_3,_3 = [P_1,_3 * P_2,_3] / [] = (2*6) / 1 \approx 12 \\
+```
+Note that this is a simplified example. The actual prototype uses groups and elliptic curves with points instead of simple integers.
 
 ### Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)
 ![Publicly Verifiable Secret Sharing](/img/pvss.png)
