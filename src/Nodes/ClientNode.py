@@ -15,20 +15,20 @@ class ClientNode (FastNode):
         super(ClientNode, self).__init__(
             host, port, id, callback, max_connections)
 
+        self.index = None  # Is used when doing step 3 of FPA protocol
         self.bc_node = None  # gets set in setup
 
         self.debugPrint = False
-        self.easy_signatures = True
         self.bid = bid
 
         self.bit_commitments = []
         self.bits = []
 
-        self.broadcast_node = None
         self.vetoarray = []
 
-        self.ext_bigxs = []
-        self.ext_commitments = []
+        self.big_xs = []
+        self.big_ys = []
+        self.commitments = []
 
         self.contractparams = None
 
@@ -86,6 +86,9 @@ class ClientNode (FastNode):
             self.bits.append(bit)
             self.bit_commitments.append(self.pd.commit(bit))
 
+    def col(self, mat, index):
+        return [e[index] for e in mat]
+
     def setup(self):
         self.bc_node = get_broadcast_node(self.all_nodes)
         # Stage 1
@@ -129,30 +132,49 @@ class ClientNode (FastNode):
 
         reset_all_node_msgs(self.all_nodes)
 
+        commits_w_index = f"{str(self.index)}-{str(commit_x_arr)}"
+
         # maybe also send identification of yourself along ?
-        self.send_to_nodes(str(commit_x_arr), exclude=[self.bc_node])
+        self.send_to_nodes(
+            commits_w_index, exclude=[self.bc_node])
         # print(f"{self.id} has sent {len(commit_x_arr)} commitments and big X's to other nodes of size: {self.utf8len(str(commit_x_arr))} ")
 
-        unpack_commitment_and_x(self, [str(commit_x_arr)])
+        for i in range(len(self.clients) + 1):
+            self.commitments.append([])  # add room for another client
+            self.big_xs.append([])  # add room for another client
 
-        # self.ext_bigxs.append(unpack_commitment_and_x(self, str(commit_x_arr)))
+        unpack_commitment_and_x(self, [commits_w_index])
+
+        # self.big_xs.append(unpack_commitment_and_x(self, str(commit_x_arr)))
 
         commit_and_X_array = get_all_messages_arr(self, len(self.clients))
         # print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
 
-        # print(commit_and_X_array)
         unpack_commitment_and_x(self, commit_and_X_array)
 
         # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
-        n = len(self.clients) + 1
-        m = len(self.bit_commitments)
 
-        big_y = []
+        for i in range(len(self.big_xs)):
+            self.big_ys.append([])
+            for j in range(len(self.big_xs[0])):
+                left_side = self.pd.param[1]
+                right_side = self.pd.param[1]
 
-        for i in range(n):
-            big_y.append([])
-            for j in range(m):
-                pass
+                for h in range(self.index):  # Left side of equation
+                    left_side = self.pd.cp.add_point(
+                        left_side, self.big_xs[h][j])
+
+                for h in range(self.index+1, len(self.big_xs)):  # Right side of equation
+                    right_side = self.pd.cp.add_point(
+                        right_side, self.big_xs[h][j])
+
+                left_side = self.pd.cp.sub_point(
+                    left_side, self.pd.param[1])
+                right_side = self.pd.cp.sub_point(
+                    right_side, self.pd.param[1])
+
+                self.big_ys[i].append(self.pd.cp.sub_point(
+                    left_side, right_side))
 
     def veto(self):
         p = int(self.contractparams[6])
@@ -241,6 +263,6 @@ class ClientNode (FastNode):
 
         self.setup()
 
-        self.veto()
+        # self.veto()
 
         print("finished")

@@ -67,7 +67,12 @@ class BroadcastNode (FastNode):
             if len(self.clients) == len(self.nodes):
                 break
 
-        self.send_to_nodes(str(self.clients))
+        converted_clients = []
+
+        for i in range(len(self.clients)):
+            converted_clients.append(f"{i}:{str(self.clients[i])}")
+
+        self.send_to_nodes(str(converted_clients))
         # self.terminate_flag.set()
         print("Broadcast Finished")
 

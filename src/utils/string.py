@@ -27,15 +27,19 @@ def str_to_point2(s, curve):
 
 def unpack_commitment_and_x(self, array):
     for j in range(len(array)):
-        self.ext_commitments.append([])  # add room for another client
-        self.ext_bigxs.append([])  # add room for another client
         temparray = array[j]
+
+        index, temparray = temparray.split("-")
+
         temparray = temparray.split(";")
         temparray = temparray[:-1]
         afterstrip = []
+        # if(self.id == str(1)):
+        #     print(array)
         for x in temparray:
             afterstrip.append(x.strip("()'").replace(
                 '(', '').replace(')', '')[1:])
+
         afterstripsquared = []
         for x in afterstrip:
             afterstripsquared.append(x.split("|"))
@@ -45,8 +49,8 @@ def unpack_commitment_and_x(self, array):
             # print(i)
             # print(afterstripsquared[i][0])
             # print("checking ext_commitments[j] after this")
-            self.ext_commitments[j].append(str_to_point2(
+            self.commitments[int(index)].append(str_to_point2(
                 afterstripsquared[i][0].strip("'"), self.pd.cp))  # [R][0=commitment | 1=BigX]
             # print(str_to_point2(afterstripsquared[i][0]))
-            self.ext_bigxs[j].append(str_to_point2(
+            self.big_xs[int(index)].append(str_to_point2(
                 afterstripsquared[i][1], self.pd.cp))  # [R][0=commitment | 1=BigX]
