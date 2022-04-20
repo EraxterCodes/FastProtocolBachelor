@@ -88,6 +88,10 @@ Y_3,_3 = [P_1,_3 * P_2,_3] / [] = (2*6) / 1 \approx 12 \\
 ```
 Note that this is a simplified example. The actual prototype uses groups and elliptic curves with points instead of simple integers.
 
+We're still missing this part:
+![Commit verification](/img/verify_commit.png)
+This part is skipped because we simply don't understand it yet.:'(
+
 ### Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)
 ![Publicly Verifiable Secret Sharing](/img/pvss.png)
 

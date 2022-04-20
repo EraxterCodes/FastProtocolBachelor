@@ -1,6 +1,6 @@
 from Infrastructure.Nodes.FastNode import FastNode
-from src.utils.string import str_to_point, unpack_commitment_and_x
-from src.utils.node import reset_all_node_msgs, get_broadcast_node, get_trimmed_info, get_message, get_all_messages, get_all_messages_arr
+from src.utils.string import *
+from src.utils.node import *
 from ecpy.curves import Point, Curve
 from Crypto.Util import number
 from ecpy.keys import ECPublicKey, ECPrivateKey
@@ -86,9 +86,6 @@ class ClientNode (FastNode):
             self.bits.append(bit)
             self.bit_commitments.append(self.pd.commit(bit))
 
-    def col(self, mat, index):
-        return [e[index] for e in mat]
-
     def setup(self):
         self.bc_node = get_broadcast_node(self.all_nodes)
         # Stage 1
@@ -149,7 +146,6 @@ class ClientNode (FastNode):
 
         commit_and_X_array = get_all_messages_arr(self, len(self.clients))
         # print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
-
         unpack_commitment_and_x(self, commit_and_X_array)
 
         # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
@@ -174,82 +170,13 @@ class ClientNode (FastNode):
                     right_side, self.pd.param[1])
 
                 self.big_ys[i].append(self.pd.cp.sub_point(
-                    left_side, right_side))
+                    left_side, right_side).__str__())
+
+        # verify c_j for each other party p_j
 
     def veto(self):
         p = int(self.contractparams[6])
         g = str_to_point(self.contractparams[4], self.pd.cp)
-
-        get_all_messages(self, len(self.clients))
-        time.sleep(0.1)
-
-        veto = None
-        out_of_running = False
-        last_v_ir = None
-
-        for j in range(len(self.bit_commitments)):  # Rounds
-            print(f"{j} for: {self.id}")
-            v_ir_array = []
-
-            if j != 0:
-                v_ir_array = get_all_messages_arr(self, len(self.clients))
-                v_ir_array.append(last_v_ir)
-                print(v_ir_array)
-
-            # compute the random value X and broadcast that to all other nodes
-            # get random value from the field.
-            # Random elements of Z_p used for commitments
-
-            str_big_x_arr = get_all_messages_arr(self, len(self.clients))
-
-            # if self.hasAnyoneVetoed(v_ir_array) == False:  # before first veto
-            #     # Compute V_ir
-            #     if (self.bits[j] == 0):
-            #         print("bit is 0")
-            #         # Case for no veto:
-            #         # Y = g^(negative of other x's)
-            #         veto = g ** e
-            #         last_v_ir = veto
-            #         self.send_to_nodes(str(veto), exclude=[self.bc_node])
-            #         time.sleep(0.05)
-            #     else:
-            #         # Case for veto:
-            #         print("YO I VETOED G :" + self.id)
-            #         r_hat = random.randint(1, p - 1)
-            #         veto = g ** r_hat
-            #         self.send_to_nodes(str(veto), exclude=[self.bc_node])
-
-            #     # Generate NIZK BV (before veto) for veto decision proof.
-            # else:  # after first veto
-            #     print("Function returned true")
-            #     if self.bits[j] == 0:
-            #         veto = g ** e
-            #         self.send_to_nodes(str(veto), exclude=[self.bc_node])
-
-            #         # should be out of running if and only if some other party has vetoed
-            #     elif out_of_running:
-            #         veto = g ** e
-            #         self.send_to_nodes(str(veto), exclude=[self.bc_node])
-            #     else:
-            #         # calc veto
-            #         pass
-
-        # send v_ir to all others
-
-    def hasAnyoneVetoed(self, v_ir_array):
-        # we must know all others v_ir
-
-        if len(v_ir_array) == 0:  # First round case
-            return False
-
-        V = 1
-        for v_ir in v_ir_array:
-            V = V*(int(v_ir))  # V = product of all v_ir's
-
-        if V == 1:
-            return False
-        else:
-            return True
 
     def pay_to_public_key(self, utxo_arr, recepient):
         pass
@@ -263,6 +190,6 @@ class ClientNode (FastNode):
 
         self.setup()
 
-        # self.veto()
+        self.veto()
 
         print("finished")
