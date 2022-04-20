@@ -26,6 +26,7 @@ class ClientNode (FastNode):
 
         self.vetoarray = []
 
+        self.small_xs = []
         self.big_xs = []
         self.big_ys = []
         self.commitments = []
@@ -120,6 +121,7 @@ class ClientNode (FastNode):
         commit_x_arr = []
         for i in range(len(self.bit_commitments)):
             x = number.getRandomRange(1, p - 1)
+            self.small_xs.append(x)
 
             commit_and_big_x = self.bit_commitments[i][0].__str__(
             ) + "|" + self.pd.cp.mul_point(x, g).__str__()
@@ -170,13 +172,42 @@ class ClientNode (FastNode):
                     right_side, self.pd.param[1])
 
                 self.big_ys[i].append(self.pd.cp.sub_point(
-                    left_side, right_side).__str__())
+                    left_side, right_side))
 
-        # verify c_j for each other party p_j
+        # verify c_j for each other party p_j, skipped atm
 
     def veto(self):
         p = int(self.contractparams[6])
         g = str_to_point(self.contractparams[4], self.pd.cp)
+
+        for i in range(len(self.bit_commitments)):
+            if i == 31:
+                if self.bits[i] == 1:
+                    r = number.getRandomRange(1, p - 1)
+                    v = self.pd.cp.mul_point(r, g)
+                else:
+                    v = self.pd.cp.mul_point(
+                        self.small_xs[i], self.big_ys[self.index][i])
+
+                self.send_to_nodes(str(v), exclude=[self.bc_node])
+
+                vs = get_all_messages_arr(self, len(self.clients))
+
+                v_arr = []
+                v_arr.append(v)
+
+                for j in range(len(self.clients)):
+                    v_arr.append(str_to_point(vs[j], self.pd.cp))
+
+                point = g
+
+                for j in range(len(v_arr)):
+                    point = self.pd.cp.add_point(point, v_arr[j])
+
+                final = self.pd.cp.sub_point(point, g)
+                print(final)
+
+                print(f"{self.bits[i]}: {point != g}")
 
     def pay_to_public_key(self, utxo_arr, recepient):
         pass
@@ -192,4 +223,4 @@ class ClientNode (FastNode):
 
         self.veto()
 
-        print("finished")
+        # print("finished")
