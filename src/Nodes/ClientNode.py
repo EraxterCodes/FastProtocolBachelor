@@ -177,11 +177,16 @@ class ClientNode (FastNode):
         # verify c_j for each other party p_j, skipped atm
 
     def veto(self):
+        # Own veto result has to be saved in an array, so we can check for it in after first veto.
+        # Create NIZK :)
+
         p = int(self.contractparams[6])
         g = str_to_point(self.contractparams[4], self.pd.cp)
 
+        bfv = True
+
         for i in range(len(self.bit_commitments)):
-            if i == 31:
+            if bfv:  # Before first veto
                 if self.bits[i] == 1:
                     r = number.getRandomRange(1, p - 1)
                     v = self.pd.cp.mul_point(r, g)
@@ -190,6 +195,8 @@ class ClientNode (FastNode):
                         self.small_xs[i], self.big_ys[self.index][i])
 
                 self.send_to_nodes(str(v), exclude=[self.bc_node])
+
+                time.sleep(0.1)
 
                 vs = get_all_messages_arr(self, len(self.clients))
 
@@ -204,10 +211,18 @@ class ClientNode (FastNode):
                 for j in range(len(v_arr)):
                     point = self.pd.cp.add_point(point, v_arr[j])
 
-                final = self.pd.cp.sub_point(point, g)
-                print(final)
+                # self.pd.cp.sub_point(point, g)
 
-                print(f"{self.bits[i]}: {point != g}")
+                if point != g:
+                    bfv = False
+
+                print(i)
+
+            else:  # After first veto
+                print(i)
+                break
+
+            time.sleep(0.1)
 
     def pay_to_public_key(self, utxo_arr, recepient):
         pass
