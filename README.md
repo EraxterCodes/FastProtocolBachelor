@@ -7,18 +7,26 @@ The best Bachelor since EMBA's Bachelor
   - [Security Concerns:](#security-concerns)
   - [Implementation steps](#implementation-steps)
     - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
-    - [Setup Phase](#setup-phase)
     - [Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)](#publicly-verifiable-secret-sharing-fig-12-phase-f-of-off-chain-messaging)
-    - [VetoPhase](#vetophase)
+  - [FPA](#fpa)
+    - [Setup Phase (Stage 1)](#setup-phase-stage-1)
+    - [VetoPhase (Stage 2, 3)](#vetophase-stage-2-3)
+    - [Stage 4, output](#stage-4-output)
+    - [Recovery](#recovery)
 
 
 ## TODO:
 - [x] Get library for P2P
 - [x] P2P network with reliable messaging
 - [x] Find library for Pedersen commitments (ECPy) - Elliptic curve implementation works!
-- [ ] Working Veto
-  - [ ]  NIZK in Veto
-  - [ ]  Toggle for first or second price auction
+- [ ] FPA
+  - [x] Stage 1
+  - [x] Stage 2
+    - [x] Veto, Before first veto
+  - [ ] Stage 3
+    - [ ] NIZK
+    - [x] Veto, after first veto
+  - [ ] Stage 4
 - [ ]  Paper
 - [ ] using ERC20 / UTXO 
   - [ ] Class for UTXO model
@@ -63,7 +71,12 @@ When all nodes are connected, the signature exchange is started with n rounds.
 
 The implementation uses the python library ECDSA (Elliptic Curve Digital Signature Algorithm) to create a public and private key (Signing key + Verifying key). The signature sharing algorithm goes through n+1 number of rounds. For each round a message and a signed message is send to the other nodes.
 ****
-### Setup Phase
+
+### Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)
+![Publicly Verifiable Secret Sharing](/img/pvss.png)
+
+## FPA
+### Setup Phase (Stage 1)
 ![setup-phase bid decomposition](/img/setup-phase.png)
 
 For step 3 in stage 1 of the setup phase, each node has to calculate all the Y's for themselves and then broadcast them. 
@@ -92,8 +105,12 @@ We're still missing this part:
 ![Commit verification](/img/verify_commit.png)
 This part is skipped because we simply don't understand it yet.:'(
 
-### Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)
-![Publicly Verifiable Secret Sharing](/img/pvss.png)
-
-### VetoPhase
+### VetoPhase (Stage 2, 3)
 ![Veto](/img/VetoPhase.png)
+
+### Stage 4, output
+![Stage4](/img/stage4.png)
+
+### Recovery
+Comittee is needed for this stage
+![Recovery](/img/recovery.png)

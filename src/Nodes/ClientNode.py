@@ -1,10 +1,8 @@
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.string import *
 from src.utils.node import *
-from ecpy.curves import Point, Curve
 from Crypto.Util import number
-from ecpy.keys import ECPublicKey, ECPrivateKey
-from ecpy.ecdsa import ECDSA
+from ecdsa import SigningKey, VerifyingKey
 
 import threading
 import time
@@ -20,6 +18,9 @@ class ClientNode (FastNode):
 
         self.debugPrint = False
         self.bid = bid
+
+        self.sk = SigningKey.generate()
+        self.vk = self.sk.verifying_key
 
         self.bit_commitments = []
         self.bits = []
@@ -267,10 +268,39 @@ class ClientNode (FastNode):
                 print(i)
 
             time.sleep(0.1)
-        print(f"Party {self.id} {self.vetos == self.bits}")
 
-    def pay_to_public_key(self, utxo_arr, recepient):
-        pass
+    def veto_output(self):
+        self.send_to_nodes(str(self.vetos), exclude=[self.bc_node])
+
+        winner = get_all_messages_arr(self, len(self.clients))
+
+        first_win = winner[0]
+
+        for win in winner:
+            if win != first_win:
+                print("OH NOOO")
+                break
+
+        if str(self.bits) == first_win:
+            self.send_win_proof()
+
+    def bit_to_int(self, bitlist):
+        output = 0
+        for bit in bitlist:
+            output = (output << 1) | bit
+        return output
+
+    def send_win_proof(self):
+        # P_w opens the commitment, sends it to the smart contract
+        # sends (output, sid, P_w, b_w, r_bw, {sig_sk, (b_w)}
+        # Make the smart contract do work | Broadcast node
+
+        output = self.bit_to_int(self.vetos)  # Decimal winning bid
+        sid = self.id
+        p_w = self.index
+        b_w = self.bits
+        r_bw = None
+        signed_b_w = None
 
     def run(self):
         accept_connections_thread = threading.Thread(
@@ -283,4 +313,6 @@ class ClientNode (FastNode):
 
         self.veto()
 
-        # print("finished")
+        self.veto_output()
+
+        print("finished")
