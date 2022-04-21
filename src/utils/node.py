@@ -32,12 +32,10 @@ def get_all_messages(self, num_messages):
             if msg != "":
                 self.messages.append(msg)
                 node.reset_node_message()
-            time.sleep(0.05)
+            time.sleep(0.01)
 
 
 def get_all_messages_arr(self, num_messages):
-    time.sleep(0.05)
-
     messages = []
 
     while (len(messages)) != num_messages:
