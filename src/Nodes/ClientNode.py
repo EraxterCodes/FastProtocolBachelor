@@ -183,16 +183,21 @@ class ClientNode (FastNode):
         p = int(self.contractparams[6])
         g = str_to_point(self.contractparams[4], self.pd.cp)
 
-        bfv = True
+        bfv = True  # Before First Veto
+
+        previous_vetos = []
+        latest_veto_r = None
 
         for i in range(len(self.bit_commitments)):
             if bfv:  # Before first veto
                 if self.bits[i] == 1:
                     r = number.getRandomRange(1, p - 1)
                     v = self.pd.cp.mul_point(r, g)
+                    previous_vetos.append(True)
                 else:
                     v = self.pd.cp.mul_point(
                         self.small_xs[i], self.big_ys[self.index][i])
+                    previous_vetos.append(False)
 
                 self.send_to_nodes(str(v), exclude=[self.bc_node])
 
@@ -201,8 +206,8 @@ class ClientNode (FastNode):
                 vs = get_all_messages_arr(self, len(self.clients))
 
                 v_arr = []
-                v_arr.append(v)
 
+                v_arr.append(v)
                 for j in range(len(self.clients)):
                     v_arr.append(str_to_point(vs[j], self.pd.cp))
 
@@ -211,18 +216,55 @@ class ClientNode (FastNode):
                 for j in range(len(v_arr)):
                     point = self.pd.cp.add_point(point, v_arr[j])
 
-                # self.pd.cp.sub_point(point, g)
-
                 if point != g:
                     bfv = False
+                    latest_veto_r = i
 
                 print(i)
 
             else:  # After first veto
+                # If the bit is 1 and the previous veto was true
+                if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
+                    print(f"Latest veto round: {latest_veto_r}")
+                    r = number.getRandomRange(1, p - 1)
+                    v = self.pd.cp.mul_point(r, g)
+                    previous_vetos.append(True)
+                # If the bit is 1 and the previous veto was false
+                elif self.bits[i] == 1 and previous_vetos[latest_veto_r] == False:
+                    v = self.pd.cp.mul_point(
+                        self.small_xs[i], self.big_ys[self.index][i])
+                    previous_vetos.append(False)
+                else:  # If the bit is 0
+                    v = self.pd.cp.mul_point(
+                        self.small_xs[i], self.big_ys[self.index][i])
+                    previous_vetos.append(False)
+
+                self.send_to_nodes(str(v), exclude=[self.bc_node])
+
+                time.sleep(0.1)
+
+                vs = get_all_messages_arr(self, len(self.clients))
+
+                v_arr = []
+
+                v_arr.append(v)
+                for j in range(len(self.clients)):
+                    v_arr.append(str_to_point(vs[j], self.pd.cp))
+
+                point = g
+
+                for j in range(len(v_arr)):
+                    point = self.pd.cp.add_point(point, v_arr[j])
+
+                if point != g:
+                    latest_veto_r = i
+
                 print(i)
-                break
 
             time.sleep(0.1)
+
+        print(f"{self.id}: veto_arr: {str(previous_vetos)}")
+        print(f"{self.id}: bits: {str(self.bits)}")
 
     def pay_to_public_key(self, utxo_arr, recepient):
         pass

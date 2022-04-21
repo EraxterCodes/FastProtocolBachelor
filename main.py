@@ -15,8 +15,8 @@ if selfinput:
             "127.0.0.1", 8003 + (i*2), int(Bid_Input), id))
 
 else:
-    Node1 = ClientNode("127.0.0.1", 8003, 42, 1)
-    Node2 = ClientNode("127.0.0.1", 8005, 123, 2)
+    Node1 = ClientNode("127.0.0.1", 8003, 6421, 1)
+    Node2 = ClientNode("127.0.0.1", 8005, 10000, 2)
     Node3 = ClientNode("127.0.0.1", 8007, 666, 3)
     Client_Node_list = [Node1, Node2, Node3]
 
