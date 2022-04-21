@@ -24,7 +24,7 @@ class ClientNode (FastNode):
         self.bit_commitments = []
         self.bits = []
 
-        self.vetoarray = []
+        self.vetos = []
 
         self.small_xs = []
         self.big_xs = []
@@ -131,7 +131,7 @@ class ClientNode (FastNode):
 
         reset_all_node_msgs(self.all_nodes)
 
-        commits_w_index = f"{str(self.index)}-{str(commit_x_arr)}"
+        commits_w_index = f"{str(self.index)}--{str(commit_x_arr)}"
 
         # maybe also send identification of yourself along ?
         self.send_to_nodes(
@@ -219,13 +219,15 @@ class ClientNode (FastNode):
                 if point != g:
                     bfv = False
                     latest_veto_r = i
+                    self.vetos.append(1)
+                else:
+                    self.vetos.append(0)
 
                 print(i)
 
             else:  # After first veto
                 # If the bit is 1 and the previous veto was true
                 if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
-                    print(f"Latest veto round: {latest_veto_r}")
                     r = number.getRandomRange(1, p - 1)
                     v = self.pd.cp.mul_point(r, g)
                     previous_vetos.append(True)
@@ -258,13 +260,14 @@ class ClientNode (FastNode):
 
                 if point != g:
                     latest_veto_r = i
+                    self.vetos.append(1)
+                else:
+                    self.vetos.append(0)
 
                 print(i)
 
             time.sleep(0.1)
-
-        print(f"{self.id}: veto_arr: {str(previous_vetos)}")
-        print(f"{self.id}: bits: {str(self.bits)}")
+        print(f"Party {self.id} {self.vetos == self.bits}")
 
     def pay_to_public_key(self, utxo_arr, recepient):
         pass

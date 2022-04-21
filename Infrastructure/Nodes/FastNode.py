@@ -39,7 +39,7 @@ class FastNode (Node):
                 if self.max_connections == 0 or len(self.nodes_inbound) < self.max_connections:
 
                     # Basic information exchange (not secure) of the id's of the nodes!
-                    connected_node_id = connection.recv(16384).decode(
+                    connected_node_id = connection.recv(1048576).decode(
                         'utf-8')  # When a node is connected, it sends it id!
                     # Send my id to the connected node!
                     connection.send(self.id.encode('utf-8'))
@@ -104,7 +104,7 @@ class FastNode (Node):
             # Send my id to the connected node!
             sock.send(self.id.encode('utf-8'))
             # When a node is connected, it sends it id!
-            connected_node_id = sock.recv(16384).decode('utf-8')
+            connected_node_id = sock.recv(1048576).decode('utf-8')
 
             for node in self.nodes_inbound:
                 if node.host == host and node.id == connected_node_id:
