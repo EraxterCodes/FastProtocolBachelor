@@ -4,7 +4,6 @@ _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
 - [🏃🏽 FASTProtocol](#-fastprotocol)
   - [TODO:](#todo)
-  - [Security Concerns:](#security-concerns)
   - [Implementation steps](#implementation-steps)
     - [Implementation steps for Off-Chain-Messaging:](#implementation-steps-for-off-chain-messaging)
     - [Publicly Verifiable Secret Sharing (Fig 12, phase F of Off-Chain Messaging)](#publicly-verifiable-secret-sharing-fig-12-phase-f-of-off-chain-messaging)
@@ -13,6 +12,9 @@ The best Bachelor since EMBA's Bachelor
     - [VetoPhase (Stage 2, 3)](#vetophase-stage-2-3)
     - [Stage 4, output](#stage-4-output)
     - [Recovery](#recovery)
+  - [Things we miss:](#things-we-miss)
+    - [Calculate commit for bid and send it](#calculate-commit-for-bid-and-send-it)
+    - [Fix, such that client only sends to broadcast node](#fix-such-that-client-only-sends-to-broadcast-node)
 
 
 ## TODO:
@@ -31,11 +33,6 @@ The best Bachelor since EMBA's Bachelor
 - [ ] using ERC20 / UTXO 
   - [ ] Class for UTXO model
 - [ ] GUI
-
-## Security Concerns:
-Currently it is possible to listen on others connection like showcased below: p1 is somehow getting p2's bid
-![Listen-on-others-connections](/img/Listen-on-others-connection.png)
-
 
 ## Implementation steps
 
@@ -82,31 +79,49 @@ The implementation uses the python library ECDSA (Elliptic Curve Digital Signatu
 For step 3 in stage 1 of the setup phase, each node has to calculate all the Y's for themselves and then broadcast them. 
 For a client to calculate the Y for each bid commitment, it has to take the product of all the X's (until the index of the client in the client list) and divide it with the rest of the X's.
 For the example the bid commitment will not be shown, but rather just an index:
-```math
-P_1 = [1, 2, 3] \\
-P_2 = [4, 5, 6] \\
-P_3 = [7, 8, 9] \\
-```
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large P_1 = [1, 2, 3]"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large P_2 = [4, 5, 6]"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large P_3 = [7, 8, 9]"></div>
+
 Then the calculation has to be: *(First index is party and second is the bid. I.e. P_2,_2 = 5 (If the party is the first or last node, there will not be a product of any numbers, but instead just a 1 to avoid issues.))*
-```math
-Y_1,_1 = [] / [P_2,_1 * P_3,_1] = 1 / (4*7) \approx 0,0357 \\
-Y_2,_1 = P_1,_1 / P_3,_1 = 1 / 7 \approx 0,1428 \\
-Y_3,_1 = [P_1,_1 * P_2,_1] / [] = (1*4) / 1 \approx 4 \\~\\
-Y_1,_2 = [] / [P_2,_2 * P_3,_2] = 1 / (5*8) \approx 0,025 \\
-Y_2,_2 = P_1,_2 / P_3,_2 = 2/8 \approx 0,25 \\
-Y_3,_2 = [P_1,_2 * P_2,_2] / [] = (2*5) / 1 \approx 10 \\~\\
-Y_1,_3 = [] / [P_2,_3 * P_3,_3] = 1 / (6*9) \approx 0,0185 \\
-Y_2,_3 = P_1,_3 / P_3,_3 = 3 / 9 \approx 0,3333 \\
-Y_3,_3 = [P_1,_3 * P_2,_3] / [] = (2*6) / 1 \approx 12 \\
-```
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_1,_1 = [] / [P_2,_1 * P_3,_1] = 1 / 4*7 \approx 0,0357"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_2,_1 = P_1,_1 / P_3,_1 = 1 / 7 \approx 0,1428"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_3,_1 = [P_1,_1 * P_2,_1] / [] = (1*4) / 1 \approx 4"></div>
+<br>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_1,_2 = [] / [P_2,_2 * P_3,_2] = 1 / (5*8) \approx 0,025"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_2,_2 = P_1,_2 / P_3,_2 = 2/8 \approx 0,25"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_3,_2 = [P_1,_2 * P_2,_2] / [] = (2*5) / 1 \approx 10"></div>
+<br>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_1,_3 = [] / [P_2,_3 * P_3,_3] = 1 / (6*9) \approx 0,0185"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_2,_3 = P_1,_3 / P_3,_3 = 3 / 9 \approx 0,3333"></div>
+<div align="center"><img src="https://render.githubusercontent.com/render/math?math=\large Y_3,_3 = [P_1,_3 * P_2,_3] / [] = (2*6) / 1 \approx 12"></div>
+
 Note that this is a simplified example. The actual prototype uses groups and elliptic curves with points instead of simple integers.
 
 We're still missing this part:
 ![Commit verification](/img/verify_commit.png)
-This part is skipped because we simply don't understand it yet.:'(
+(Essentially it's just the commit to the bid, which also has to be sent to the smart contract.)
 
 ### VetoPhase (Stage 2, 3)
 ![Veto](/img/VetoPhase.png)
+
+When generating the NIZK, there's a bit of headscratching to do. Two NIZK's are created, one for before the first veto and one for after the first veto.
+![Nizk bfv](/img/nizk1.png)
+I assume that two proofs has to be done for this. There needs to be a proof of either <img src="https://render.githubusercontent.com/render/math?math=F_1"> or <img src="https://render.githubusercontent.com/render/math?math=F_2"> depending on what bit to round r you have. If the bit is 0 then you make a proof for <img src="https://render.githubusercontent.com/render/math?math=F_1"> and if the bit it 1 then you make a proof of <img src="https://render.githubusercontent.com/render/math?math=F_2">. The beautiful part is that the other part doesn't know what you've prooven, just that you've correctly calculated it.
+For the equation we have a constant <img src="https://render.githubusercontent.com/render/math?math=\alpha">, which is either 1 or 2 (As mentioned in step 4). <img src="https://render.githubusercontent.com/render/math?math=\alpha"> denotes what F we want to calculate. Furthermore there's also the variable <img src="https://render.githubusercontent.com/render/math?math=i">. <img src="https://render.githubusercontent.com/render/math?math=i"> is mentioned both as the party, to sample <img src="https://render.githubusercontent.com/render/math?math=v"> and to sample <img src="https://render.githubusercontent.com/render/math?math=w">. However, when we want to put <img src="https://render.githubusercontent.com/render/math?math=i"> in relation to <img src="https://render.githubusercontent.com/render/math?math=\alpha">, we only look at what <img src="https://render.githubusercontent.com/render/math?math=\gamma"> that needs to be calculated. So if we want to do proof for <img src="https://render.githubusercontent.com/render/math?math=\alpha"> = 1, then <img src="https://render.githubusercontent.com/render/math?math=\gamma_1 = H - (w_1 + w_2) (mod q)"> and <img src="https://render.githubusercontent.com/render/math?math=\gamma_2 = w_i \approx w_2">. If <img src="https://render.githubusercontent.com/render/math?math=\alpha \neq i"> then <img src="https://render.githubusercontent.com/render/math?math=\gamma_1 = w_1"> and <img src="https://render.githubusercontent.com/render/math?math=\gamma_2 = H - (w_1+w_2) (mod q)">.
+
+Let's start from **step 1** (But in human language).
+We have to prove <img src="https://render.githubusercontent.com/render/math?math=F_1, F_2">. 
+<img src="https://render.githubusercontent.com/render/math?math=F_1 =">We start by proving <img src="https://render.githubusercontent.com/render/math?math=\alpha = 1">, which means calculating <img src="https://render.githubusercontent.com/render/math?math=F_1">. <img src="https://render.githubusercontent.com/render/math?math=V = (v_1, v_2, v_3, v_4)"> are created by sampling random elements from the field of <img src="https://render.githubusercontent.com/render/math?math=\mathbb{Z}_q"> (Meaning <img src="https://render.githubusercontent.com/render/math?math=v_1 ... v_4"> are random elements from <img src="https://render.githubusercontent.com/render/math?math=1 ... q-1">). Then <img src="https://render.githubusercontent.com/render/math?math=w = (w_1, w_2)"> is created. These elements are also sampled at random from the field of <img src="https://render.githubusercontent.com/render/math?math=\mathbb{Z}_q">. However, since <img src="https://render.githubusercontent.com/render/math?math=\alpha = 1">, then it's only <img src="https://render.githubusercontent.com/render/math?math=w_2"> that's sampled at random and <img src="https://render.githubusercontent.com/render/math?math=w_1 = 0">. Now that both values <img src="https://render.githubusercontent.com/render/math?math=V"> and <img src="https://render.githubusercontent.com/render/math?math=w"> are selected, <img src="https://render.githubusercontent.com/render/math?math=t_1 ... t_5"> can be calculated, using the public values <img src="https://render.githubusercontent.com/render/math?math=c, h, v, g, X, Y"> (In section 2.2.NIZK For Stage 2, the paper says that <img src="https://render.githubusercontent.com/render/math?math=v, c, X, g, Y"> are public, but i assume <img src="https://render.githubusercontent.com/render/math?math=h"> is also public, as it's a shared value for the pedersen commitments).
+In **step 2**, <img src="https://render.githubusercontent.com/render/math?math=H"> is calculated, which is all of the values added together (I think, Bernardo plz respond) modulo q. 
+From here, we can go to **step 3**, where <img src="https://render.githubusercontent.com/render/math?math=\Gamma = (\gamma_1, \gamma_2)"> is calculated. For this step we need to use <img src="https://render.githubusercontent.com/render/math?math=\alpha"> again. Since <img src="https://render.githubusercontent.com/render/math?math=\alpha = 1">, then for <img src="https://render.githubusercontent.com/render/math?math=\gamma_1"> we calculate <img src="https://render.githubusercontent.com/render/math?math=\gamma_1 = H - (w_1 + w_2) (mod q)"> and for <img src="https://render.githubusercontent.com/render/math?math=\gamma_2"> is simply <img src="https://render.githubusercontent.com/render/math?math=\gamma_2 = w_2">.
+In **step 4**, <img src="https://render.githubusercontent.com/render/math?math=R = (r_1, r_2, r_3, r_4, r_5)"> is calculated. Again, since we want to proove <img src="https://render.githubusercontent.com/render/math?math=F_1">, then <img src="https://render.githubusercontent.com/render/math?math=\aplha = 1"> and then we have the tuple <img src="https://render.githubusercontent.com/render/math?math=(x_1, x_2, x_3, x_4) = (r_i_r, x_i_r, 0, 0)">. All values of <img src="https://render.githubusercontent.com/render/math?math=R"> has to be calculated in order to check the validity of the proof.
+
+When calculating <img src="https://render.githubusercontent.com/render/math?math=F_2">, then <img src="https://render.githubusercontent.com/render/math?math=\alpha"> is then also set to 2.
+For **step 1**, the same approach is done again, however when choosing <img src="https://render.githubusercontent.com/render/math?math=w">, then <img src="https://render.githubusercontent.com/render/math?math=w_1"> is randomly sampled and <img src="https://render.githubusercontent.com/render/math?math=w_2"> is 0.
+**Step 2** is also the same as in <img src="https://render.githubusercontent.com/render/math?math=F_1">.
+**Step 3** has to be switched around, such that <img src="https://render.githubusercontent.com/render/math?math=\gamma_1 = w_1 ="> random sample of <img src="https://render.githubusercontent.com/render/math?math=\mathbb{Z}_q"> and <img src="https://render.githubusercontent.com/render/math?math=\gamma_2 = H - (w_1 + w_2) (mod q)">.
+**Step 4** is also the same, however since <img src="https://render.githubusercontent.com/render/math?math=\alpha = 2"> then we have <img src="https://render.githubusercontent.com/render/math?math=(x_1, x_2, x_3, x_4) = (0, 0, r_i_r, \hat{r}_i_r)">. Then we have everything to proove we have calculated <img src="https://render.githubusercontent.com/render/math?math=v"> correctly.
 
 ### Stage 4, output
 ![Stage4](/img/stage4.png)
@@ -114,3 +129,13 @@ This part is skipped because we simply don't understand it yet.:'(
 ### Recovery
 Comittee is needed for this stage
 ![Recovery](/img/recovery.png)
+
+## Things we miss:
+### Calculate commit for bid and send it
+We're still missing this part:
+![Commit verification](/img/verify_commit.png)
+(Essentially it's just the commit to the bid, which also has to be sent to the smart contract.)
+
+### Fix, such that client only sends to broadcast node
+Currently it is possible to listen on others connection like showcased below: p1 is somehow getting p2's bid
+![Listen-on-others-connections](/img/Listen-on-others-connection.png)

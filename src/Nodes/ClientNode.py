@@ -63,10 +63,7 @@ class ClientNode (FastNode):
 
             trimmed_info = get_trimmed_info(self, node_info)
 
-            self.broadcast_node = self.all_nodes[0]
-
-            # self.disconnect_with_node(self.all_nodes[0])
-            # self.nodes_outbound.remove(self.all_nodes[0])
+            self.bc_node = get_broadcast_node(self.all_nodes)
 
             time.sleep(0.1)
 
@@ -89,18 +86,17 @@ class ClientNode (FastNode):
             self.bit_commitments.append(self.pd.commit(bit))
 
     def setup(self):
-        self.bc_node = get_broadcast_node(self.all_nodes)
         # Stage 1
         # change (secret)
         change = 0.1
         # fee: work
         work = 0.1
         # build secret deposit
-        bid_param = F"{self.bid};{change};{work}"
+        bid_param = f"{self.bid};{change};{work}"
         [self.bid, change, work, self.id]
 
         # (a) send to smart contract (BroadcastNode)
-        self.send_to_nodes(bid_param, exclude=[self.clients])
+        self.send_to_node(self.bc_node, bid_param)
         # (b) compute bit commitments
 
         self.bid_decomposition()
@@ -152,33 +148,34 @@ class ClientNode (FastNode):
         unpack_commitment_and_x(self, commit_and_X_array)
 
         # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
+        try:
+            for i in range(len(self.big_xs)):
+                self.big_ys.append([])
+                for j in range(len(self.big_xs[0])):
+                    left_side = self.pd.param[1]
+                    right_side = self.pd.param[1]
 
-        for i in range(len(self.big_xs)):
-            self.big_ys.append([])
-            for j in range(len(self.big_xs[0])):
-                left_side = self.pd.param[1]
-                right_side = self.pd.param[1]
+                    for h in range(self.index):  # Left side of equation
+                        left_side = self.pd.cp.add_point(
+                            left_side, self.big_xs[h][j])
 
-                for h in range(self.index):  # Left side of equation
-                    left_side = self.pd.cp.add_point(
-                        left_side, self.big_xs[h][j])
+                    for h in range(self.index+1, len(self.big_xs)):  # Right side of equation
+                        right_side = self.pd.cp.add_point(
+                            right_side, self.big_xs[h][j])
 
-                for h in range(self.index+1, len(self.big_xs)):  # Right side of equation
-                    right_side = self.pd.cp.add_point(
-                        right_side, self.big_xs[h][j])
+                    left_side = self.pd.cp.sub_point(
+                        left_side, self.pd.param[1])
+                    right_side = self.pd.cp.sub_point(
+                        right_side, self.pd.param[1])
 
-                left_side = self.pd.cp.sub_point(
-                    left_side, self.pd.param[1])
-                right_side = self.pd.cp.sub_point(
-                    right_side, self.pd.param[1])
-
-                self.big_ys[i].append(self.pd.cp.sub_point(
-                    left_side, right_side))
-
+                    self.big_ys[i].append(self.pd.cp.sub_point(
+                        left_side, right_side))
+        except:
+            print(
+                f"Failed when creating Y's for {self.id} - Big X's: {len(self.big_xs)}")
         # verify c_j for each other party p_j, skipped atm
 
     def veto(self):
-        # Own veto result has to be saved in an array, so we can check for it in after first veto.
         # Create NIZK :)
 
         p = int(self.contractparams[6])
@@ -189,85 +186,92 @@ class ClientNode (FastNode):
         previous_vetos = []
         latest_veto_r = None
 
-        for i in range(len(self.bit_commitments)):
-            if bfv:  # Before first veto
-                if self.bits[i] == 1:
-                    r = number.getRandomRange(1, p - 1)
-                    v = self.pd.cp.mul_point(r, g)
-                    previous_vetos.append(True)
-                else:
-                    v = self.pd.cp.mul_point(
-                        self.small_xs[i], self.big_ys[self.index][i])
-                    previous_vetos.append(False)
+        print(
+            f"{self.id} small_xs: {len(self.small_xs)}, big_ys: {len(self.big_ys[self.index])}")
 
-                self.send_to_nodes(str(v), exclude=[self.bc_node])
+        try:
+            for i in range(len(self.bit_commitments)):
+                if bfv:  # Before first veto
+                    if self.bits[i] == 1:
+                        r = number.getRandomRange(1, p - 1)
+                        v = self.pd.cp.mul_point(r, g)
+                        previous_vetos.append(True)
+                    else:
+                        v = self.pd.cp.mul_point(
+                            self.small_xs[i], self.big_ys[self.index][i])
+                        previous_vetos.append(False)
+
+                    self.send_to_nodes(str(v), exclude=[self.bc_node])
+
+                    time.sleep(0.1)
+
+                    vs = get_all_messages_arr(self, len(self.clients))
+
+                    v_arr = []
+
+                    v_arr.append(v)
+                    for j in range(len(self.clients)):
+                        v_arr.append(str_to_point(vs[j], self.pd.cp))
+
+                    point = g
+
+                    for j in range(len(v_arr)):
+                        point = self.pd.cp.add_point(point, v_arr[j])
+
+                    if point != g:
+                        bfv = False
+                        latest_veto_r = i
+                        self.vetos.append(1)
+                    else:
+                        self.vetos.append(0)
+
+                    print(i)
+
+                else:  # After first veto
+                    # If the bit is 1 and the previous veto was true
+                    if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
+                        r = number.getRandomRange(1, p - 1)
+                        v = self.pd.cp.mul_point(r, g)
+                        previous_vetos.append(True)
+                    # If the bit is 1 and the previous veto was false
+                    elif self.bits[i] == 1 and previous_vetos[latest_veto_r] == False:
+                        v = self.pd.cp.mul_point(
+                            self.small_xs[i], self.big_ys[self.index][i])
+                        previous_vetos.append(False)
+                    else:  # If the bit is 0
+                        v = self.pd.cp.mul_point(
+                            self.small_xs[i], self.big_ys[self.index][i])
+                        previous_vetos.append(False)
+
+                    self.send_to_nodes(str(v), exclude=[self.bc_node])
+
+                    time.sleep(0.1)
+
+                    vs = get_all_messages_arr(self, len(self.clients))
+
+                    v_arr = []
+
+                    v_arr.append(v)
+                    for j in range(len(self.clients)):
+                        v_arr.append(str_to_point(vs[j], self.pd.cp))
+
+                    point = g
+
+                    for j in range(len(v_arr)):
+                        point = self.pd.cp.add_point(point, v_arr[j])
+
+                    if point != g:
+                        latest_veto_r = i
+                        self.vetos.append(1)
+                    else:
+                        self.vetos.append(0)
+
+                    print(i)
 
                 time.sleep(0.1)
-
-                vs = get_all_messages_arr(self, len(self.clients))
-
-                v_arr = []
-
-                v_arr.append(v)
-                for j in range(len(self.clients)):
-                    v_arr.append(str_to_point(vs[j], self.pd.cp))
-
-                point = g
-
-                for j in range(len(v_arr)):
-                    point = self.pd.cp.add_point(point, v_arr[j])
-
-                if point != g:
-                    bfv = False
-                    latest_veto_r = i
-                    self.vetos.append(1)
-                else:
-                    self.vetos.append(0)
-
-                print(i)
-
-            else:  # After first veto
-                # If the bit is 1 and the previous veto was true
-                if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
-                    r = number.getRandomRange(1, p - 1)
-                    v = self.pd.cp.mul_point(r, g)
-                    previous_vetos.append(True)
-                # If the bit is 1 and the previous veto was false
-                elif self.bits[i] == 1 and previous_vetos[latest_veto_r] == False:
-                    v = self.pd.cp.mul_point(
-                        self.small_xs[i], self.big_ys[self.index][i])
-                    previous_vetos.append(False)
-                else:  # If the bit is 0
-                    v = self.pd.cp.mul_point(
-                        self.small_xs[i], self.big_ys[self.index][i])
-                    previous_vetos.append(False)
-
-                self.send_to_nodes(str(v), exclude=[self.bc_node])
-
-                time.sleep(0.1)
-
-                vs = get_all_messages_arr(self, len(self.clients))
-
-                v_arr = []
-
-                v_arr.append(v)
-                for j in range(len(self.clients)):
-                    v_arr.append(str_to_point(vs[j], self.pd.cp))
-
-                point = g
-
-                for j in range(len(v_arr)):
-                    point = self.pd.cp.add_point(point, v_arr[j])
-
-                if point != g:
-                    latest_veto_r = i
-                    self.vetos.append(1)
-                else:
-                    self.vetos.append(0)
-
-                print(i)
-
-            time.sleep(0.1)
+        except Exception as e:
+            print(
+                f"FAILED: {self.id} small_xs: {len(self.small_xs)}, big_ys: {len(self.big_ys[self.index])}")
 
     def veto_output(self):
         self.send_to_nodes(str(self.vetos), exclude=[self.bc_node])
@@ -282,6 +286,7 @@ class ClientNode (FastNode):
                 break
 
         if str(self.bits) == first_win:
+            print(f"{self.id} won")
             self.send_win_proof()
 
     def bit_to_int(self, bitlist):
@@ -299,7 +304,7 @@ class ClientNode (FastNode):
         sid = self.id
         p_w = self.index
         b_w = self.bits
-        r_bw = None
+        r_bw = None  # Should be computed in step b og stage 1 in setup. Maybe
         signed_b_w = None
 
     def run(self):
