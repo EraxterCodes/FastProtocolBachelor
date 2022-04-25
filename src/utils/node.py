@@ -48,33 +48,3 @@ def get_all_messages_arr(self, num_messages):
             time.sleep(0.01)
 
     return messages
-
-
-def get_trimmed_info(self, node_info=str):
-    try:
-        info_array = []
-
-        remove_braces = node_info.strip("[]")
-        temp_info = remove_braces.split(" ")
-        for info in temp_info:
-            remove_commas = info.strip(',')
-            remove_ticks = remove_commas.strip("'")
-            index, host, port = remove_ticks.split(":")
-
-            converted_port = int(port)
-
-            if(self.host == host and self.port == converted_port):
-                self.index = int(index)
-
-            info_tuple = (host, converted_port)
-            info_array.append(info_tuple)
-
-        print(info_array)
-        return info_array
-    except:
-        print(f"{self.id} has crashed when splitting node_info")
-        self.sock.close()
-
-
-def add_index_to_node_info():
-    pass

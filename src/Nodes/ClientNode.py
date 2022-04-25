@@ -17,7 +17,6 @@ class ClientNode (FastNode):
         self.index = None  # Is used when doing step 3 of FPA protocol
         self.bc_node = None  # gets set in setup
 
-        self.debugPrint = False
         self.bid = bid
 
         self.p = 0
@@ -42,42 +41,28 @@ class ClientNode (FastNode):
         self.utxos = []
 
     def connect_to_clients(self, node_info):
-        try:
-            host = node_info[0]
-            port = int(node_info[1])
+        host = node_info["client_info"]["host"]
+        port = node_info["client_info"]["port"]
 
-            if not(host == self.host and port == self.port):
-                self.clients.append((host, port))
-                self.connect_with_node(host, port)
-        except:
-            print(f"{self.id} has crashed when connecting to clients")
-            self.sock.close()
+        if not(host == self.host and port == self.port):
+            self.clients.append((host, port))
+            self.connect_with_node(host, port)
+        else:
+            self.index = node_info["client_index"]
 
     def connect_to_nodes(self):
-        try:
-            self.connect_with_node(self.broadcast_host, self.broadcast_port)
+        self.connect_with_node(self.broadcast_host, self.broadcast_port)
 
-            node_info = f"{self.host}:{str(self.port)}"
-            self.send_to_nodes(node_info)
+        node_info = {"host": self.host, "port": self.port}
+        self.send_to_nodes(node_info)
 
-            while self.all_nodes[0].get_node_message() == "":
-                time.sleep(0.1)
+        node_info_json = json.loads(get_message(self.all_nodes[0]))
 
-            node_info = self.all_nodes[0].get_node_message()
-            self.all_nodes[0].reset_node_message()
+        self.bc_node = get_broadcast_node(self.all_nodes)
 
-            trimmed_info = get_trimmed_info(self, node_info)
-
-            self.bc_node = get_broadcast_node(self.all_nodes)
-
-            time.sleep(0.1)
-
-            for node in trimmed_info:
-                self.connect_to_clients(node)
-                time.sleep(0.1)
-        except:
-            print(f"{self.id} has crashed when connecting to all nodes")
-            self.sock.close()
+        for node in node_info_json["node_info"]:
+            self.connect_to_clients(node)
+            time.sleep(0.01)
 
     def bid_decomposition(self):
         bits = [int(digit) for digit in bin(self.bid)[2:]]
@@ -174,7 +159,6 @@ class ClientNode (FastNode):
         # verify c_j for each other party p_j, skipped atm
 
     def generate_bfv_nizk(self, i, c, v, X, Y, r, x, r_hat):
-        # Theoretically these could be the same, but we'll run that chance chief
         if i == 1:
             alpha = 2
         else:

@@ -71,9 +71,10 @@ class BroadcastNode (FastNode):
         converted_clients = []
 
         for i in range(len(self.clients)):
-            converted_clients.append(f"{i}:{str(self.clients[i])}")
+            converted_clients.append(
+                {"client_index": i, "client_info": json.loads(self.clients[i])})
 
-        self.send_to_nodes(str(converted_clients))
+        self.send_to_nodes({"node_info": converted_clients})
         # self.terminate_flag.set()
         print("Broadcast Finished")
 
