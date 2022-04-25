@@ -98,12 +98,10 @@ class ClientNode (FastNode):
         work = 0.1
         # build secret deposit
         bid_param = f"{self.bid};{change};{work}"
-        [self.bid, change, work, self.id]
 
         # (a) send to smart contract (BroadcastNode)
-        self.send_to_node(self.bc_node, bid_param)
+        self.send_to_node(self.bc_node, bid_param)  # Not a dict
         # (b) compute bit commitments
-
         self.bid_decomposition()
 
         # (c) build UTXO for confidential transaction - skippable
@@ -167,11 +165,6 @@ class ClientNode (FastNode):
                     for h in range(self.index+1, len(self.big_xs)):  # Right side of equation
                         right_side = self.pd.cp.add_point(
                             right_side, self.big_xs[h][j])
-
-                    left_side = self.pd.cp.sub_point(
-                        left_side, self.pd.param[1])
-                    right_side = self.pd.cp.sub_point(
-                        right_side, self.pd.param[1])
 
                     self.big_ys[i].append(self.pd.cp.sub_point(
                         left_side, right_side))
@@ -238,7 +231,7 @@ class ClientNode (FastNode):
                        c_div_g_p, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p]
 
         if alpha == 1:  # F_1
-            gamma_1 = None  # H - (w_1 + w_2) (mod p)
+            gamma_1 = w_1  # None  # H - (w_1 + w_2) (mod p)
             gamma_2 = w_2
 
             x_1, x_2, x_3, x_4 = r, x, 0, 0
@@ -260,7 +253,7 @@ class ClientNode (FastNode):
 
         else:  # F_2
             gamma_1 = w_1
-            gamma_2 = None  # H - (w_1 + w_2) (mod p)
+            gamma_2 = w_2  # None  # H - (w_1 + w_2) (mod p)
 
             x_1, x_2, x_3, x_4 = 0, 0, r, r_hat
 
@@ -279,9 +272,17 @@ class ClientNode (FastNode):
             # (v_4 - gamma_2 * x_4) mod p
             r_5 = (v_s[3] - (gamma_2 * x_4)) % self.p
 
-        return (gamma_1, gamma_2, r_1, r_2, r_3, r_4, r_5)
+        return {
+            "gamma_1": gamma_1,
+            "gamma_2": gamma_2,
+            "r_1": r_1,
+            "r_2": r_2,
+            "r_3": r_3,
+            "r_4": r_4,
+            "r_5": r_5
+        }
 
-    def generate_afv_nizk(self, i, d, c, v, X, Y, Xr, Yr, r, x, r_hat, r_hat_lv,x_lv):
+    def generate_afv_nizk(self, i, d, c, v, X, Y, Xr, Yr, r, x, r_hat, r_hat_lv, x_lv):
         if i == 1 and d == 1:
             alpha = 2
         elif i == 1 and d == 0:
@@ -323,9 +324,9 @@ class ClientNode (FastNode):
         t_4_p = Point(t_4.x % self.p, t_4.y % self.p, self.pd.cp)
 
         # d^w_2 * g^v_4
-        t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_2, d), self.pd.cp.mul_point(v_s[3], self.g))
-        t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
+        # t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
+        #     w_2, d), self.pd.cp.mul_point(v_s[3], self.g))  # D is not a point
+        # t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
 
         # v^w_2 * g^v_5
         t_6 = self.pd.cp.add_point(self.pd.cp.mul_point(
@@ -338,9 +339,9 @@ class ClientNode (FastNode):
         t_7_p = Point(t_7.x % self.p, t_7.y % self.p, self.pd.cp)
 
         # d^w_3 * Yr^v_7
-        t_8 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
-        t_8_p = Point(t_8.x % self.p, t_8.y % self.p, self.pd.cp)
+        # t_8 = self.pd.cp.add_point(self.pd.cp.mul_point(
+        #     w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
+        # t_8_p = Point(t_8.x % self.p, t_8.y % self.p, self.pd.cp)
 
         # Xr^w_3 * g^v_7
         t_9 = self.pd.cp.add_point(self.pd.cp.mul_point(
@@ -357,18 +358,18 @@ class ClientNode (FastNode):
             w_3, X), self.pd.cp.mul_point(v_s[7], self.g))
         t_11_p = Point(t_11.x % self.p, t_11.y % self.p, self.pd.cp)
 
-        h_add_arr = [self.h, c, Y, v, self.g, X, c_div_g, d, Yr, Xr,
-                     t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
+        # h_add_arr = [self.h, c, Y, v, self.g, X, c_div_g, d, Yr, Xr,
+        #              t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
 
         if alpha == 1:  # F_1
-            gamma_1 = None  # H - (w_1 + w_2 + w_3) (mod p)
+            gamma_1 = w_1  # None  # H - (w_1 + w_2 + w_3) (mod p)
             gamma_2 = w_2
             gamma_3 = w_3
 
-            x_1,x_2, x_3, x_4, x_5, x_6, x_7, x_8 = r, x, 0, 0, 0, 0, 0, 0 
+            x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = r, x, 0, 0, 0, 0, 0, 0
 
             #  v_1 - gamma alpha * x1
-            r_1 = (v_s[0] - (gamma_1 * x_1)) % self.p #Bob is this right?
+            r_1 = (v_s[0] - (gamma_1 * x_1)) % self.p  # Bob is this right?
 
             # v_2 - gamma alpha * x2
             r_2 = (v_s[1] - (gamma_1 * x_2)) % self.p
@@ -376,91 +377,125 @@ class ClientNode (FastNode):
             # v_2 - gamma alpha * x2 -> The same as r2?
             r_3 = r_2
 
-            #v_3 - gamma alpha * x3
+            # v_3 - gamma alpha * x3
             r_4 = (v_s[2] - (gamma_1 * x_3)) % self.p
 
-            #v_4 - gamma alpha * x4
+            # v_4 - gamma alpha * x4
             r_5 = (v_s[3] - (gamma_1 * x_4)) % self.p
 
-            #v_5 - gamma alpha * x5
+            # v_5 - gamma alpha * x5
             r_6 = (v_s[4] - (gamma_1 * x_5)) % self.p
 
-            #v_6 - gamma alpha * x6
+            # v_6 - gamma alpha * x6
             r_7 = (v_s[5] - (gamma_1 * x_6)) % self.p
 
-            #v_7 - gamma alpha * x7
+            # v_7 - gamma alpha * x7
             r_8 = (v_s[6] - (gamma_1 * x_7)) % self.p
 
-            #v_7 - gamma alpha * x7 -> Same as r8?
+            # v_7 - gamma alpha * x7 -> Same as r8?
             r_9 = r_8
 
-            #v_8 - gamma alpha * x8
+            # v_8 - gamma alpha * x8
             r_10 = (v_s[7] - (gamma_1 * x_8)) % self.p
-            
-            #v_8 - gamma alpha * x8 -> Same as r_10 ?
+
+            # v_8 - gamma alpha * x8 -> Same as r_10 ?
             r_11 = r_10
 
         elif alpha == 2:  # F_2
             gamma_1 = w_1
-            gamma_2 = None  # H - (w_1 + w_2 + w_3) (mod p)
+            gamma_2 = w_2  # None  # H - (w_1 + w_2 + w_3) (mod p)
             gamma_3 = w_3
 
-            x_1,x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, r, r_hat_lv, r_hat, 0, 0, 0
+            x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, r, r_hat_lv, r_hat, 0, 0, 0
 
-            
             #  v_1 - gamma alpha * x1
-            r_1 = (v_s[0] - (gamma_2 * x_1)) % self.p #Bob is this right?
+            r_1 = (v_s[0] - (gamma_2 * x_1)) % self.p  # Bob is this right?
 
             # v_2 - gamma alpha * x2
             r_2 = (v_s[1] - (gamma_2 * x_2)) % self.p
 
             # v_2 - gamma alpha * x2 -> The same as r2?
-            r_3 = (v_s[1] - (gamma_2 * x_2)) % self.p
+            r_3 = r_2
 
-            #v_3 - gamma alpha * x3
+            # v_3 - gamma alpha * x3
             r_4 = (v_s[2] - (gamma_2 * x_3)) % self.p
 
-            #v_4 - gamma alpha * x4
+            # v_4 - gamma alpha * x4
             r_5 = (v_s[3] - (gamma_2 * x_4)) % self.p
 
-            #v_5 - gamma alpha * x5
+            # v_5 - gamma alpha * x5
             r_6 = (v_s[4] - (gamma_2 * x_5)) % self.p
 
-            #v_6 - gamma alpha * x6
+            # v_6 - gamma alpha * x6
             r_7 = (v_s[5] - (gamma_2 * x_6)) % self.p
 
-            #v_7 - gamma alpha * x7
+            # v_7 - gamma alpha * x7
             r_8 = (v_s[6] - (gamma_2 * x_7)) % self.p
 
-            #v_7 - gamma alpha * x7 -> Same as r8?
-            r_9 = (v_s[6] - (gamma_2 * x_7)) % self.p
+            # v_7 - gamma alpha * x7 -> Same as r8?
+            r_9 = r_8
 
-            #v_8 - gamma alpha * x8
+            # v_8 - gamma alpha * x8
             r_10 = (v_s[7] - (gamma_2 * x_8)) % self.p
-            
-            #v_8 - gamma alpha * x8 -> Same as r_10 ?
-            r_11 = (v_s[7] - (gamma_2 * x_8)) % self.p
 
+            # v_8 - gamma alpha * x8 -> Same as r_10 ?
+            r_11 = r_10
         else:  # F_3
             gamma_1 = w_1
             gamma_2 = w_2
-            gamma_3 = None  # H - (w_1 + w_2 + w_3) (mod p)
+            gamma_3 = w_3  # None  # H - (w_1 + w_2 + w_3) (mod p)
 
-            x_1,x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0,0,0,0,0,r,x_lv,x
+            x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, 0, 0, 0, r, x_lv, x
 
-            r_1 = None
-            r_2 = None
-            r_3 = None
-            r_4 = None
-            r_5 = None
-            r_6 = None
-            r_7 = None
-            r_8 = None
-            r_9 = None
-            r_10 = None
-            r_11 = None
+            #  v_1 - gamma alpha * x1
+            r_1 = (v_s[0] - (gamma_3 * x_1)) % self.p  # Bob is this right?
 
-        return (gamma_1, gamma_2, gamma_3, r_1, r_2, r_3, r_4, r_5, r_6, r_7, r_8, r_9, r_10, r_11)
+            # v_2 - gamma alpha * x2
+            r_2 = (v_s[1] - (gamma_3 * x_2)) % self.p
+
+            # v_2 - gamma alpha * x2 -> The same as r2?
+            r_3 = r_2
+
+            # v_3 - gamma alpha * x3
+            r_4 = (v_s[2] - (gamma_3 * x_3)) % self.p
+
+            # v_4 - gamma alpha * x4
+            r_5 = (v_s[3] - (gamma_3 * x_4)) % self.p
+
+            # v_5 - gamma alpha * x5
+            r_6 = (v_s[4] - (gamma_3 * x_5)) % self.p
+
+            # v_6 - gamma alpha * x6
+            r_7 = (v_s[5] - (gamma_3 * x_6)) % self.p
+
+            # v_7 - gamma alpha * x7
+            r_8 = (v_s[6] - (gamma_3 * x_7)) % self.p
+
+            # v_7 - gamma alpha * x7 -> Same as r8?
+            r_9 = r_8
+
+            # v_8 - gamma alpha * x8
+            r_10 = (v_s[7] - (gamma_3 * x_8)) % self.p
+
+            # v_8 - gamma alpha * x8 -> Same as r_10 ?
+            r_11 = r_10
+
+        return {
+            "gamma_1": gamma_1,
+            "gamma_2": gamma_2,
+            "gamma_3": gamma_3,
+            "r_1": r_1,
+            "r_2": r_2,
+            "r_3": r_3,
+            "r_4": r_4,
+            "r_5": r_5,
+            "r_6": r_6,
+            "r_7": r_7,
+            "r_8": r_8,
+            "r_9": r_9,
+            "r_10": r_10,
+            "r_11": r_11
+        }
 
     def sample_from_field(self):
         return number.getRandomRange(1, self.p - 1)
@@ -472,11 +507,88 @@ class ClientNode (FastNode):
 
         return lst
 
+    def verify_bfv_nizk(self, data, h, c, Y, v, g, X):
+        gamma_res = data["gamma_1"] + data["gamma_2"]
+
+        c_div_g = self.pd.cp.sub_point(c, g)
+
+        # c^gamma_1 * h^r_1
+        t_1_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_1"], c), self.pd.cp.mul_point(data["r_1"], h))
+
+        # v^gamma_1 * Y^r_2
+        t_2_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_1"], v), self.pd.cp.mul_point(data["r_2"], Y))
+
+        # X^gamma_1 * g^r_3
+        t_3_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_1"], X), self.pd.cp.mul_point(data["r_3"], g))
+
+        # (c/g)^gamma_2 * h^r_4
+        t_4_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_2"], c_div_g), self.pd.cp.mul_point(data["r_4"], h))
+
+        # v^gamma_2 * g^r_5
+        t_5_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_2"], v), self.pd.cp.mul_point(data["r_5"], g))
+
+        # Check if gamma = H
+
+    def verify_afv_nizk(self, data, c, Y, v, X, d, Yr, Xr):
+        gamma_res = data["gamma_1"] + data["gamma_2"] + data["gamma_3"]
+
+        c_div_g = self.pd.cp.sub_point(c, self.g)
+
+        # c^gamma_1 * h^r_1
+        t_1_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_1"], c), self.pd.cp.mul_point(data["r_1"], self.h))
+
+        # v^gamma_1 * Y^r_2
+        t_2_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_1"], v), self.pd.cp.mul_point(data["r_2"], Y))
+
+        # X^gamma_1 * g^r_3
+        t_3_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_1"], X), self.pd.cp.mul_point(data["r_3"], self.g))
+
+        # (c/g)^gamma_2 * h^r_4
+        t_4_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_2"], c_div_g), self.pd.cp.mul_point(data["r_4"], self.h))
+
+        # d^gamma_2 * g^r_5 # d is not a point
+        # t_5_prime = self.pd.cp.add_point(self.pd.cp.mul_point(data["gamma_2"], d), self.pd.cp.mul_point(data["r_5"], self.g))
+
+        # v^gamma_2 * g^r_6
+        t_6_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_2"], v), self.pd.cp.mul_point(data["r_6"], self.g))
+
+        # (c/g)^gamma_3 * h^r_7
+        t_7_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_3"], c_div_g), self.pd.cp.mul_point(data["r_7"], self.h))
+
+        # d^gamma_3 * Yr^r_8 # d is not a point
+        # t_8_prime = self.pd.cp.add_point(self.pd.cp.mul_point(data["gamma_3"], d), self.pd.cp.mul_point(data["r_8"], Yr))
+
+        # Xr^gamma_3 * g^r_9
+        t_9_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_3"], Xr), self.pd.cp.mul_point(data["r_9"], self.g))
+
+        # v^gamma_3 * Y^r_10
+        t_10_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_3"], v), self.pd.cp.mul_point(data["r_10"], Y))
+
+        # X^gamma_3 * g^r_11
+        t_11_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
+            data["gamma_3"], X), self.pd.cp.mul_point(data["r_11"], self.g))
+
+        # Check if gamma = H
+
     def veto(self):
         # Create NIZK :)
         bfv = True  # Before First Veto
 
         previous_vetos = []
+        veto_randomness = []
         latest_veto_r = None
 
         print(
@@ -485,9 +597,9 @@ class ClientNode (FastNode):
         for i in range(len(self.bit_commitments)):
             if bfv:  # Before first veto
                 r_hat = number.getRandomRange(1, self.p - 1)
-
+                veto_randomness.append(r_hat)
                 if self.bits[i] == 1:
-                    v = self.pd.cp.mul_point(r, self.g)
+                    v = self.pd.cp.mul_point(r_hat, self.g)
                     previous_vetos.append(True)
                 else:
                     v = self.pd.cp.mul_point(
@@ -497,17 +609,21 @@ class ClientNode (FastNode):
                 bfv_nizk = self.generate_bfv_nizk(
                     self.bits[i], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_commitments[i][1], self.small_xs[i], r_hat)
 
-                self.send_to_nodes(str(v), exclude=[self.bc_node])
+                self.send_to_nodes(
+                    ({"v_ir": str(v), "BV": bfv_nizk}), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
                 vs = get_all_messages_arr(self, len(self.clients))
 
                 v_arr = []
-
                 v_arr.append(v)
                 for j in range(len(self.clients)):
-                    v_arr.append(str_to_point(vs[j], self.pd.cp))
+                    json_data = json.loads(vs[j])
+                    self.verify_bfv_nizk(json_data["BV"], self.h, self.bit_commitments[i][0],
+                                         self.big_ys[self.index][i], v, self.g, self.big_xs[self.index][i])
+                    v_arr.append(str_to_point(
+                        str(json_data["v_ir"]), self.pd.cp))
 
                 point = self.g
 
@@ -526,6 +642,7 @@ class ClientNode (FastNode):
             else:  # After first veto
                 # If the bit is 1 and the previous veto was true
                 r_hat = number.getRandomRange(1, self.p - 1)
+                veto_randomness.append(r_hat)
                 if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
                     v = self.pd.cp.mul_point(r_hat, self.g)
                     previous_vetos.append(True)
@@ -540,10 +657,12 @@ class ClientNode (FastNode):
                     previous_vetos.append(False)
 
                 afv_nizk = self.generate_afv_nizk(
-                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r],
-                    self.bit_commitments[i][1],self.small_xs[i], r_hat, r_hat_lv,x_lv)
+                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[
+                        self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r],
+                    self.bit_commitments[i][1], self.small_xs[i], r_hat, veto_randomness[latest_veto_r], self.small_xs[latest_veto_r])
 
-                self.send_to_nodes(str(v), exclude=[self.bc_node])
+                self.send_to_nodes(
+                    ({"v_ir": str(v), "AV": afv_nizk}), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
@@ -553,17 +672,18 @@ class ClientNode (FastNode):
 
                 v_arr.append(v)
                 for j in range(len(self.clients)):
-                    v_arr.append(str_to_point(vs[j], self.pd.cp))
+                    json_data = json.loads(vs[j])
+                    # self.verify_afv_nizk(json_data["AV"], self.bit_commitments[i][0], self.big_ys[self.index][i], v, self.big_xs[
+                    #                      self.index][i], self.bits[latest_veto_r], self.big_ys[latest_veto_r], self.big_xs[latest_veto_r])
+                    v_arr.append(str_to_point(json_data["v_ir"], self.pd.cp))
 
                 point = self.g
 
                 for j in range(len(v_arr)):
                     point = self.pd.cp.add_point(point, v_arr[j])
 
-                if point != self.g: # veto
+                if point != self.g:  # veto
                     latest_veto_r = i
-                    r_hat_lv = r_hat
-                    x_lv = self.small_xs[i]
                     self.vetos.append(1)
                 else:
                     self.vetos.append(0)
