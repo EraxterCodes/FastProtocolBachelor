@@ -1,3 +1,4 @@
+import json
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.string import *
 from src.utils.node import *
@@ -144,7 +145,6 @@ class ClientNode (FastNode):
         # self.big_xs.append(unpack_commitment_and_x(self, str(commit_x_arr)))
 
         commit_and_X_array = get_all_messages_arr(self, len(self.clients))
-        # print(str(commit_and_X_array) + "          " + self.id +  "   " + str(len(commit_and_X_array)))
         unpack_commitment_and_x(self, commit_and_X_array)
 
         # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
@@ -313,6 +313,14 @@ class ClientNode (FastNode):
         accept_connections_thread.start()
 
         self.connect_to_nodes()
+
+        # self.send_to_nodes(({"input": "setup", "input2": self.clients[0]}))
+
+        # msg = get_all_messages_arr(self, len(self.clients))
+
+        # dict1 = json.loads(msg[0])
+
+        # print(dict1["input"])
 
         self.setup()
 
