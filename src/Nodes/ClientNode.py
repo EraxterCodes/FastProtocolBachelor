@@ -281,7 +281,7 @@ class ClientNode (FastNode):
 
         return (gamma_1, gamma_2, r_1, r_2, r_3, r_4, r_5)
 
-    def generate_afv_nizk(self, i, d, c, v, X, Y, Xr, Yr):
+    def generate_afv_nizk(self, i, d, c, v, X, Y, Xr, Yr, r, x, r_hat, r_hat_lv,x_lv):
         if i == 1 and d == 1:
             alpha = 2
         elif i == 1 and d == 0:
@@ -365,37 +365,88 @@ class ClientNode (FastNode):
             gamma_2 = w_2
             gamma_3 = w_3
 
-            r_1 = None
-            r_2 = None
-            r_3 = None
-            r_4 = None
-            r_5 = None
-            r_6 = None
-            r_7 = None
-            r_8 = None
-            r_9 = None
-            r_10 = None
-            r_11 = None
+            x_1,x_2, x_3, x_4, x_5, x_6, x_7, x_8 = r, x, 0, 0, 0, 0, 0, 0 
+
+            #  v_1 - gamma alpha * x1
+            r_1 = (v_s[0] - (gamma_1 * x_1)) % self.p #Bob is this right?
+
+            # v_2 - gamma alpha * x2
+            r_2 = (v_s[1] - (gamma_1 * x_2)) % self.p
+
+            # v_2 - gamma alpha * x2 -> The same as r2?
+            r_3 = r_2
+
+            #v_3 - gamma alpha * x3
+            r_4 = (v_s[2] - (gamma_1 * x_3)) % self.p
+
+            #v_4 - gamma alpha * x4
+            r_5 = (v_s[3] - (gamma_1 * x_4)) % self.p
+
+            #v_5 - gamma alpha * x5
+            r_6 = (v_s[4] - (gamma_1 * x_5)) % self.p
+
+            #v_6 - gamma alpha * x6
+            r_7 = (v_s[5] - (gamma_1 * x_6)) % self.p
+
+            #v_7 - gamma alpha * x7
+            r_8 = (v_s[6] - (gamma_1 * x_7)) % self.p
+
+            #v_7 - gamma alpha * x7 -> Same as r8?
+            r_9 = r_8
+
+            #v_8 - gamma alpha * x8
+            r_10 = (v_s[7] - (gamma_1 * x_8)) % self.p
+            
+            #v_8 - gamma alpha * x8 -> Same as r_10 ?
+            r_11 = r_10
+
         elif alpha == 2:  # F_2
             gamma_1 = w_1
             gamma_2 = None  # H - (w_1 + w_2 + w_3) (mod p)
             gamma_3 = w_3
 
-            r_1 = None
-            r_2 = None
-            r_3 = None
-            r_4 = None
-            r_5 = None
-            r_6 = None
-            r_7 = None
-            r_8 = None
-            r_9 = None
-            r_10 = None
-            r_11 = None
+            x_1,x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, r, r_hat_lv, r_hat, 0, 0, 0
+
+            
+            #  v_1 - gamma alpha * x1
+            r_1 = (v_s[0] - (gamma_2 * x_1)) % self.p #Bob is this right?
+
+            # v_2 - gamma alpha * x2
+            r_2 = (v_s[1] - (gamma_2 * x_2)) % self.p
+
+            # v_2 - gamma alpha * x2 -> The same as r2?
+            r_3 = (v_s[1] - (gamma_2 * x_2)) % self.p
+
+            #v_3 - gamma alpha * x3
+            r_4 = (v_s[2] - (gamma_2 * x_3)) % self.p
+
+            #v_4 - gamma alpha * x4
+            r_5 = (v_s[3] - (gamma_2 * x_4)) % self.p
+
+            #v_5 - gamma alpha * x5
+            r_6 = (v_s[4] - (gamma_2 * x_5)) % self.p
+
+            #v_6 - gamma alpha * x6
+            r_7 = (v_s[5] - (gamma_2 * x_6)) % self.p
+
+            #v_7 - gamma alpha * x7
+            r_8 = (v_s[6] - (gamma_2 * x_7)) % self.p
+
+            #v_7 - gamma alpha * x7 -> Same as r8?
+            r_9 = (v_s[6] - (gamma_2 * x_7)) % self.p
+
+            #v_8 - gamma alpha * x8
+            r_10 = (v_s[7] - (gamma_2 * x_8)) % self.p
+            
+            #v_8 - gamma alpha * x8 -> Same as r_10 ?
+            r_11 = (v_s[7] - (gamma_2 * x_8)) % self.p
+
         else:  # F_3
             gamma_1 = w_1
             gamma_2 = w_2
             gamma_3 = None  # H - (w_1 + w_2 + w_3) (mod p)
+
+            x_1,x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0,0,0,0,0,r,x_lv,x
 
             r_1 = None
             r_2 = None
@@ -474,9 +525,9 @@ class ClientNode (FastNode):
 
             else:  # After first veto
                 # If the bit is 1 and the previous veto was true
+                r_hat = number.getRandomRange(1, self.p - 1)
                 if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
-                    r = number.getRandomRange(1, self.p - 1)
-                    v = self.pd.cp.mul_point(r, self.g)
+                    v = self.pd.cp.mul_point(r_hat, self.g)
                     previous_vetos.append(True)
                 # If the bit is 1 and the previous veto was false
                 elif self.bits[i] == 1 and previous_vetos[latest_veto_r] == False:
@@ -489,7 +540,8 @@ class ClientNode (FastNode):
                     previous_vetos.append(False)
 
                 afv_nizk = self.generate_afv_nizk(
-                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r])
+                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r],
+                    self.bit_commitments[i][1],self.small_xs[i], r_hat, r_hat_lv,x_lv)
 
                 self.send_to_nodes(str(v), exclude=[self.bc_node])
 
@@ -508,8 +560,10 @@ class ClientNode (FastNode):
                 for j in range(len(v_arr)):
                     point = self.pd.cp.add_point(point, v_arr[j])
 
-                if point != self.g:
+                if point != self.g: # veto
                     latest_veto_r = i
+                    r_hat_lv = r_hat
+                    x_lv = self.small_xs[i]
                     self.vetos.append(1)
                 else:
                     self.vetos.append(0)
