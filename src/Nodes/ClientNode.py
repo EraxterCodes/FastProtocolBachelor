@@ -200,22 +200,23 @@ class ClientNode (FastNode):
             w_2, v), self.pd.cp.mul_point(v_s[3], self.g))
         t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
 
-        h_p = Point(self.h.x % self.p, self.h.y % self.p, self.pd.cp)
-        c_p = Point(c.x % self.p, c.y % self.p, self.pd.cp)
-        Y_p = Point(Y.x % self.p, Y.y % self.p, self.pd.cp)
-        v_p = Point(v.x % self.p, v.y % self.p, self.pd.cp)
-        g_p = Point(self.g.x % self.p, self.g.y % self.p, self.pd.cp)
-        X_p = Point(X.x % self.p, X.y % self.p, self.pd.cp)
-        c_div_g_p = Point(c_div_g.x % self.p, c_div_g.y % self.p, self.pd.cp)
+        #Dont think we need this.
+        #h_p = Point(self.h.x % self.p, self.h.y % self.p, self.pd.cp)
+        #c_p = Point(c.x % self.p, c.y % self.p, self.pd.cp)
+        #Y_p = Point(Y.x % self.p, Y.y % self.p, self.pd.cp)
+        #v_p = Point(v.x % self.p, v.y % self.p, self.pd.cp)
+        #g_p = Point(self.g.x % self.p, self.g.y % self.p, self.pd.cp)
+        #X_p = Point(X.x % self.p, X.y % self.p, self.pd.cp)
+        #c_div_g_p = Point(c_div_g.x % self.p, c_div_g.y % self.p, self.pd.cp)
 
         h_add_arr = [self.h, c, Y, v, self.g,
                      X, c_div_g, t_1, t_2, t_3, t_4, t_5]
 
-        h_p_add_arr = [h_p, c_p, Y_p, v_p, g_p, X_p,
-                       c_div_g_p, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p]
-
+        big_h = self.Calc_h(h_add_arr)
+    
+        #Calc gamma
         if alpha == 1:  # F_1
-            gamma_1 = w_1  # None  # H - (w_1 + w_2) (mod p)
+            gamma_1 = (big_h - (w_1 + w_2)) % self.p
             gamma_2 = w_2
 
             x_1, x_2, x_3, x_4 = r, x, 0, 0
@@ -237,7 +238,7 @@ class ClientNode (FastNode):
 
         else:  # F_2
             gamma_1 = w_1
-            gamma_2 = w_2  # None  # H - (w_1 + w_2) (mod p)
+            gamma_2 = (big_h - (w_1 + w_2)) % self.p
 
             x_1, x_2, x_3, x_4 = 0, 0, r, r_hat
 
@@ -308,9 +309,9 @@ class ClientNode (FastNode):
         t_4_p = Point(t_4.x % self.p, t_4.y % self.p, self.pd.cp)
 
         # d^w_2 * g^v_4
-        # t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
-        #     w_2, d), self.pd.cp.mul_point(v_s[3], self.g))  # D is not a point
-        # t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
+        t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
+             w_2, d), self.pd.cp.mul_point(v_s[3], self.g))  # D is not a point
+        t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
 
         # v^w_2 * g^v_5
         t_6 = self.pd.cp.add_point(self.pd.cp.mul_point(
@@ -323,9 +324,9 @@ class ClientNode (FastNode):
         t_7_p = Point(t_7.x % self.p, t_7.y % self.p, self.pd.cp)
 
         # d^w_3 * Yr^v_7
-        # t_8 = self.pd.cp.add_point(self.pd.cp.mul_point(
-        #     w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
-        # t_8_p = Point(t_8.x % self.p, t_8.y % self.p, self.pd.cp)
+        t_8 = self.pd.cp.add_point(self.pd.cp.mul_point(
+             w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
+        t_8_p = Point(t_8.x % self.p, t_8.y % self.p, self.pd.cp)
 
         # Xr^w_3 * g^v_7
         t_9 = self.pd.cp.add_point(self.pd.cp.mul_point(
@@ -342,11 +343,13 @@ class ClientNode (FastNode):
             w_3, X), self.pd.cp.mul_point(v_s[7], self.g))
         t_11_p = Point(t_11.x % self.p, t_11.y % self.p, self.pd.cp)
 
-        # h_add_arr = [self.h, c, Y, v, self.g, X, c_div_g, d, Yr, Xr,
-        #              t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
+        h_add_arr = [self.h, c, Y, v, self.g, X, c_div_g, d, Yr, Xr,
+                    t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
+
+        big_h = self.Calc_h(h_add_arr)
 
         if alpha == 1:  # F_1
-            gamma_1 = w_1  # None  # H - (w_1 + w_2 + w_3) (mod p)
+            gamma_1 = (big_h - (w_1 + w_2 + w_3)) % self.p
             gamma_2 = w_2
             gamma_3 = w_3
 
@@ -387,7 +390,7 @@ class ClientNode (FastNode):
 
         elif alpha == 2:  # F_2
             gamma_1 = w_1
-            gamma_2 = w_2  # None  # H - (w_1 + w_2 + w_3) (mod p)
+            gamma_2 = (big_h - (w_1 + w_2 + w_3)) % self.p
             gamma_3 = w_3
 
             x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, r, r_hat_lv, r_hat, 0, 0, 0
@@ -427,7 +430,7 @@ class ClientNode (FastNode):
         else:  # F_3
             gamma_1 = w_1
             gamma_2 = w_2
-            gamma_3 = w_3  # None  # H - (w_1 + w_2 + w_3) (mod p)
+            gamma_3 = (big_h - (w_1 + w_2 + w_3)) % self.p
 
             x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, 0, 0, 0, r, x_lv, x
 
@@ -492,7 +495,7 @@ class ClientNode (FastNode):
         return lst
 
     def verify_bfv_nizk(self, data, h, c, Y, v, g, X):
-        gamma_res = data["gamma_1"] + data["gamma_2"]
+        gamma_result = data["gamma_1"] + data["gamma_2"]
 
         c_div_g = self.pd.cp.sub_point(c, g)
 
@@ -516,7 +519,12 @@ class ClientNode (FastNode):
         t_5_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
             data["gamma_2"], v), self.pd.cp.mul_point(data["r_5"], g))
 
+        #Calc H
+        
+
         # Check if gamma = H
+
+
 
     def verify_afv_nizk(self, data, c, Y, v, X, d, Yr, Xr):
         gamma_res = data["gamma_1"] + data["gamma_2"] + data["gamma_3"]
@@ -566,6 +574,13 @@ class ClientNode (FastNode):
             data["gamma_3"], X), self.pd.cp.mul_point(data["r_11"], self.g))
 
         # Check if gamma = H
+
+    def Calc_h(self, sumarray):
+        result = Point(0,0,self.pd.cp,check=False)
+        for x in sumarray :
+            result = self.pd.cp.add_point(result,x)
+        result_p = Point(result.x % self.p, result.y % self.p, self.pd.cp)
+        return result_p
 
     def veto(self):
         # Create NIZK :)
