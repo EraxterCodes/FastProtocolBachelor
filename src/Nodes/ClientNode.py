@@ -200,7 +200,7 @@ class ClientNode (FastNode):
             w_2, v), self.pd.cp.mul_point(v_s[3], self.g))
         t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
 
-        #Dont think we need this.
+        # Dont think we need this.
         #h_p = Point(self.h.x % self.p, self.h.y % self.p, self.pd.cp)
         #c_p = Point(c.x % self.p, c.y % self.p, self.pd.cp)
         #Y_p = Point(Y.x % self.p, Y.y % self.p, self.pd.cp)
@@ -212,9 +212,11 @@ class ClientNode (FastNode):
         h_add_arr = [self.h, c, Y, v, self.g,
                      X, c_div_g, t_1, t_2, t_3, t_4, t_5]
 
-        big_h = self.Calc_h(h_add_arr)
-    
-        #Calc gamma
+        res_h = self.Calc_h(h_add_arr)
+
+        big_h = 0
+
+        # Calc gamma
         if alpha == 1:  # F_1
             gamma_1 = (big_h - (w_1 + w_2)) % self.p
             gamma_2 = w_2
@@ -310,7 +312,7 @@ class ClientNode (FastNode):
 
         # d^w_2 * g^v_4
         t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
-             w_2, d), self.pd.cp.mul_point(v_s[3], self.g))  # D is not a point
+            w_2, d), self.pd.cp.mul_point(v_s[3], self.g))  # D is not a point
         t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
 
         # v^w_2 * g^v_5
@@ -325,7 +327,7 @@ class ClientNode (FastNode):
 
         # d^w_3 * Yr^v_7
         t_8 = self.pd.cp.add_point(self.pd.cp.mul_point(
-             w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
+            w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
         t_8_p = Point(t_8.x % self.p, t_8.y % self.p, self.pd.cp)
 
         # Xr^w_3 * g^v_7
@@ -344,7 +346,7 @@ class ClientNode (FastNode):
         t_11_p = Point(t_11.x % self.p, t_11.y % self.p, self.pd.cp)
 
         h_add_arr = [self.h, c, Y, v, self.g, X, c_div_g, d, Yr, Xr,
-                    t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
+                     t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
 
         big_h = self.Calc_h(h_add_arr)
 
@@ -519,12 +521,15 @@ class ClientNode (FastNode):
         t_5_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
             data["gamma_2"], v), self.pd.cp.mul_point(data["r_5"], g))
 
-        #Calc H
-        
+        # Calc H
+        h_add_arr = [self.h, c, Y, v, self.g,
+                     X, c_div_g, t_1_prime, t_2_prime, t_3_prime, t_4_prime, t_5_prime]
+
+        res_h = self.Calc_h(h_add_arr)
+
+        big_h = 0
 
         # Check if gamma = H
-
-
 
     def verify_afv_nizk(self, data, c, Y, v, X, d, Yr, Xr):
         gamma_res = data["gamma_1"] + data["gamma_2"] + data["gamma_3"]
@@ -576,11 +581,11 @@ class ClientNode (FastNode):
         # Check if gamma = H
 
     def Calc_h(self, sumarray):
-        result = Point(0,0,self.pd.cp,check=False)
-        for x in sumarray :
-            result = self.pd.cp.add_point(result,x)
-        result_p = Point(result.x % self.p, result.y % self.p, self.pd.cp)
-        return result_p
+        result = self.g
+        for x in sumarray:
+            result = self.pd.cp.add_point(result, x)
+
+        return result
 
     def veto(self):
         # Create NIZK :)
@@ -610,6 +615,8 @@ class ClientNode (FastNode):
 
                 self.send_to_nodes(
                     ({"v_ir": str(v), "BV": bfv_nizk}), exclude=[self.bc_node])
+                # self.send_to_nodes(
+                #     ({"v_ir": str(v)}), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
@@ -655,13 +662,15 @@ class ClientNode (FastNode):
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
 
-                afv_nizk = self.generate_afv_nizk(
-                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[
-                        self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r],
-                    self.bit_commitments[i][1], self.small_xs[i], r_hat, veto_randomness[latest_veto_r], self.small_xs[latest_veto_r])
+                # afv_nizk = self.generate_afv_nizk(
+                #     self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[
+                #         self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r],
+                #     self.bit_commitments[i][1], self.small_xs[i], r_hat, veto_randomness[latest_veto_r], self.small_xs[latest_veto_r])
 
                 self.send_to_nodes(
-                    ({"v_ir": str(v), "AV": afv_nizk}), exclude=[self.bc_node])
+                    ({"v_ir": str(v)}), exclude=[self.bc_node])
+                # self.send_to_nodes(
+                #     ({"v_ir": str(v), "AV": afv_nizk}), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 

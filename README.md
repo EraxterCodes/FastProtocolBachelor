@@ -12,6 +12,7 @@ The best Bachelor since EMBA's Bachelor
     - [VetoPhase (Stage 2, 3)](#vetophase-stage-2-3)
     - [Stage 4, output](#stage-4-output)
     - [Recovery](#recovery)
+    - [Smart Contract](#smart-contract)
   - [Things we miss:](#things-we-miss)
     - [Calculate commit for bid and send it](#calculate-commit-for-bid-and-send-it)
     - [Fix, such that client only sends to broadcast node](#fix-such-that-client-only-sends-to-broadcast-node)
@@ -129,6 +130,47 @@ For **step 1**, the same approach is done again, however when choosing <img src=
 ### Recovery
 Comittee is needed for this stage
 ![Recovery](/img/recovery.png)
+
+### Smart Contract
+*Pseudo code*
+The smart contract takes care of punishing cheaters, as well as controlling the currency. We propose that a person that wants to sell an item, instantiate a smart contract with following parameters and functions:
+```solidity
+struct Client {
+  address public publickey;
+  uint256 bid;
+  string host;
+  uint256 port;
+}
+
+struct Auction {
+  uint256 price;
+  address seller;
+  address buyer;
+  uint256 timestamp;
+  bool isSold;
+  Client[] clients;
+}
+
+constructor() public {
+  Auction auction = Auction(0, msg.sender, "0x00", block.timestamp, false, []);
+}
+```
+
+Once a person has instantiated the smart contract, other parties can join the auction through the address of the contract, calling a method ```joinAuction``` with the following parameters:
+```solidity
+function joinAuction(uint256 _bid, string _host, uint256 port) public payable {
+  Client client = Client(msg.sender, _bid, _host, port);
+  auction.clients.push(client)
+}
+```
+And then the Auction object should append the client to the array of clients. Finally, once the seller (owner of the contract) is happy with the amount of people that has joined, he can call the method ```startAuction```, which in tern starts the auction and the therefore the protocol:
+```solidity
+function startAuction() public {
+  if(auction.seller == msg.sender) {
+    -- start the auction -- 
+  }
+}
+```
 
 ## Things we miss:
 ### Calculate commit for bid and send it

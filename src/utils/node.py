@@ -10,7 +10,7 @@ def get_broadcast_node(node_list):
 def reset_all_node_msgs(node_list):
     for node in node_list:
         node.reset_node_message()
-    time.sleep(0.2)
+    time.sleep(0.1)
 
 
 def get_message(node):
@@ -19,7 +19,7 @@ def get_message(node):
     msg = node.get_node_message()
     node.reset_node_message()
 
-    time.sleep(0.1)
+    # time.sleep(0.1)
 
     return msg
 
