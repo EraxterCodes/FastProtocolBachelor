@@ -165,9 +165,13 @@ function joinAuction(uint256 _bid, string _host, uint256 port) public payable {
 ```
 And then the Auction object should append the client to the array of clients. Finally, once the seller (owner of the contract) is happy with the amount of people that has joined, he can call the method ```startAuction```, which in tern starts the auction and the therefore the protocol:
 ```solidity
-function startAuction() public {
+function startAuction() public returns (bool) {
   if(auction.seller == msg.sender) {
     -- start the auction -- 
+
+    return true;
+  } else {
+    return false;
   }
 }
 ```

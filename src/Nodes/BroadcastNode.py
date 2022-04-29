@@ -16,7 +16,8 @@ class BroadcastNode (FastNode):
         while(client.get_node_message() == ""):
             time.sleep(0.1)
 
-        self.received_bids.append((client.id, client.get_node_message()))
+        self.received_bids.append(
+            (client.id, client.get_node_message()))
 
     def send_params(self, client):
         while(len(self.nodes) > len(self.received_bids)):
@@ -25,16 +26,30 @@ class BroadcastNode (FastNode):
         # sort received bids by client id
         self.received_bids.sort(key=lambda y: y[0])
 
+        # TODO THIS HAS TO BE CHANGED. WILL FAIL IF CLIENT IDS ARE NOT UNIQUE
         param = self.received_bids[int(client.id) - 1]
 
-        sid = client.id
+        sid = client.id  # Not true, since we use self.index
         g = self.pd.param[1]
         h = self.pd.param[2]
         p = self.pd.param[0]
         pk_c_array = []  # We currently dont implement comittee sooo
-        composed_msg = f"{param};{sid};{g};{h};{p};{pk_c_array}"
+        composed_msg = {
+            "PARAM_FSC": param[1],
+            "sid": sid,
+            "g": {
+                "x": g.x,
+                "y": g.y,
+            },
+            "h": {
+                "x": h.x,
+                "y": h.y,
+            },
+            "p": p,
+            "pk_c_array": str(pk_c_array)
+        }
 
-        self.send_to_node(client, composed_msg)
+        self.send_to_node(client, (composed_msg))
 
     def accept_connections(self):
         while not self.terminate_flag.is_set():
@@ -75,7 +90,6 @@ class BroadcastNode (FastNode):
                 {"client_index": i, "client_info": json.loads(self.clients[i])})
 
         self.send_to_nodes({"node_info": converted_clients})
-        # self.terminate_flag.set()
         print("Broadcast Finished")
 
     def run(self):
