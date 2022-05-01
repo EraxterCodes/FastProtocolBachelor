@@ -190,10 +190,10 @@ class ClientNode (FastNode):
 
         if bit == 0:  # F_1
             alpha = 1
-            w_1 = self.sample_from_field()
+            w_2 = self.sample_from_field()
         else:  # F_2
             alpha = 2
-            w_2 = self.sample_from_field()
+            w_1 = self.sample_from_field()
 
         c_div_g = curve.sub_point(c, self.g)
 
@@ -218,7 +218,7 @@ class ClientNode (FastNode):
         # Something might be wrong with picking the non H gamma
         if alpha == 1:  # F_1
             gamma1 = (h - (w_1 + w_2)) % self.p
-            gamma2 = w_1
+            gamma2 = w_2
 
             x1, x2, x3, x4 = r, x, 0, 0
 
@@ -229,7 +229,7 @@ class ClientNode (FastNode):
             r5 = (v_s[4] - gamma1 * x4) % self.p
 
         else:  # F_2
-            gamma1 = w_2
+            gamma1 = w_1
             gamma2 = (h - (w_1 + w_2)) % self.p
 
             x1, x2, x3, x4 = 0, 0, r, r_bar
@@ -240,12 +240,12 @@ class ClientNode (FastNode):
             r4 = (v_s[3] - gamma2 * x3) % self.p
             r5 = (v_s[4] - gamma2 * x4) % self.p
 
-        # if self.index == 2:
-        #     print(f"Create NIZK: {t_1}")
-        #     print(f"Create NIZK: {t_2}")
-        #     print(f"Create NIZK: {t_3}")
-        #     print(f"Create NIZK: {t_4}")
-        #     print(f"Create NIZK: {t_5}")
+        if self.index == 2:
+            print(f"Create NIZK: {t_1}")
+            print(f"Create NIZK: {t_2}")
+            print(f"Create NIZK: {t_3}")
+            print(f"Create NIZK: {t_4}")
+            print(f"Create NIZK: {t_5}")
 
         return {
             "h": h,
@@ -294,7 +294,7 @@ class ClientNode (FastNode):
             }
         }
 
-    def verify_bfv_nizk(self, nizk, index):
+    def verify_bfv_nizk(self, nizk, index, v):
         gamma1 = nizk["gamma1"]
         gamma2 = nizk["gamma2"]
         r1 = nizk["r1"]
@@ -309,47 +309,53 @@ class ClientNode (FastNode):
         curve = self.pd.cp
 
         c = Point(nizk["c"]["x"], nizk["c"]["y"], curve)
-        v = Point(nizk["v"]["x"], nizk["v"]["y"], curve)
         big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
         big_x = Point(nizk["X"]["x"], nizk["X"]["y"], curve)
 
         c_div_g = curve.sub_point(c, self.g)
 
-        # t_1_prime = curve.add_point(curve.mul_point(
-        #     gamma1, c), curve.mul_point(r1, self.h))
+        t_1_prime = curve.add_point(curve.mul_point(
+            gamma1, c), curve.mul_point(r1, self.h))
 
-        # t_2_prime = curve.add_point(curve.mul_point(
-        #     gamma1, v), curve.mul_point(r2, big_y))
+        # Correct
+        t_2_prime = curve.add_point(curve.mul_point(
+            gamma1, v), curve.mul_point(r2, big_y))
 
-        # t_3_prime = curve.add_point(curve.mul_point(
-        #     gamma1, big_x), curve.mul_point(r3, self.g))
+        # Correct
+        t_3_prime = curve.add_point(curve.mul_point(
+            gamma1, big_x), curve.mul_point(r3, self.g))
 
-        # t_4_prime = curve.add_point(curve.mul_point(
-        #     gamma2, c_div_g), curve.mul_point(r4, self.h))
+        # Correct
+        t_4_prime = curve.add_point(curve.mul_point(
+            gamma2, c_div_g), curve.mul_point(r4, self.h))
 
-        # t_5_prime = curve.add_point(curve.mul_point(
-        #     gamma2, v), curve.mul_point(r5, self.g))
+        t_5_prime = curve.add_point(curve.mul_point(
+            gamma2, v), curve.mul_point(r5, self.g))
 
-        t_1_prime = Point(nizk["t1"]["x"], nizk["t1"]["y"], curve)
-        t_2_prime = Point(nizk["t2"]["x"], nizk["t2"]["y"], curve)
-        t_3_prime = Point(nizk["t3"]["x"], nizk["t3"]["y"], curve)
-        t_4_prime = Point(nizk["t4"]["x"], nizk["t4"]["y"], curve)
-        t_5_prime = Point(nizk["t5"]["x"], nizk["t5"]["y"], curve)
+        # t_1_prime = Point(nizk["t1"]["x"], nizk["t1"]["y"], curve)
+        # t_2_prime = Point(nizk["t2"]["x"], nizk["t2"]["y"], curve)
+        # t_3_prime = Point(nizk["t3"]["x"], nizk["t3"]["y"], curve)
+        # t_4_prime = Point(nizk["t4"]["x"], nizk["t4"]["y"], curve)
+        # t_5_prime = Point(nizk["t5"]["x"], nizk["t5"]["y"], curve)
 
-        # if index == 2 and self.index == 1:
-        #     print(f"Verify NIZK: {t_1_prime}")
-        #     print(f"Verify NIZK: {t_2_prime}")
-        #     print(f"Verify NIZK: {t_3_prime}")
-        #     print(f"Verify NIZK: {t_4_prime}")
-        #     print(f"Verify NIZK: {t_5_prime}")
+        if index == 2 and self.index == 1:
+            print(f"Verify NIZK: {t_1_prime}")
+            print(f"Verify NIZK: {t_2_prime}")
+            print(f"Verify NIZK: {t_3_prime}")
+            print(f"Verify NIZK: {t_4_prime}")
+            print(f"Verify NIZK: {t_5_prime}")
 
         # HAS TO BE MODULO P
         h = hash(self.concatenate_points(
             [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_prime, t_2_prime, t_3_prime, t_4_prime, t_5_prime])) % self.p
 
-        print(h == gamma_res)
-
         # Check if gamma = H
+        if h == gamma_res:
+            print(h == gamma_res)
+            return True
+        else:
+            print(h == gamma_res)
+            return False
 
     def sample_from_field(self):
         return random.randint(1, self.p-1)
@@ -413,10 +419,12 @@ class ClientNode (FastNode):
                 v_arr = []
                 v_arr.append(v)
                 for j in range(len(self.clients)):
+                    v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
+                                   ["v_ir"]["y"], self.pd.cp)
+
                     self.verify_bfv_nizk(
-                        vs[j]["BV"], vs[j]["index"])
-                    v_arr.append(
-                        Point(vs[j]["v_ir"]["x"], vs[j]["v_ir"]["y"], self.pd.cp))
+                        vs[j]["BV"], vs[j]["index"], v_to_i)
+                    v_arr.append(v_to_i)
 
                 point = self.g
 
