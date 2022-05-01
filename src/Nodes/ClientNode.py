@@ -1,4 +1,6 @@
+import hashlib
 import json
+import random
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.string import *
 from src.utils.node import *
@@ -148,6 +150,8 @@ class ClientNode (FastNode):
 
         commit_and_X_arr = get_all_messages_arr(self, len(self.clients))
 
+        time.sleep(0.5)
+
         unpack_commitments_x(self, [commits_w_index])
         unpack_commitments_x_arr(self, commit_and_X_arr)
 
@@ -178,434 +182,191 @@ class ClientNode (FastNode):
                 f"Failed when creating Y's for {self.id} - Big X's: {len(self.big_xs)}")
         # verify c_j for each other party p_j, skipped atm
 
-    def generate_bfv_nizk(self, i, c, v, X, Y, r, x, r_hat):
-        if i == 1:
-            alpha = 2
-        else:
-            alpha = 1
+    def generate_bfv_nizk(self, bit, c, v, big_y, big_x, r, x, r_bar):
+        curve = self.pd.cp
 
         v_s = self.sample_from_field_arr(4)
-
         w_1, w_2 = 0, 0
 
-        if alpha == 1:  # F_1
-            w_2 = self.sample_from_field()
-        else:  # F_2
-            w_1 = self.sample_from_field()
-
-        c_div_g = self.pd.cp.sub_point(c, self.g)
-
-        # c^w_1 * h^v_1
-        t_1 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_1, c), self.pd.cp.mul_point(v_s[0], self.h))
-        t_1_p = Point(t_1.x % self.p, t_1.y % self.p, self.pd.cp)
-
-        # v^w_1 * Y^v_2
-        t_2 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_1, v), self.pd.cp.mul_point(v_s[1], Y))
-        t_2_p = Point(t_2.x % self.p, t_2.y % self.p, self.pd.cp)
-
-        # X^_w_1 * g^v_2
-        t_3 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_1, X), self.pd.cp.mul_point(v_s[1], self.g))
-        t_3_p = Point(t_3.x % self.p, t_3.y % self.p, self.pd.cp)
-
-        # (c/g)^w_2 * h^v_3
-        t_4 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_2, c_div_g), self.pd.cp.mul_point(v_s[2], self.h))
-        t_4_p = Point(t_4.x % self.p, t_4.y % self.p, self.pd.cp)
-
-        # v^w_2 * g^v_4
-        t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_2, v), self.pd.cp.mul_point(v_s[3], self.g))
-        t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
-
-        # Dont think we need this.
-        #h_p = Point(self.h.x % self.p, self.h.y % self.p, self.pd.cp)
-        #c_p = Point(c.x % self.p, c.y % self.p, self.pd.cp)
-        #Y_p = Point(Y.x % self.p, Y.y % self.p, self.pd.cp)
-        #v_p = Point(v.x % self.p, v.y % self.p, self.pd.cp)
-        #g_p = Point(self.g.x % self.p, self.g.y % self.p, self.pd.cp)
-        #X_p = Point(X.x % self.p, X.y % self.p, self.pd.cp)
-        #c_div_g_p = Point(c_div_g.x % self.p, c_div_g.y % self.p, self.pd.cp)
-
-        h_add_arr = [self.h, c, Y, v, self.g,
-                     X, c_div_g, t_1, t_2, t_3, t_4, t_5]
-
-        res_h = self.Calc_h(h_add_arr)
-
-        big_h = 0
-
-        # Calc gamma
-        if alpha == 1:  # F_1
-            gamma_1 = (big_h - (w_1 + w_2)) % self.p
-            gamma_2 = w_2
-
-            x_1, x_2, x_3, x_4 = r, x, 0, 0
-
-            # (v_1 - gamma_1 * x_1) mod p
-            r_1 = (v_s[0] - (gamma_1 * x_1)) % self.p
-
-            # (v_2 - gamma_1 * x_2) mod p
-            r_2 = (v_s[1] - (gamma_1 * x_2)) % self.p
-
-            # (v_2 - gamma_1 * x_2) mod p
-            r_3 = r_2
-
-            # (v_3 - gamma_1 * x_3) mod p
-            r_4 = (v_s[2] - (gamma_1 * x_3)) % self.p
-
-            # (v_4 - gamma_1 * x_4) mod p
-            r_5 = (v_s[3] - (gamma_1 * x_4)) % self.p
-
-        else:  # F_2
-            gamma_1 = w_1
-            gamma_2 = (big_h - (w_1 + w_2)) % self.p
-
-            x_1, x_2, x_3, x_4 = 0, 0, r, r_hat
-
-            # (v_1 - gamma_2 * x_1) mod p
-            r_1 = (v_s[0] - (gamma_2 * x_1)) % self.p
-
-            # (v_2 - gamma_2 * x_2) mod p
-            r_2 = (v_s[1] - (gamma_2 * x_2)) % self.p
-
-            # (v_2 - gamma_2 * x_2) mod p
-            r_3 = r_2
-
-            # (v_3 - gamma_2 * x_3) mod p
-            r_4 = (v_s[2] - (gamma_2 * x_3)) % self.p
-
-            # (v_4 - gamma_2 * x_4) mod p
-            r_5 = (v_s[3] - (gamma_2 * x_4)) % self.p
-
-        return {
-            "gamma_1": gamma_1,
-            "gamma_2": gamma_2,
-            "r_1": r_1,
-            "r_2": r_2,
-            "r_3": r_3,
-            "r_4": r_4,
-            "r_5": r_5
-        }
-
-    def generate_afv_nizk(self, i, d, c, v, X, Y, Xr, Yr, r, x, r_hat, r_hat_lv, x_lv):
-        if i == 1 and d == 1:
-            alpha = 2
-        elif i == 1 and d == 0:
-            alpha = 3
-        else:
+        if bit == 0:  # F_1
             alpha = 1
+            w_1 = self.sample_from_field()
+        else:  # F_2
+            alpha = 2
+            w_2 = self.sample_from_field()
 
-        v_s = self.sample_from_field_arr(8)
+        c_div_g = curve.sub_point(c, self.g)
 
-        w_1, w_2, w_3 = 0, 0, 0
+        t_1 = curve.add_point(curve.mul_point(
+            w_1, c), curve.mul_point(v_s[1], self.h))
 
-        if i == 1 and d == 1:  # F_2
-            w_1, w_3 = self.sample_from_field(), self.sample_from_field()
-        elif i == i and d == 0:  # F_3
-            w_1, w_2 = self.sample_from_field(), self.sample_from_field()
-        else:  # F_1
-            w_2, w_3 = self.sample_from_field(), self.sample_from_field()
+        t_2 = curve.add_point(curve.mul_point(
+            w_1, v), curve.mul_point(v_s[2], big_y))
 
-        c_div_g = self.pd.cp.sub_point(c, self.g)
+        t_3 = curve.add_point(curve.mul_point(
+            w_1, big_x), curve.mul_point(v_s[2], self.g))
 
-        # c^w_1 * h^v_1
-        t_1 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_1, c), self.pd.cp.mul_point(v_s[0], self.h))
-        t_1_p = Point(t_1.x % self.p, t_1.y % self.p, self.pd.cp)
+        t_4 = curve.add_point(curve.mul_point(
+            w_2, c_div_g), curve.mul_point(v_s[3], self.h))
 
-        # v^w_1 * Y^v_2
-        t_2 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_1, v), self.pd.cp.mul_point(v_s[1], Y))
-        t_2_p = Point(t_2.x % self.p, t_2.y % self.p, self.pd.cp)
+        t_5 = curve.add_point(curve.mul_point(
+            w_2, v), curve.mul_point(v_s[3], self.g))
 
-        # X^_w_1 * g^v_2
-        t_3 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_1, X), self.pd.cp.mul_point(v_s[1], self.g))
-        t_3_p = Point(t_3.x % self.p, t_3.y % self.p, self.pd.cp)
+        h = hash(self.concatenate_points(
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
 
-        # (c/g)^w_2 * h^v_3
-        t_4 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_2, c_div_g), self.pd.cp.mul_point(v_s[2], self.h))
-        t_4_p = Point(t_4.x % self.p, t_4.y % self.p, self.pd.cp)
-
-        # d^w_2 * g^v_4
-        t_5 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_2, d), self.pd.cp.mul_point(v_s[3], self.g))  # D is not a point
-        t_5_p = Point(t_5.x % self.p, t_5.y % self.p, self.pd.cp)
-
-        # v^w_2 * g^v_5
-        t_6 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_2, v), self.pd.cp.mul_point(v_s[4], self.g))
-        t_6_p = Point(t_6.x % self.p, t_6.y % self.p, self.pd.cp)
-
-        # (c/g)^w_3 * h^v_6
-        t_7 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_3, c_div_g), self.pd.cp.mul_point(v_s[5], self.h))
-        t_7_p = Point(t_7.x % self.p, t_7.y % self.p, self.pd.cp)
-
-        # d^w_3 * Yr^v_7
-        t_8 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_3, d), self.pd.cp.mul_point(v_s[6], Yr))
-        t_8_p = Point(t_8.x % self.p, t_8.y % self.p, self.pd.cp)
-
-        # Xr^w_3 * g^v_7
-        t_9 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_3, Xr), self.pd.cp.mul_point(v_s[6], self.g))
-        t_9_p = Point(t_9.x % self.p, t_9.y % self.p, self.pd.cp)
-
-        # v^w_3 * Y^v_8
-        t_10 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_3, v), self.pd.cp.mul_point(v_s[7], Y))
-        t_10_p = Point(t_10.x % self.p, t_10.y % self.p, self.pd.cp)
-
-        # X^w_3 * g^v_8
-        t_11 = self.pd.cp.add_point(self.pd.cp.mul_point(
-            w_3, X), self.pd.cp.mul_point(v_s[7], self.g))
-        t_11_p = Point(t_11.x % self.p, t_11.y % self.p, self.pd.cp)
-
-        h_add_arr = [self.h, c, Y, v, self.g, X, c_div_g, d, Yr, Xr,
-                     t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11]
-
-        big_h = self.Calc_h(h_add_arr)
-
+        # Something might be wrong with picking the non H gamma
         if alpha == 1:  # F_1
-            gamma_1 = (big_h - (w_1 + w_2 + w_3)) % self.p
-            gamma_2 = w_2
-            gamma_3 = w_3
+            gamma1 = (h - (w_1 + w_2)) % self.p
+            gamma2 = w_1
 
-            x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = r, x, 0, 0, 0, 0, 0, 0
+            x1, x2, x3, x4 = r, x, 0, 0
 
-            #  v_1 - gamma alpha * x1
-            r_1 = (v_s[0] - (gamma_1 * x_1)) % self.p  # Bob is this right?
+            r1 = (v_s[1] - gamma1 * x1) % self.p
+            r2 = (v_s[2] - gamma1 * x2) % self.p
+            r3 = r2
+            r4 = (v_s[3] - gamma1 * x3) % self.p
+            r5 = (v_s[4] - gamma1 * x4) % self.p
 
-            # v_2 - gamma alpha * x2
-            r_2 = (v_s[1] - (gamma_1 * x_2)) % self.p
+        else:  # F_2
+            gamma1 = w_2
+            gamma2 = (h - (w_1 + w_2)) % self.p
 
-            # v_2 - gamma alpha * x2 -> The same as r2?
-            r_3 = r_2
+            x1, x2, x3, x4 = 0, 0, r, r_bar
 
-            # v_3 - gamma alpha * x3
-            r_4 = (v_s[2] - (gamma_1 * x_3)) % self.p
+            r1 = (v_s[1] - gamma2 * x1) % self.p
+            r2 = (v_s[2] - gamma2 * x2) % self.p
+            r3 = r2
+            r4 = (v_s[3] - gamma2 * x3) % self.p
+            r5 = (v_s[4] - gamma2 * x4) % self.p
 
-            # v_4 - gamma alpha * x4
-            r_5 = (v_s[3] - (gamma_1 * x_4)) % self.p
-
-            # v_5 - gamma alpha * x5
-            r_6 = (v_s[4] - (gamma_1 * x_5)) % self.p
-
-            # v_6 - gamma alpha * x6
-            r_7 = (v_s[5] - (gamma_1 * x_6)) % self.p
-
-            # v_7 - gamma alpha * x7
-            r_8 = (v_s[6] - (gamma_1 * x_7)) % self.p
-
-            # v_7 - gamma alpha * x7 -> Same as r8?
-            r_9 = r_8
-
-            # v_8 - gamma alpha * x8
-            r_10 = (v_s[7] - (gamma_1 * x_8)) % self.p
-
-            # v_8 - gamma alpha * x8 -> Same as r_10 ?
-            r_11 = r_10
-
-        elif alpha == 2:  # F_2
-            gamma_1 = w_1
-            gamma_2 = (big_h - (w_1 + w_2 + w_3)) % self.p
-            gamma_3 = w_3
-
-            x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, r, r_hat_lv, r_hat, 0, 0, 0
-
-            #  v_1 - gamma alpha * x1
-            r_1 = (v_s[0] - (gamma_2 * x_1)) % self.p  # Bob is this right?
-
-            # v_2 - gamma alpha * x2
-            r_2 = (v_s[1] - (gamma_2 * x_2)) % self.p
-
-            # v_2 - gamma alpha * x2 -> The same as r2?
-            r_3 = r_2
-
-            # v_3 - gamma alpha * x3
-            r_4 = (v_s[2] - (gamma_2 * x_3)) % self.p
-
-            # v_4 - gamma alpha * x4
-            r_5 = (v_s[3] - (gamma_2 * x_4)) % self.p
-
-            # v_5 - gamma alpha * x5
-            r_6 = (v_s[4] - (gamma_2 * x_5)) % self.p
-
-            # v_6 - gamma alpha * x6
-            r_7 = (v_s[5] - (gamma_2 * x_6)) % self.p
-
-            # v_7 - gamma alpha * x7
-            r_8 = (v_s[6] - (gamma_2 * x_7)) % self.p
-
-            # v_7 - gamma alpha * x7 -> Same as r8?
-            r_9 = r_8
-
-            # v_8 - gamma alpha * x8
-            r_10 = (v_s[7] - (gamma_2 * x_8)) % self.p
-
-            # v_8 - gamma alpha * x8 -> Same as r_10 ?
-            r_11 = r_10
-        else:  # F_3
-            gamma_1 = w_1
-            gamma_2 = w_2
-            gamma_3 = (big_h - (w_1 + w_2 + w_3)) % self.p
-
-            x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8 = 0, 0, 0, 0, 0, r, x_lv, x
-
-            #  v_1 - gamma alpha * x1
-            r_1 = (v_s[0] - (gamma_3 * x_1)) % self.p  # Bob is this right?
-
-            # v_2 - gamma alpha * x2
-            r_2 = (v_s[1] - (gamma_3 * x_2)) % self.p
-
-            # v_2 - gamma alpha * x2 -> The same as r2?
-            r_3 = r_2
-
-            # v_3 - gamma alpha * x3
-            r_4 = (v_s[2] - (gamma_3 * x_3)) % self.p
-
-            # v_4 - gamma alpha * x4
-            r_5 = (v_s[3] - (gamma_3 * x_4)) % self.p
-
-            # v_5 - gamma alpha * x5
-            r_6 = (v_s[4] - (gamma_3 * x_5)) % self.p
-
-            # v_6 - gamma alpha * x6
-            r_7 = (v_s[5] - (gamma_3 * x_6)) % self.p
-
-            # v_7 - gamma alpha * x7
-            r_8 = (v_s[6] - (gamma_3 * x_7)) % self.p
-
-            # v_7 - gamma alpha * x7 -> Same as r8?
-            r_9 = r_8
-
-            # v_8 - gamma alpha * x8
-            r_10 = (v_s[7] - (gamma_3 * x_8)) % self.p
-
-            # v_8 - gamma alpha * x8 -> Same as r_10 ?
-            r_11 = r_10
+        # if self.index == 2:
+        #     print(f"Create NIZK: {t_1}")
+        #     print(f"Create NIZK: {t_2}")
+        #     print(f"Create NIZK: {t_3}")
+        #     print(f"Create NIZK: {t_4}")
+        #     print(f"Create NIZK: {t_5}")
 
         return {
-            "gamma_1": gamma_1,
-            "gamma_2": gamma_2,
-            "gamma_3": gamma_3,
-            "r_1": r_1,
-            "r_2": r_2,
-            "r_3": r_3,
-            "r_4": r_4,
-            "r_5": r_5,
-            "r_6": r_6,
-            "r_7": r_7,
-            "r_8": r_8,
-            "r_9": r_9,
-            "r_10": r_10,
-            "r_11": r_11
+            "h": h,
+            "gamma1": gamma1,
+            "gamma2": gamma2,
+            "r1": r1,
+            "r2": r2,
+            "r3": r3,
+            "r4": r4,
+            "r5": r5,
+            "c": {
+                "x": c.x,
+                "y": c.y
+            },
+            "v": {
+                "x": v.x,
+                "y": v.y
+            },
+            "Y": {
+                "x": big_y.x,
+                "y": big_y.y
+            },
+            "X": {
+                "x": big_x.x,
+                "y": big_x.y
+            },
+            "t1": {
+                "x": t_1.x,
+                "y": t_1.y
+            },
+            "t2": {
+                "x": t_2.x,
+                "y": t_2.y
+            },
+            "t3": {
+                "x": t_3.x,
+                "y": t_3.y
+            },
+            "t4": {
+                "x": t_4.x,
+                "y": t_4.y
+            },
+            "t5": {
+                "x": t_5.x,
+                "y": t_5.y
+            }
         }
+
+    def verify_bfv_nizk(self, nizk, index):
+        gamma1 = nizk["gamma1"]
+        gamma2 = nizk["gamma2"]
+        r1 = nizk["r1"]
+        r2 = nizk["r2"]
+        r3 = nizk["r3"]
+        r4 = nizk["r4"]
+        r5 = nizk["r5"]
+
+        # THIS HAS TO BE MODULO P IF EVERYTHING ELSE IS
+        gamma_res = (gamma1 + gamma2) % self.p
+
+        curve = self.pd.cp
+
+        c = Point(nizk["c"]["x"], nizk["c"]["y"], curve)
+        v = Point(nizk["v"]["x"], nizk["v"]["y"], curve)
+        big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
+        big_x = Point(nizk["X"]["x"], nizk["X"]["y"], curve)
+
+        c_div_g = curve.sub_point(c, self.g)
+
+        # t_1_prime = curve.add_point(curve.mul_point(
+        #     gamma1, c), curve.mul_point(r1, self.h))
+
+        # t_2_prime = curve.add_point(curve.mul_point(
+        #     gamma1, v), curve.mul_point(r2, big_y))
+
+        # t_3_prime = curve.add_point(curve.mul_point(
+        #     gamma1, big_x), curve.mul_point(r3, self.g))
+
+        # t_4_prime = curve.add_point(curve.mul_point(
+        #     gamma2, c_div_g), curve.mul_point(r4, self.h))
+
+        # t_5_prime = curve.add_point(curve.mul_point(
+        #     gamma2, v), curve.mul_point(r5, self.g))
+
+        t_1_prime = Point(nizk["t1"]["x"], nizk["t1"]["y"], curve)
+        t_2_prime = Point(nizk["t2"]["x"], nizk["t2"]["y"], curve)
+        t_3_prime = Point(nizk["t3"]["x"], nizk["t3"]["y"], curve)
+        t_4_prime = Point(nizk["t4"]["x"], nizk["t4"]["y"], curve)
+        t_5_prime = Point(nizk["t5"]["x"], nizk["t5"]["y"], curve)
+
+        # if index == 2 and self.index == 1:
+        #     print(f"Verify NIZK: {t_1_prime}")
+        #     print(f"Verify NIZK: {t_2_prime}")
+        #     print(f"Verify NIZK: {t_3_prime}")
+        #     print(f"Verify NIZK: {t_4_prime}")
+        #     print(f"Verify NIZK: {t_5_prime}")
+
+        # HAS TO BE MODULO P
+        h = hash(self.concatenate_points(
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_prime, t_2_prime, t_3_prime, t_4_prime, t_5_prime])) % self.p
+
+        print(h == gamma_res)
+
+        # Check if gamma = H
 
     def sample_from_field(self):
-        return number.getRandomRange(1, self.p - 1)
+        return random.randint(1, self.p-1)
 
     def sample_from_field_arr(self, amount):
-        lst = []
+        lst = [None]
         for i in range(amount):
             lst.append(self.sample_from_field())
 
         return lst
 
-    def verify_bfv_nizk(self, data, h, c, Y, v, g, X):
-        gamma_result = data["gamma_1"] + data["gamma_2"]
+    def concatenate_points(self, points):
+        res_string = ""
+        for point in points:
+            res_string += f"{point.x}{point.y}"
 
-        c_div_g = self.pd.cp.sub_point(c, g)
-
-        # c^gamma_1 * h^r_1
-        t_1_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_1"], c), self.pd.cp.mul_point(data["r_1"], h))
-
-        # v^gamma_1 * Y^r_2
-        t_2_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_1"], v), self.pd.cp.mul_point(data["r_2"], Y))
-
-        # X^gamma_1 * g^r_3
-        t_3_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_1"], X), self.pd.cp.mul_point(data["r_3"], g))
-
-        # (c/g)^gamma_2 * h^r_4
-        t_4_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_2"], c_div_g), self.pd.cp.mul_point(data["r_4"], h))
-
-        # v^gamma_2 * g^r_5
-        t_5_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_2"], v), self.pd.cp.mul_point(data["r_5"], g))
-
-        # Calc H
-        h_add_arr = [self.h, c, Y, v, self.g,
-                     X, c_div_g, t_1_prime, t_2_prime, t_3_prime, t_4_prime, t_5_prime]
-
-        res_h = self.Calc_h(h_add_arr)
-
-        big_h = 0
-
-        # Check if gamma = H
-
-    def verify_afv_nizk(self, data, c, Y, v, X, d, Yr, Xr):
-        gamma_res = data["gamma_1"] + data["gamma_2"] + data["gamma_3"]
-
-        c_div_g = self.pd.cp.sub_point(c, self.g)
-
-        # c^gamma_1 * h^r_1
-        t_1_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_1"], c), self.pd.cp.mul_point(data["r_1"], self.h))
-
-        # v^gamma_1 * Y^r_2
-        t_2_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_1"], v), self.pd.cp.mul_point(data["r_2"], Y))
-
-        # X^gamma_1 * g^r_3
-        t_3_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_1"], X), self.pd.cp.mul_point(data["r_3"], self.g))
-
-        # (c/g)^gamma_2 * h^r_4
-        t_4_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_2"], c_div_g), self.pd.cp.mul_point(data["r_4"], self.h))
-
-        # d^gamma_2 * g^r_5 # d is not a point
-        # t_5_prime = self.pd.cp.add_point(self.pd.cp.mul_point(data["gamma_2"], d), self.pd.cp.mul_point(data["r_5"], self.g))
-
-        # v^gamma_2 * g^r_6
-        t_6_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_2"], v), self.pd.cp.mul_point(data["r_6"], self.g))
-
-        # (c/g)^gamma_3 * h^r_7
-        t_7_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_3"], c_div_g), self.pd.cp.mul_point(data["r_7"], self.h))
-
-        # d^gamma_3 * Yr^r_8 # d is not a point
-        # t_8_prime = self.pd.cp.add_point(self.pd.cp.mul_point(data["gamma_3"], d), self.pd.cp.mul_point(data["r_8"], Yr))
-
-        # Xr^gamma_3 * g^r_9
-        t_9_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_3"], Xr), self.pd.cp.mul_point(data["r_9"], self.g))
-
-        # v^gamma_3 * Y^r_10
-        t_10_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_3"], v), self.pd.cp.mul_point(data["r_10"], Y))
-
-        # X^gamma_3 * g^r_11
-        t_11_prime = self.pd.cp.add_point(self.pd.cp.mul_point(
-            data["gamma_3"], X), self.pd.cp.mul_point(data["r_11"], self.g))
-
-        # Check if gamma = H
-
-    def Calc_h(self, sumarray):
-        result = self.g
-        for x in sumarray:
-            result = self.pd.cp.add_point(result, x)
-
-        return result
+        return res_string
 
     def veto(self):
         # Create NIZK :)
@@ -630,13 +391,20 @@ class ClientNode (FastNode):
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
 
-                bfv_nizk = self.generate_bfv_nizk(
-                    self.bits[i], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_commitments[i][1], self.small_xs[i], r_hat)
+                nizk = self.generate_bfv_nizk(
+                    self.bits[i], self.commitments[self.index][i], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_commitments[i][1], self.small_xs[i], r_hat)
+
+                nizk_msg = {
+                    "v_ir": {
+                        "x": v.x,
+                        "y": v.y,
+                    },
+                    "BV": nizk,
+                    "index": self.index,
+                }
 
                 self.send_to_nodes(
-                    ({"v_ir": str(v), "BV": bfv_nizk}), exclude=[self.bc_node])
-                # self.send_to_nodes(
-                #     ({"v_ir": str(v)}), exclude=[self.bc_node])
+                    (nizk_msg), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
@@ -645,10 +413,10 @@ class ClientNode (FastNode):
                 v_arr = []
                 v_arr.append(v)
                 for j in range(len(self.clients)):
-                    # self.verify_bfv_nizk(json_data["BV"], self.h, self.bit_commitments[i][0],
-                    #                      self.big_ys[self.index][i], v, self.g, self.big_xs[self.index][i])
-                    v_arr.append(str_to_point(
-                        str(vs[j]["v_ir"]), self.pd.cp))
+                    self.verify_bfv_nizk(
+                        vs[j]["BV"], vs[j]["index"])
+                    v_arr.append(
+                        Point(vs[j]["v_ir"]["x"], vs[j]["v_ir"]["y"], self.pd.cp))
 
                 point = self.g
 
@@ -681,15 +449,8 @@ class ClientNode (FastNode):
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
 
-                # afv_nizk = self.generate_afv_nizk(
-                #     self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[
-                #         self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r],
-                #     self.bit_commitments[i][1], self.small_xs[i], r_hat, veto_randomness[latest_veto_r], self.small_xs[latest_veto_r])
-
                 self.send_to_nodes(
                     ({"v_ir": str(v)}), exclude=[self.bc_node])
-                # self.send_to_nodes(
-                #     ({"v_ir": str(v), "AV": afv_nizk}), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
@@ -699,8 +460,6 @@ class ClientNode (FastNode):
 
                 v_arr.append(v)
                 for j in range(len(self.clients)):
-                    # self.verify_afv_nizk(json_data["AV"], self.bit_commitments[i][0], self.big_ys[self.index][i], v, self.big_xs[
-                    #                      self.index][i], self.bits[latest_veto_r], self.big_ys[latest_veto_r], self.big_xs[latest_veto_r])
                     v_arr.append(str_to_point(vs[j]["v_ir"], self.pd.cp))
 
                 point = self.g

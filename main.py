@@ -31,7 +31,7 @@ else:
     else:
         Node1 = ClientNode("127.0.0.1", 8003, 42, 1)
         Node2 = ClientNode("127.0.0.1", 8005, 1000, 2)
-        Node3 = ClientNode("127.0.0.1", 8007, 999, 3)
+        Node3 = ClientNode("127.0.0.1", 8007, 9999, 3)
 
         Client_Node_list = [Node1, Node2, Node3]
 
