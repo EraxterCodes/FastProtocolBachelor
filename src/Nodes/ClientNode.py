@@ -363,8 +363,10 @@ class ClientNode (FastNode):
             t_8 = curve.mul_point(
                 v_s[7], big_y_lvr)
         else:
-            t_5 = 0
-            t_8 = 0
+            t_5 = curve.mul_point(0, curve.mul_point(
+                v_s[4], self.g))
+            t_8 = curve.mul_point(0, curve.mul_point(
+                v_s[7], big_y_lvr))
 
         t_6 = curve.add_point(curve.mul_point(
             w_2, v), curve.mul_point(v_s[5], self.g))
@@ -476,10 +478,11 @@ class ClientNode (FastNode):
             "Y_lvr": {
                 "x": big_y_lvr.x,
                 "y": big_y_lvr.y
-            }
+            },
+            "d_ir": bit_lvr
         }
 
-    def verify_afv_nizk(self, nizk, c, v, big_x, bit_lvr, big_x_lvr, index):
+    def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, index, bit_lvr):
         gamma1 = nizk["gamma1"]
         gamma2 = nizk["gamma2"]
         gamma3 = nizk["gamma3"]
@@ -522,9 +525,11 @@ class ClientNode (FastNode):
                 r5, self.g)
             t_8_p = curve.mul_point(
                 r8, big_y_lvr)
-        else:
-            t_5_p = 0
-            t_8_p = 0
+        else:  # IS THIS EVEN LEGAL?!?!?!
+            t_5_p = curve.mul_point(0, curve.mul_point(
+                r5, self.g))
+            t_8_p = curve.mul_point(0, curve.mul_point(
+                r8, big_y_lvr))
 
         t_6_p = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r6, self.g))
@@ -577,8 +582,10 @@ class ClientNode (FastNode):
         for point in points:
             if (type(point) == int):
                 res_string += str(point)
-            else:
+            elif (type(point) == Point):
                 res_string += f"{point.x}{point.y}"
+            else:
+                res_string += str(point)
 
         return res_string
 
@@ -698,7 +705,7 @@ class ClientNode (FastNode):
                                    ["v_ir"]["y"], self.pd.cp)
 
                     nizk_verification = self.verify_afv_nizk(
-                        vs[j]["AV"], self.commitments[self.index][i], v_to_i, self.big_xs[party][i], self.bits[latest_veto_r], self.big_xs[party][latest_veto_r], party)
+                        vs[j]["AV"], self.commitments[self.index][i], v_to_i, self.big_xs[party][i], self.big_xs[party][latest_veto_r], party, self.bits[latest_veto_r])
 
                     if not nizk_verification:
                         # Go to recovery with the index of the party that sent the wrong NIZK
