@@ -1,5 +1,6 @@
 import json
 import random
+import sys
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.string import *
 from src.utils.node import *
@@ -35,7 +36,6 @@ class ClientNode (FastNode):
         self.big_xs = []
         self.big_ys = []
         self.commitments = []
-        self.bit_randomness = []
 
         self.contractparams = None
 
@@ -76,7 +76,6 @@ class ClientNode (FastNode):
             self.bits.append(bit)
             commitment = self.pd.commit(bit)
             self.bit_commitments.append(commitment)
-            self.bit_randomness.append(commitment[1])
 
     def setup(self):
         # Stage 1
@@ -215,8 +214,11 @@ class ClientNode (FastNode):
         t_5 = curve.add_point(curve.mul_point(
             w_2, v), curve.mul_point(v_s[4], self.g))
 
+        # h = hash(self.concatenate_points(
+        #     [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
+
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_2, t_3, t_5])) % self.p
 
         # Something might be wrong with picking the non H gamma
         if alpha == 1:  # F_1
@@ -243,12 +245,12 @@ class ClientNode (FastNode):
             r4 = (v_s[3] - (gamma2 * x3)) % self.p  # Something's wrong with r
             r5 = (v_s[4] - (gamma2 * x4)) % self.p
 
-        if self.index == 2:
-            print(f"Create NIZK: t1 {t_1}")
-            print(f"Create NIZK: t2 {t_2}")
-            print(f"Create NIZK: t3 {t_3}")
-            print(f"Create NIZK: t4 {t_4}")
-            print(f"Create NIZK: t5 {t_5}")
+        # if self.index == 2:
+        #     print(f"Create NIZK: t1 {t_1}")
+        #     print(f"Create NIZK: t2 {t_2}")
+        #     print(f"Create NIZK: t3 {t_3}")
+        #     print(f"Create NIZK: t4 {t_4}")
+        #     print(f"Create NIZK: t5 {t_5}")
 
         return {
             "gamma1": gamma1,
@@ -258,10 +260,6 @@ class ClientNode (FastNode):
             "r3": r3,
             "r4": r4,
             "r5": r5,
-            "v": {
-                "x": v.x,
-                "y": v.y
-            },
             "Y": {
                 "x": big_y.x,
                 "y": big_y.y
@@ -288,42 +286,280 @@ class ClientNode (FastNode):
         c_div_g = curve.sub_point(c, self.g)
 
         # Incorrect
-        t_1_prime = curve.add_point(curve.mul_point(
+        t_1_p = curve.add_point(curve.mul_point(
             gamma1, c), curve.mul_point(r1, self.h))
 
         # Correct
-        t_2_prime = curve.add_point(curve.mul_point(
+        t_2_p = curve.add_point(curve.mul_point(
             gamma1, v), curve.mul_point(r2, big_y))
 
         # Correct
-        t_3_prime = curve.add_point(curve.mul_point(
+        t_3_p = curve.add_point(curve.mul_point(
             gamma1, big_x), curve.mul_point(r3, self.g))
 
         # Correct
-        t_4_prime = curve.add_point(curve.mul_point(
+        t_4_p = curve.add_point(curve.mul_point(
             gamma2, c_div_g), curve.mul_point(r4, self.h))
 
         # Correct
-        t_5_prime = curve.add_point(curve.mul_point(
+        t_5_p = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r5, self.g))
 
-        if index == 2 and self.index == 1:
-            print(f"Verify NIZK: t1 {t_1_prime}")
-            print(f"Verify NIZK: t2 {t_2_prime}")
-            print(f"Verify NIZK: t3 {t_3_prime}")
-            print(f"Verify NIZK: t4 {t_4_prime}")
-            print(f"Verify NIZK: t5 {t_5_prime}")
+        # if index == 2 and self.index == 1:
+        #     print(f"Verify NIZK: t1 {t_1_p}")
+        #     print(f"Verify NIZK: t2 {t_2_p}")
+        #     print(f"Verify NIZK: t3 {t_3_p}")
+        #     print(f"Verify NIZK: t4 {t_4_p}")
+        #     print(f"Verify NIZK: t5 {t_5_p}")
 
         # HAS TO BE MODULO P
+        # h = hash(self.concatenate_points(
+        #     [self.h, c, big_y, v, self.g, big_x, c_div_g, t_2_p, t_3_p, t_4_p, t_5_p])) % self.p
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_prime, t_2_prime, t_3_prime, t_4_prime, t_5_prime])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_2_p, t_3_p, t_5_p])) % self.p
 
         # Check if gamma = H
         if h == gamma_res:
-            # print(h == gamma_res)
             return True
         else:
-            # print(h == gamma_res)
+            return False
+
+    def generate_afv_nizk(self, bit, bit_lvr, c, v, big_y, big_x, big_y_lvr, big_x_lvr, r, x, r_hat_lvr, r_hat, x_lvr):
+        curve = self.pd.cp
+
+        v_s = self.sample_from_field_arr(8)
+        w_1, w_2, w_3 = 0, 0, 0
+
+        if bit == 0:  # F_1
+            alpha = 1
+            w_2 = self.sample_from_field()
+            w_3 = self.sample_from_field()
+        elif bit_lvr == 1 and bit == 1:  # F_2
+            alpha = 2
+            w_1 = self.sample_from_field()
+            w_3 = self.sample_from_field()
+        else:  # F_3
+            alpha = 3
+            w_1 = self.sample_from_field()
+            w_2 = self.sample_from_field()
+
+        c_div_g = curve.sub_point(c, self.g)
+
+        t_1 = curve.add_point(curve.mul_point(
+            w_1, c), curve.mul_point(v_s[1], self.h))
+
+        t_2 = curve.add_point(curve.mul_point(
+            w_1, v), curve.mul_point(v_s[2], big_y))
+
+        t_3 = curve.add_point(curve.mul_point(
+            w_1, big_x), curve.mul_point(v_s[2], self.g))
+
+        t_4 = curve.add_point(curve.mul_point(
+            w_2, c_div_g), curve.mul_point(v_s[3], self.h))
+
+        if bit_lvr == 1:
+            t_5 = curve.mul_point(
+                v_s[4], self.g)
+            t_8 = curve.mul_point(
+                v_s[7], big_y_lvr)
+        else:
+            t_5 = 0
+            t_8 = 0
+
+        t_6 = curve.add_point(curve.mul_point(
+            w_2, v), curve.mul_point(v_s[5], self.g))
+
+        t_7 = curve.add_point(curve.mul_point(
+            w_3, c_div_g), curve.mul_point(v_s[6], self.h))
+
+        t_9 = curve.add_point(curve.mul_point(
+            w_3, big_x_lvr), curve.mul_point(v_s[7], self.g))
+
+        t_10 = curve.add_point(curve.mul_point(
+            w_3, v), curve.mul_point(v_s[8], big_y))
+
+        t_11 = curve.add_point(curve.mul_point(
+            w_3, big_x), curve.mul_point(v_s[8], self.g))
+
+        h = hash(self.concatenate_points(
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, bit_lvr, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])) % self.p
+
+        if alpha == 1:  # F_1
+            gamma1 = (h - (w_1 + w_2 + w_3)) % self.p
+            gamma2 = w_2
+            gamma3 = w_3
+
+            x1, x2, x3, x4, x5, x6, x7, x8 = r, x, 0, 0, 0, 0, 0, 0
+
+            r1 = (v_s[1] - (gamma1 * x1)) % self.p
+            r2 = (v_s[2] - (gamma1 * x2)) % self.p
+            r3 = r2
+            r4 = (v_s[3] - (gamma1 * x3)) % self.p
+            r5 = (v_s[4] - (gamma1 * x4)) % self.p
+            r6 = (v_s[5] - (gamma1 * x5)) % self.p
+            r7 = (v_s[6] - (gamma1 * x6)) % self.p
+            r8 = (v_s[7] - (gamma1 * x7)) % self.p
+            r9 = r8
+            r10 = (v_s[8] - (gamma1 * x8)) % self.p
+            r11 = r10
+
+        elif alpha == 2:  # F_2
+            gamma1 = w_1
+            gamma2 = (h - (w_1 + w_2 + w_3)) % self.p
+            gamma3 = w_3
+
+            x1, x2, x3, x4, x5, x6, x7, x8 = 0, 0, r, r_hat_lvr, r_hat, 0, 0, 0
+
+            r1 = (v_s[1] - (gamma2 * x1)) % self.p
+            r2 = (v_s[2] - (gamma2 * x2)) % self.p
+            r3 = r2
+            r4 = (v_s[3] - (gamma2 * x3)) % self.p
+            r5 = (v_s[4] - (gamma2 * x4)) % self.p
+            r6 = (v_s[5] - (gamma2 * x5)) % self.p
+            r7 = (v_s[6] - (gamma2 * x6)) % self.p
+            r8 = (v_s[7] - (gamma2 * x7)) % self.p
+            r9 = r8
+            r10 = (v_s[8] - (gamma2 * x8)) % self.p
+            r11 = r10
+
+        else:  # F_3
+            gamma1 = w_1
+            gamma2 = w_2
+            gamma3 = (h - (w_1 + w_2 + w_3)) % self.p
+
+            x1, x2, x3, x4, x5, x6, x7, x8 = 0, 0, 0, 0, 0, r, x_lvr, x
+
+            r1 = (v_s[1] - (gamma3 * x1)) % self.p
+            r2 = (v_s[2] - (gamma3 * x2)) % self.p
+            r3 = r2
+            r4 = (v_s[3] - (gamma3 * x3)) % self.p
+            r5 = (v_s[4] - (gamma3 * x4)) % self.p
+            r6 = (v_s[5] - (gamma3 * x5)) % self.p
+            r7 = (v_s[6] - (gamma3 * x6)) % self.p
+            r8 = (v_s[7] - (gamma3 * x7)) % self.p
+            r9 = r8
+            r10 = (v_s[8] - (gamma3 * x8)) % self.p
+            r11 = r10
+
+        if self.index == 2:
+            print(f"Create NIZK: t1 {t_1}")
+            print(f"Create NIZK: t2 {t_2}")
+            print(f"Create NIZK: t3 {t_3}")
+            print(f"Create NIZK: t4 {t_4}")
+            print(f"Create NIZK: t5 {t_5}")
+            print(f"Create NIZK: t6 {t_6}")
+            print(f"Create NIZK: t7 {t_7}")
+            print(f"Create NIZK: t8 {t_8}")
+            print(f"Create NIZK: t9 {t_9}")
+            print(f"Create NIZK: t10 {t_10}")
+            print(f"Create NIZK: t11 {t_11}")
+
+        return {
+            "gamma1": gamma1,
+            "gamma2": gamma2,
+            "gamma3": gamma3,
+            "r1": r1,
+            "r2": r2,
+            "r3": r3,
+            "r4": r4,
+            "r5": r5,
+            "r6": r6,
+            "r7": r7,
+            "r8": r8,
+            "r9": r9,
+            "r10": r10,
+            "r11": r11,
+            "Y": {
+                "x": big_y.x,
+                "y": big_y.y
+            },
+            "Y_lvr": {
+                "x": big_y_lvr.x,
+                "y": big_y_lvr.y
+            }
+        }
+
+    def verify_afv_nizk(self, nizk, c, v, big_x, bit_lvr, big_x_lvr, index):
+        gamma1 = nizk["gamma1"]
+        gamma2 = nizk["gamma2"]
+        gamma3 = nizk["gamma3"]
+        r1 = nizk["r1"]
+        r2 = nizk["r2"]
+        r3 = nizk["r3"]
+        r4 = nizk["r4"]
+        r5 = nizk["r5"]
+        r6 = nizk["r6"]
+        r7 = nizk["r7"]
+        r8 = nizk["r8"]
+        r9 = nizk["r9"]
+        r10 = nizk["r10"]
+        r11 = nizk["r11"]
+
+        # THIS HAS TO BE MODULO P, paper doesn't mention it
+        gamma_res = (gamma1 + gamma2 + gamma3) % self.p
+
+        curve = self.pd.cp
+
+        big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
+        big_y_lvr = Point(nizk["Y_lvr"]["x"], nizk["Y_lvr"]["y"], curve)
+
+        c_div_g = curve.sub_point(c, self.g)
+
+        t_1_p = curve.add_point(curve.mul_point(
+            gamma1, c), curve.mul_point(r1, self.h))
+
+        t_2_p = curve.add_point(curve.mul_point(
+            gamma1, v), curve.mul_point(r2, big_y))
+
+        t_3_p = curve.add_point(curve.mul_point(
+            gamma1, big_x), curve.mul_point(r3, self.g))
+
+        t_4_p = curve.add_point(curve.mul_point(
+            gamma2, c_div_g), curve.mul_point(r4, self.h))
+
+        if bit_lvr == 1:
+            t_5_p = curve.mul_point(
+                r5, self.g)
+            t_8_p = curve.mul_point(
+                r8, big_y_lvr)
+        else:
+            t_5_p = 0
+            t_8_p = 0
+
+        t_6_p = curve.add_point(curve.mul_point(
+            gamma2, v), curve.mul_point(r6, self.g))
+
+        t_7_p = curve.add_point(curve.mul_point(
+            gamma3, c_div_g), curve.mul_point(r7, self.h))
+
+        t_9_p = curve.add_point(curve.mul_point(
+            gamma3, big_x_lvr), curve.mul_point(r9, self.g))
+
+        t_10_p = curve.add_point(curve.mul_point(
+            gamma3, v), curve.mul_point(r10, big_y))
+
+        t_11_p = curve.add_point(curve.mul_point(
+            gamma3, big_x), curve.mul_point(r11, self.g))
+
+        if index == 2 and self.index == 1:
+            print(f"Verify NIZK: t1 {t_1_p}")
+            print(f"Verify NIZK: t2 {t_2_p}")
+            print(f"Verify NIZK: t3 {t_3_p}")
+            print(f"Verify NIZK: t4 {t_4_p}")
+            print(f"Verify NIZK: t5 {t_5_p}")
+            print(f"Verify NIZK: t6 {t_6_p}")
+            print(f"Verify NIZK: t7 {t_7_p}")
+            print(f"Verify NIZK: t8 {t_8_p}")
+            print(f"Verify NIZK: t9 {t_9_p}")
+            print(f"Verify NIZK: t10 {t_10_p}")
+            print(f"Verify NIZK: t11 {t_11_p}")
+
+        h = hash(self.concatenate_points(
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, bit_lvr, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
+
+        if h == gamma_res:
+            return True
+        else:
             return False
 
     def sample_from_field(self):
@@ -339,7 +575,10 @@ class ClientNode (FastNode):
     def concatenate_points(self, points):
         res_string = ""
         for point in points:
-            res_string += f"{point.x}{point.y}"
+            if (type(point) == int):
+                res_string += str(point)
+            else:
+                res_string += f"{point.x}{point.y}"
 
         return res_string
 
@@ -366,7 +605,7 @@ class ClientNode (FastNode):
                     previous_vetos.append(False)
 
                 nizk = self.generate_bfv_nizk(
-                    self.bits[i], self.commitments[self.index][i], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_randomness[i], self.small_xs[i], r_hat)
+                    self.bits[i], self.commitments[self.index][i], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_commitments[i][1], self.small_xs[i], r_hat)
 
                 nizk_msg = {
                     "v_ir": {
@@ -396,11 +635,9 @@ class ClientNode (FastNode):
 
                     if not nizk_verification:
                         # Go to recovery with the index of the party that sent the wrong NIZK
-                        # print(f"{self.index}: Party {party} sent a wrong NIZK")
-                        pass
+                        print(f"NIZK verification failed for {party}")
                     else:
-                        pass
-                    v_arr.append(v_to_i)
+                        v_arr.append(v_to_i)
 
                 point = self.g
 
@@ -433,8 +670,20 @@ class ClientNode (FastNode):
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
 
+                nizk = self.generate_afv_nizk(
+                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r], self.bit_commitments[i][1], self.small_xs[i], veto_randomness[latest_veto_r], r_hat, self.small_xs[latest_veto_r])
+
+                nizk_msg = {
+                    "v_ir": {
+                        "x": v.x,
+                        "y": v.y,
+                    },
+                    "AV": nizk,
+                    "index": self.index,
+                }
+
                 self.send_to_nodes(
-                    ({"v_ir": str(v)}), exclude=[self.bc_node])
+                    (nizk_msg), exclude=[self.bc_node])
 
                 time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
@@ -444,7 +693,20 @@ class ClientNode (FastNode):
 
                 v_arr.append(v)
                 for j in range(len(self.clients)):
-                    v_arr.append(str_to_point(vs[j]["v_ir"], self.pd.cp))
+                    party = vs[j]["index"]
+                    v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
+                                   ["v_ir"]["y"], self.pd.cp)
+
+                    nizk_verification = self.verify_afv_nizk(
+                        vs[j]["AV"], self.commitments[self.index][i], v_to_i, self.big_xs[party][i], self.bits[latest_veto_r], self.big_xs[party][latest_veto_r], party)
+
+                    if not nizk_verification:
+                        # Go to recovery with the index of the party that sent the wrong NIZK
+                        # print(f"NIZK verification failed for {party}")
+                        pass
+                    else:
+                        pass
+                    v_arr.append(v_to_i)
 
                 point = self.g
 
