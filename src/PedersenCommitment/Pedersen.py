@@ -38,12 +38,12 @@ class Pedersen:
         return c, r
 
     def commit(self, m):
-        p, g, h = self.param
+        p, _, _ = self.param
 
         # Randomness of Z_p
         r = random.randint(1, p-1)
 
-        c, _ = self.create_commit(m, r)
+        c, r = self.create_commit(m, r)
 
         return c, r
 

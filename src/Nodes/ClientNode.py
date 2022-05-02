@@ -1,4 +1,3 @@
-import hashlib
 import json
 import random
 from Infrastructure.Nodes.FastNode import FastNode
@@ -36,6 +35,7 @@ class ClientNode (FastNode):
         self.big_xs = []
         self.big_ys = []
         self.commitments = []
+        self.bit_randomness = []
 
         self.contractparams = None
 
@@ -74,7 +74,9 @@ class ClientNode (FastNode):
 
         for bit in bits:
             self.bits.append(bit)
-            self.bit_commitments.append(self.pd.commit(bit))
+            commitment = self.pd.commit(bit)
+            self.bit_commitments.append(commitment)
+            self.bit_randomness.append(commitment[1])
 
     def setup(self):
         # Stage 1
@@ -177,6 +179,7 @@ class ClientNode (FastNode):
 
                     self.big_ys[i].append(self.pd.cp.sub_point(
                         left_side, right_side))
+
         except:
             print(
                 f"Failed when creating Y's for {self.id} - Big X's: {len(self.big_xs)}")
@@ -210,7 +213,7 @@ class ClientNode (FastNode):
             w_2, c_div_g), curve.mul_point(v_s[3], self.h))
 
         t_5 = curve.add_point(curve.mul_point(
-            w_2, v), curve.mul_point(v_s[3], self.g))
+            w_2, v), curve.mul_point(v_s[4], self.g))
 
         h = hash(self.concatenate_points(
             [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
@@ -222,11 +225,11 @@ class ClientNode (FastNode):
 
             x1, x2, x3, x4 = r, x, 0, 0
 
-            r1 = (v_s[1] - gamma1 * x1) % self.p
-            r2 = (v_s[2] - gamma1 * x2) % self.p
+            r1 = (v_s[1] - (gamma1 * x1)) % self.p  # Something's wrong with r
+            r2 = (v_s[2] - (gamma1 * x2)) % self.p
             r3 = r2
-            r4 = (v_s[3] - gamma1 * x3) % self.p
-            r5 = (v_s[4] - gamma1 * x4) % self.p
+            r4 = (v_s[3] - (gamma1 * x3)) % self.p
+            r5 = (v_s[4] - (gamma1 * x4)) % self.p
 
         else:  # F_2
             gamma1 = w_1
@@ -234,21 +237,20 @@ class ClientNode (FastNode):
 
             x1, x2, x3, x4 = 0, 0, r, r_bar
 
-            r1 = (v_s[1] - gamma2 * x1) % self.p
-            r2 = (v_s[2] - gamma2 * x2) % self.p
+            r1 = (v_s[1] - (gamma2 * x1)) % self.p
+            r2 = (v_s[2] - (gamma2 * x2)) % self.p
             r3 = r2
-            r4 = (v_s[3] - gamma2 * x3) % self.p
-            r5 = (v_s[4] - gamma2 * x4) % self.p
+            r4 = (v_s[3] - (gamma2 * x3)) % self.p  # Something's wrong with r
+            r5 = (v_s[4] - (gamma2 * x4)) % self.p
 
         if self.index == 2:
-            print(f"Create NIZK: {t_1}")
-            print(f"Create NIZK: {t_2}")
-            print(f"Create NIZK: {t_3}")
-            print(f"Create NIZK: {t_4}")
-            print(f"Create NIZK: {t_5}")
+            print(f"Create NIZK: t1 {t_1}")
+            print(f"Create NIZK: t2 {t_2}")
+            print(f"Create NIZK: t3 {t_3}")
+            print(f"Create NIZK: t4 {t_4}")
+            print(f"Create NIZK: t5 {t_5}")
 
         return {
-            "h": h,
             "gamma1": gamma1,
             "gamma2": gamma2,
             "r1": r1,
@@ -256,10 +258,6 @@ class ClientNode (FastNode):
             "r3": r3,
             "r4": r4,
             "r5": r5,
-            "c": {
-                "x": c.x,
-                "y": c.y
-            },
             "v": {
                 "x": v.x,
                 "y": v.y
@@ -267,34 +265,10 @@ class ClientNode (FastNode):
             "Y": {
                 "x": big_y.x,
                 "y": big_y.y
-            },
-            "X": {
-                "x": big_x.x,
-                "y": big_x.y
-            },
-            "t1": {
-                "x": t_1.x,
-                "y": t_1.y
-            },
-            "t2": {
-                "x": t_2.x,
-                "y": t_2.y
-            },
-            "t3": {
-                "x": t_3.x,
-                "y": t_3.y
-            },
-            "t4": {
-                "x": t_4.x,
-                "y": t_4.y
-            },
-            "t5": {
-                "x": t_5.x,
-                "y": t_5.y
             }
         }
 
-    def verify_bfv_nizk(self, nizk, index, v):
+    def verify_bfv_nizk(self, nizk, index, v, c, big_x):
         gamma1 = nizk["gamma1"]
         gamma2 = nizk["gamma2"]
         r1 = nizk["r1"]
@@ -303,17 +277,17 @@ class ClientNode (FastNode):
         r4 = nizk["r4"]
         r5 = nizk["r5"]
 
-        # THIS HAS TO BE MODULO P IF EVERYTHING ELSE IS
+        # THIS HAS TO BE MODULO P
         gamma_res = (gamma1 + gamma2) % self.p
 
         curve = self.pd.cp
 
-        c = Point(nizk["c"]["x"], nizk["c"]["y"], curve)
+        # This one should've been broadcasted earlier
         big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
-        big_x = Point(nizk["X"]["x"], nizk["X"]["y"], curve)
 
         c_div_g = curve.sub_point(c, self.g)
 
+        # Incorrect
         t_1_prime = curve.add_point(curve.mul_point(
             gamma1, c), curve.mul_point(r1, self.h))
 
@@ -329,21 +303,16 @@ class ClientNode (FastNode):
         t_4_prime = curve.add_point(curve.mul_point(
             gamma2, c_div_g), curve.mul_point(r4, self.h))
 
+        # Correct
         t_5_prime = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r5, self.g))
 
-        # t_1_prime = Point(nizk["t1"]["x"], nizk["t1"]["y"], curve)
-        # t_2_prime = Point(nizk["t2"]["x"], nizk["t2"]["y"], curve)
-        # t_3_prime = Point(nizk["t3"]["x"], nizk["t3"]["y"], curve)
-        # t_4_prime = Point(nizk["t4"]["x"], nizk["t4"]["y"], curve)
-        # t_5_prime = Point(nizk["t5"]["x"], nizk["t5"]["y"], curve)
-
         if index == 2 and self.index == 1:
-            print(f"Verify NIZK: {t_1_prime}")
-            print(f"Verify NIZK: {t_2_prime}")
-            print(f"Verify NIZK: {t_3_prime}")
-            print(f"Verify NIZK: {t_4_prime}")
-            print(f"Verify NIZK: {t_5_prime}")
+            print(f"Verify NIZK: t1 {t_1_prime}")
+            print(f"Verify NIZK: t2 {t_2_prime}")
+            print(f"Verify NIZK: t3 {t_3_prime}")
+            print(f"Verify NIZK: t4 {t_4_prime}")
+            print(f"Verify NIZK: t5 {t_5_prime}")
 
         # HAS TO BE MODULO P
         h = hash(self.concatenate_points(
@@ -351,10 +320,10 @@ class ClientNode (FastNode):
 
         # Check if gamma = H
         if h == gamma_res:
-            print(h == gamma_res)
+            # print(h == gamma_res)
             return True
         else:
-            print(h == gamma_res)
+            # print(h == gamma_res)
             return False
 
     def sample_from_field(self):
@@ -375,7 +344,6 @@ class ClientNode (FastNode):
         return res_string
 
     def veto(self):
-        # Create NIZK :)
         bfv = True  # Before First Veto
 
         previous_vetos = []
@@ -398,7 +366,7 @@ class ClientNode (FastNode):
                     previous_vetos.append(False)
 
                 nizk = self.generate_bfv_nizk(
-                    self.bits[i], self.commitments[self.index][i], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_commitments[i][1], self.small_xs[i], r_hat)
+                    self.bits[i], self.commitments[self.index][i], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_randomness[i], self.small_xs[i], r_hat)
 
                 nizk_msg = {
                     "v_ir": {
@@ -419,11 +387,19 @@ class ClientNode (FastNode):
                 v_arr = []
                 v_arr.append(v)
                 for j in range(len(self.clients)):
+                    party = vs[j]["index"]
                     v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
                                    ["v_ir"]["y"], self.pd.cp)
 
-                    self.verify_bfv_nizk(
-                        vs[j]["BV"], vs[j]["index"], v_to_i)
+                    nizk_verification = self.verify_bfv_nizk(
+                        vs[j]["BV"], party, v_to_i, self.commitments[party][i], self.big_xs[party][i])
+
+                    if not nizk_verification:
+                        # Go to recovery with the index of the party that sent the wrong NIZK
+                        # print(f"{self.index}: Party {party} sent a wrong NIZK")
+                        pass
+                    else:
+                        pass
                     v_arr.append(v_to_i)
 
                 point = self.g
