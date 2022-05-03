@@ -1,3 +1,5 @@
+import hashlib
+import random
 from p2pnetwork.node import Node
 from Infrastructure.Nodes.FastNodeConnection import FastNodeConnection
 from src.PedersenCommitment.Pedersen import Pedersen

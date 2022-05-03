@@ -20,7 +20,7 @@ class BroadcastNode (FastNode):
             (client.id, client.get_node_message()))
 
     def send_params(self, client):
-        while(len(self.nodes) > len(self.received_bids)):
+        while(3 > len(self.received_bids)):
             time.sleep(0.1)
 
         # sort received bids by client id
@@ -80,7 +80,7 @@ class BroadcastNode (FastNode):
 
             self.clients.append(node_info)
 
-            if len(self.clients) == len(self.nodes):
+            if len(self.clients) == 3:
                 break
 
         converted_clients = []

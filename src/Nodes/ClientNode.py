@@ -1,5 +1,4 @@
 import json
-import random
 import sys
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.string import *
@@ -74,7 +73,7 @@ class ClientNode (FastNode):
 
         for bit in bits:
             self.bits.append(bit)
-            commitment = self.pd.commit(bit)
+            commitment = self.pd.commit((self.p, self.g, self.h), bit)
             self.bit_commitments.append(commitment)
 
     def setup(self):
@@ -92,6 +91,16 @@ class ClientNode (FastNode):
 
         # (a) send to smart contract (BroadcastNode)
         self.send_to_node(self.bc_node, (bid_param))  # Not a dict
+
+        self.contractparams = get_message(self.bc_node)
+
+        # Receive from smart contract
+        self.p = self.contractparams["p"]
+        self.h = Point(self.contractparams["h"]["x"],
+                       self.contractparams["h"]["y"], self.pd.cp)
+        self.g = Point(self.contractparams["g"]["x"],
+                       self.contractparams["g"]["y"], self.pd.cp)
+
         # (b) compute bit commitments
         self.bid_decomposition()
 
@@ -103,14 +112,6 @@ class ClientNode (FastNode):
         # (h) ?
         # (i) ?
         # secret_key =
-
-        self.contractparams = get_message(self.bc_node)
-
-        self.p = self.contractparams["p"]
-        self.h = Point(self.contractparams["h"]["x"],
-                       self.contractparams["h"]["y"], self.pd.cp)
-        self.g = Point(self.contractparams["g"]["x"],
-                       self.contractparams["g"]["y"], self.pd.cp)
 
         # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
         commit_x_dict = {}
@@ -214,20 +215,16 @@ class ClientNode (FastNode):
         t_5 = curve.add_point(curve.mul_point(
             w_2, v), curve.mul_point(v_s[4], self.g))
 
-        # h = hash(self.concatenate_points(
-        #     [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
-
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_2, t_3, t_5])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
 
-        # Something might be wrong with picking the non H gamma
         if alpha == 1:  # F_1
             gamma1 = (h - (w_1 + w_2)) % self.p
             gamma2 = w_2
 
             x1, x2, x3, x4 = r, x, 0, 0
 
-            r1 = (v_s[1] - (gamma1 * x1)) % self.p  # Something's wrong with r
+            r1 = (v_s[1] - (gamma1 * x1)) % self.p
             r2 = (v_s[2] - (gamma1 * x2)) % self.p
             r3 = r2
             r4 = (v_s[3] - (gamma1 * x3)) % self.p
@@ -242,15 +239,8 @@ class ClientNode (FastNode):
             r1 = (v_s[1] - (gamma2 * x1)) % self.p
             r2 = (v_s[2] - (gamma2 * x2)) % self.p
             r3 = r2
-            r4 = (v_s[3] - (gamma2 * x3)) % self.p  # Something's wrong with r
+            r4 = (v_s[3] - (gamma2 * x3)) % self.p
             r5 = (v_s[4] - (gamma2 * x4)) % self.p
-
-        # if self.index == 2:
-        #     print(f"Create NIZK: t1 {t_1}")
-        #     print(f"Create NIZK: t2 {t_2}")
-        #     print(f"Create NIZK: t3 {t_3}")
-        #     print(f"Create NIZK: t4 {t_4}")
-        #     print(f"Create NIZK: t5 {t_5}")
 
         return {
             "gamma1": gamma1,
@@ -285,38 +275,24 @@ class ClientNode (FastNode):
 
         c_div_g = curve.sub_point(c, self.g)
 
-        # Incorrect
         t_1_p = curve.add_point(curve.mul_point(
             gamma1, c), curve.mul_point(r1, self.h))
 
-        # Correct
         t_2_p = curve.add_point(curve.mul_point(
             gamma1, v), curve.mul_point(r2, big_y))
 
-        # Correct
         t_3_p = curve.add_point(curve.mul_point(
             gamma1, big_x), curve.mul_point(r3, self.g))
 
-        # Correct
         t_4_p = curve.add_point(curve.mul_point(
             gamma2, c_div_g), curve.mul_point(r4, self.h))
 
-        # Correct
         t_5_p = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r5, self.g))
 
-        # if index == 2 and self.index == 1:
-        #     print(f"Verify NIZK: t1 {t_1_p}")
-        #     print(f"Verify NIZK: t2 {t_2_p}")
-        #     print(f"Verify NIZK: t3 {t_3_p}")
-        #     print(f"Verify NIZK: t4 {t_4_p}")
-        #     print(f"Verify NIZK: t5 {t_5_p}")
-
         # HAS TO BE MODULO P
-        # h = hash(self.concatenate_points(
-        #     [self.h, c, big_y, v, self.g, big_x, c_div_g, t_2_p, t_3_p, t_4_p, t_5_p])) % self.p
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_2_p, t_3_p, t_5_p])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p])) % self.p
 
         # Check if gamma = H
         if h == gamma_res:
@@ -363,10 +339,8 @@ class ClientNode (FastNode):
             t_8 = curve.mul_point(
                 v_s[7], big_y_lvr)
         else:
-            t_5 = curve.mul_point(0, curve.mul_point(
-                v_s[4], self.g))
-            t_8 = curve.mul_point(0, curve.mul_point(
-                v_s[7], big_y_lvr))
+            t_5 = 0
+            t_8 = 0
 
         t_6 = curve.add_point(curve.mul_point(
             w_2, v), curve.mul_point(v_s[5], self.g))
@@ -526,10 +500,8 @@ class ClientNode (FastNode):
             t_8_p = curve.mul_point(
                 r8, big_y_lvr)
         else:  # IS THIS EVEN LEGAL?!?!?!
-            t_5_p = curve.mul_point(0, curve.mul_point(
-                r5, self.g))
-            t_8_p = curve.mul_point(0, curve.mul_point(
-                r8, big_y_lvr))
+            t_5_p = 0
+            t_8_p = 0
 
         t_6_p = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r6, self.g))
@@ -568,7 +540,7 @@ class ClientNode (FastNode):
             return False
 
     def sample_from_field(self):
-        return random.randint(1, self.p-1)
+        return number.getRandomRange(1, self.p-1)
 
     def sample_from_field_arr(self, amount):
         lst = [None]
