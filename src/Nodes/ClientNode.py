@@ -300,7 +300,7 @@ class ClientNode (FastNode):
         else:
             return False
 
-    def generate_afv_nizk(self, bit, bit_lvr, c, v, big_y, big_x, big_y_lvr, big_x_lvr, r, x, r_hat_lvr, r_hat, x_lvr):
+    def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, big_x_lvr, r, x, r_hat_lvr, r_hat, x_lvr):
         curve = self.pd.cp
 
         v_s = self.sample_from_field_arr(8)
@@ -333,20 +333,17 @@ class ClientNode (FastNode):
         t_4 = curve.add_point(curve.mul_point(
             w_2, c_div_g), curve.mul_point(v_s[3], self.h))
 
-        if bit_lvr == 1:
-            t_5 = curve.mul_point(
-                v_s[4], self.g)
-            t_8 = curve.mul_point(
-                v_s[7], big_y_lvr)
-        else:
-            t_5 = 0
-            t_8 = 0
+        t_5 = curve.add_point(curve.mul_point(
+            w_2, d_ir), curve.mul_point(v_s[4], self.g))
 
         t_6 = curve.add_point(curve.mul_point(
             w_2, v), curve.mul_point(v_s[5], self.g))
 
         t_7 = curve.add_point(curve.mul_point(
             w_3, c_div_g), curve.mul_point(v_s[6], self.h))
+
+        t_8 = curve.add_point(curve.mul_point(
+            w_3, d_ir), curve.mul_point(v_s[7], big_y_lvr))
 
         t_9 = curve.add_point(curve.mul_point(
             w_3, big_x_lvr), curve.mul_point(v_s[7], self.g))
@@ -358,7 +355,7 @@ class ClientNode (FastNode):
             w_3, big_x), curve.mul_point(v_s[8], self.g))
 
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, bit_lvr, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])) % self.p
 
         if alpha == 1:  # F_1
             gamma1 = (h - (w_1 + w_2 + w_3)) % self.p
@@ -417,18 +414,18 @@ class ClientNode (FastNode):
             r10 = (v_s[8] - (gamma3 * x8)) % self.p
             r11 = r10
 
-        if self.index == 2:
-            print(f"Create NIZK: t1 {t_1}")
-            print(f"Create NIZK: t2 {t_2}")
-            print(f"Create NIZK: t3 {t_3}")
-            print(f"Create NIZK: t4 {t_4}")
-            print(f"Create NIZK: t5 {t_5}")
-            print(f"Create NIZK: t6 {t_6}")
-            print(f"Create NIZK: t7 {t_7}")
-            print(f"Create NIZK: t8 {t_8}")
-            print(f"Create NIZK: t9 {t_9}")
-            print(f"Create NIZK: t10 {t_10}")
-            print(f"Create NIZK: t11 {t_11}")
+        # if self.index == 2:
+        #     print(f"Create NIZK: t1 {t_1}")
+        #     print(f"Create NIZK: t2 {t_2}")
+        #     print(f"Create NIZK: t3 {t_3}")
+        #     print(f"Create NIZK: t4 {t_4}")
+        #     print(f"Create NIZK: t5 {t_5}")
+        #     print(f"Create NIZK: t6 {t_6}")
+        #     print(f"Create NIZK: t7 {t_7}")
+        #     print(f"Create NIZK: t8 {t_8}")
+        #     print(f"Create NIZK: t9 {t_9}")
+        #     print(f"Create NIZK: t10 {t_10}")
+        #     print(f"Create NIZK: t11 {t_11}")
 
         return {
             "gamma1": gamma1,
@@ -452,11 +449,10 @@ class ClientNode (FastNode):
             "Y_lvr": {
                 "x": big_y_lvr.x,
                 "y": big_y_lvr.y
-            },
-            "d_ir": bit_lvr
+            }
         }
 
-    def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, index, bit_lvr):
+    def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, index, d_ir):
         gamma1 = nizk["gamma1"]
         gamma2 = nizk["gamma2"]
         gamma3 = nizk["gamma3"]
@@ -494,20 +490,17 @@ class ClientNode (FastNode):
         t_4_p = curve.add_point(curve.mul_point(
             gamma2, c_div_g), curve.mul_point(r4, self.h))
 
-        if bit_lvr == 1:
-            t_5_p = curve.mul_point(
-                r5, self.g)
-            t_8_p = curve.mul_point(
-                r8, big_y_lvr)
-        else:  # IS THIS EVEN LEGAL?!?!?!
-            t_5_p = 0
-            t_8_p = 0
+        t_5_p = curve.add_point(curve.mul_point(
+            gamma2, d_ir), curve.mul_point(r5, self.g))
 
         t_6_p = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r6, self.g))
 
         t_7_p = curve.add_point(curve.mul_point(
             gamma3, c_div_g), curve.mul_point(r7, self.h))
+
+        t_8_p = curve.add_point(curve.mul_point(
+            gamma3, d_ir), curve.mul_point(r8, big_y_lvr))
 
         t_9_p = curve.add_point(curve.mul_point(
             gamma3, big_x_lvr), curve.mul_point(r9, self.g))
@@ -518,21 +511,21 @@ class ClientNode (FastNode):
         t_11_p = curve.add_point(curve.mul_point(
             gamma3, big_x), curve.mul_point(r11, self.g))
 
-        if index == 2 and self.index == 1:
-            print(f"Verify NIZK: t1 {t_1_p}")
-            print(f"Verify NIZK: t2 {t_2_p}")
-            print(f"Verify NIZK: t3 {t_3_p}")
-            print(f"Verify NIZK: t4 {t_4_p}")
-            print(f"Verify NIZK: t5 {t_5_p}")
-            print(f"Verify NIZK: t6 {t_6_p}")
-            print(f"Verify NIZK: t7 {t_7_p}")
-            print(f"Verify NIZK: t8 {t_8_p}")
-            print(f"Verify NIZK: t9 {t_9_p}")
-            print(f"Verify NIZK: t10 {t_10_p}")
-            print(f"Verify NIZK: t11 {t_11_p}")
+        # if index == 2 and self.index == 1:
+        #     print(f"Verify NIZK: t1 {t_1_p}")
+        #     print(f"Verify NIZK: t2 {t_2_p}")
+        #     print(f"Verify NIZK: t3 {t_3_p}")
+        #     print(f"Verify NIZK: t4 {t_4_p}")
+        #     print(f"Verify NIZK: t5 {t_5_p}")
+        #     print(f"Verify NIZK: t6 {t_6_p}")
+        #     print(f"Verify NIZK: t7 {t_7_p}")
+        #     print(f"Verify NIZK: t8 {t_8_p}")
+        #     print(f"Verify NIZK: t9 {t_9_p}")
+        #     print(f"Verify NIZK: t10 {t_10_p}")
+        #     print(f"Verify NIZK: t11 {t_11_p}")
 
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, bit_lvr, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
 
         if h == gamma_res:
             return True
@@ -566,7 +559,11 @@ class ClientNode (FastNode):
 
         previous_vetos = []
         veto_randomness = []
-        latest_veto_r = None
+        lvr = None
+        previous_vetos_points = []
+
+        for i in range(len(self.clients) + 1):
+            previous_vetos_points.append([])
 
         print(
             f"{self.id} small_xs: {len(self.small_xs)}, big_ys: {len(self.big_ys[self.index])}")
@@ -582,6 +579,10 @@ class ClientNode (FastNode):
                     v = self.pd.cp.mul_point(
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
+
+                v_arr = []
+                v_arr.append(v)
+                previous_vetos_points[self.index].append(v)
 
                 nizk = self.generate_bfv_nizk(
                     self.bits[i], self.commitments[self.index][i], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.bit_commitments[i][1], self.small_xs[i], r_hat)
@@ -602,12 +603,12 @@ class ClientNode (FastNode):
 
                 vs = get_all_messages_arr(self, len(self.clients))
 
-                v_arr = []
-                v_arr.append(v)
                 for j in range(len(self.clients)):
                     party = vs[j]["index"]
                     v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
                                    ["v_ir"]["y"], self.pd.cp)
+
+                    previous_vetos_points[party].append(v_to_i)
 
                     nizk_verification = self.verify_bfv_nizk(
                         vs[j]["BV"], party, v_to_i, self.commitments[party][i], self.big_xs[party][i])
@@ -625,7 +626,7 @@ class ClientNode (FastNode):
 
                 if point != self.g:
                     bfv = False
-                    latest_veto_r = i
+                    lvr = i
                     self.vetos.append(1)
                 else:
                     self.vetos.append(0)
@@ -636,11 +637,11 @@ class ClientNode (FastNode):
                 # If the bit is 1 and the previous veto was true
                 r_hat = number.getRandomRange(1, self.p - 1)
                 veto_randomness.append(r_hat)
-                if self.bits[i] == 1 and previous_vetos[latest_veto_r] == True:
+                if self.bits[i] == 1 and previous_vetos[lvr] == True:
                     v = self.pd.cp.mul_point(r_hat, self.g)
                     previous_vetos.append(True)
                 # If the bit is 1 and the previous veto was false
-                elif self.bits[i] == 1 and previous_vetos[latest_veto_r] == False:
+                elif self.bits[i] == 1 and previous_vetos[lvr] == False:
                     v = self.pd.cp.mul_point(
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
@@ -649,8 +650,12 @@ class ClientNode (FastNode):
                         self.small_xs[i], self.big_ys[self.index][i])
                     previous_vetos.append(False)
 
+                v_arr = []
+                v_arr.append(v)
+                previous_vetos_points[self.index].append(v)
+
                 nizk = self.generate_afv_nizk(
-                    self.bits[i], self.bits[latest_veto_r], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][latest_veto_r], self.big_xs[self.index][latest_veto_r], self.bit_commitments[i][1], self.small_xs[i], veto_randomness[latest_veto_r], r_hat, self.small_xs[latest_veto_r])
+                    self.bits[i], self.bits[lvr], previous_vetos_points[self.index][lvr], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][lvr], self.big_xs[self.index][lvr], self.bit_commitments[i][1], self.small_xs[i], veto_randomness[lvr], r_hat, self.small_xs[lvr])
 
                 nizk_msg = {
                     "v_ir": {
@@ -668,24 +673,21 @@ class ClientNode (FastNode):
 
                 vs = get_all_messages_arr(self, len(self.clients))
 
-                v_arr = []
-
-                v_arr.append(v)
                 for j in range(len(self.clients)):
                     party = vs[j]["index"]
                     v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
                                    ["v_ir"]["y"], self.pd.cp)
 
+                    previous_vetos_points[party].append(v_to_i)
+
                     nizk_verification = self.verify_afv_nizk(
-                        vs[j]["AV"], self.commitments[self.index][i], v_to_i, self.big_xs[party][i], self.big_xs[party][latest_veto_r], party, self.bits[latest_veto_r])
+                        vs[j]["AV"], self.commitments[party][i], v_to_i, self.big_xs[party][i], self.big_xs[party][lvr], party, previous_vetos_points[party][lvr])
 
                     if not nizk_verification:
                         # Go to recovery with the index of the party that sent the wrong NIZK
-                        # print(f"NIZK verification failed for {party}")
-                        pass
+                        print(f"NIZK verification failed for {party}")
                     else:
-                        pass
-                    v_arr.append(v_to_i)
+                        v_arr.append(v_to_i)
 
                 point = self.g
 
@@ -693,7 +695,7 @@ class ClientNode (FastNode):
                     point = self.pd.cp.add_point(point, v_arr[j])
 
                 if point != self.g:  # veto
-                    latest_veto_r = i
+                    lvr = i
                     self.vetos.append(1)
                 else:
                     self.vetos.append(0)
