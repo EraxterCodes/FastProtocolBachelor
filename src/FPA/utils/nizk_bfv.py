@@ -1,18 +1,19 @@
 from ecpy.curves import Point
+from src.utils.utils import *
 
 
-def generate_bfv_nizk(bit, c, v, big_y, big_x, r, x, r_bar, self):
+def generate_bfv_nizk(self, bit, c, v, big_y, big_x, r, x, r_bar):
     curve = self.pd.cp
 
-    v_s = self.sample_from_field_arr(4)
+    v_s = sample_from_field_arr(4, self.p)
     w_1, w_2 = 0, 0
 
     if bit == 0:  # F_1
         alpha = 1
-        w_2 = self.sample_from_field()
+        w_2 = sample_from_field(self.p)
     else:  # F_2
         alpha = 2
-        w_1 = self.sample_from_field()
+        w_1 = sample_from_field(self.p)
 
     c_div_g = curve.sub_point(c, self.g)
 
@@ -31,7 +32,7 @@ def generate_bfv_nizk(bit, c, v, big_y, big_x, r, x, r_bar, self):
     t_5 = curve.add_point(curve.mul_point(
         w_2, v), curve.mul_point(v_s[4], self.g))
 
-    h = hash(self.concatenate_points(
+    h = hash(concatenate_points(
         [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
 
     if alpha == 1:  # F_1
@@ -73,7 +74,7 @@ def generate_bfv_nizk(bit, c, v, big_y, big_x, r, x, r_bar, self):
     }
 
 
-def verify_bfv_nizk(nizk, v, c, big_x, self):
+def verify_bfv_nizk(self, nizk, v, c, big_x):
     gamma1 = nizk["gamma1"]
     gamma2 = nizk["gamma2"]
     r1 = nizk["r1"]
@@ -108,7 +109,7 @@ def verify_bfv_nizk(nizk, v, c, big_x, self):
         gamma2, v), curve.mul_point(r5, self.g))
 
     # HAS TO BE MODULO P
-    h = hash(self.concatenate_points(
+    h = hash(concatenate_points(
         [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p])) % self.p
 
     # Check if gamma = H

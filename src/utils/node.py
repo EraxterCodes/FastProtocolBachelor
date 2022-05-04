@@ -1,6 +1,6 @@
 import json
 import time
-from ecpy.curves import Curve, Point
+from ecpy.curves import Point
 
 
 def get_broadcast_node(node_list):

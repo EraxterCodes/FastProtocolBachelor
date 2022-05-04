@@ -13,7 +13,8 @@ def bid_decomposition(self):
 
     for bit in bits:
         self.bits.append(bit)
-        self.bit_commitments.append(self.pd.commit(bit))
+        commitment = self.pd.commit((self.p, self.g, self.h), bit)
+        self.bit_commitments.append(commitment)
 
 
 def setup(self):
@@ -31,6 +32,16 @@ def setup(self):
 
     # (a) send to smart contract (BroadcastNode)
     self.send_to_node(self.bc_node, (bid_param))  # Not a dict
+
+    self.contractparams = get_message(self.bc_node)
+
+    # Receive from smart contract
+    self.p = self.contractparams["p"]
+    self.h = Point(self.contractparams["h"]["x"],
+                   self.contractparams["h"]["y"], self.pd.cp)
+    self.g = Point(self.contractparams["g"]["x"],
+                   self.contractparams["g"]["y"], self.pd.cp)
+
     # (b) compute bit commitments
     bid_decomposition(self)
 
@@ -42,14 +53,6 @@ def setup(self):
     # (h) ?
     # (i) ?
     # secret_key =
-
-    self.contractparams = get_message(self.bc_node)
-
-    self.p = self.contractparams["p"]
-    self.h = Point(self.contractparams["h"]["x"],
-                   self.contractparams["h"]["y"], self.pd.cp)
-    self.g = Point(self.contractparams["g"]["x"],
-                   self.contractparams["g"]["y"], self.pd.cp)
 
     # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
     commit_x_dict = {}
@@ -90,6 +93,8 @@ def setup(self):
 
     commit_and_X_arr = get_all_messages_arr(self, len(self.clients))
 
+    time.sleep(0.5)
+
     unpack_commitments_x(self, [commits_w_index])
     unpack_commitments_x_arr(self, commit_and_X_arr)
 
@@ -115,6 +120,7 @@ def setup(self):
 
                 self.big_ys[i].append(self.pd.cp.sub_point(
                     left_side, right_side))
+
     except:
         print(
             f"Failed when creating Y's for {self.id} - Big X's: {len(self.big_xs)}")

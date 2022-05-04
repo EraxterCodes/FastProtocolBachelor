@@ -1,5 +1,5 @@
 from ecpy.curves import Curve
-from Crypto.Util import number
+from src.utils.utils import sample_from_field
 
 
 class Pedersen:
@@ -19,7 +19,7 @@ class Pedersen:
         g = self.cp.generator
 
         # Random scalar from G (Blinding factor)
-        r = number.getRandomRange(1, size) % p
+        r = sample_from_field(p)
 
         # How the fuck is this possible? g is generator and r is integer?
         h = self.cp.mul_point(r, g)
@@ -42,7 +42,7 @@ class Pedersen:
         p, g, h = param
 
         # Randomness of Z_p
-        r = number.getRandomRange(1, p-1)
+        r = sample_from_field(p)
 
         c, _ = self.create_commit((g, h), m, r)
 
