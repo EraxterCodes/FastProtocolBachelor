@@ -1,5 +1,5 @@
 from ecpy.curves import Curve
-import random
+from Crypto.Util import number
 
 
 class Pedersen:
@@ -19,14 +19,15 @@ class Pedersen:
         g = self.cp.generator
 
         # Random scalar from G (Blinding factor)
-        r = random.randint(1, size)
-        # Random generator value
-        h = g * r
+        r = number.getRandomRange(1, size) % p
+
+        # How the fuck is this possible? g is generator and r is integer?
+        h = self.cp.mul_point(r, g)
 
         return p, g, h
 
-    def create_commit(self, m, r):
-        _, g, h = self.param
+    def create_commit(self, param, m, r):
+        g, h = param
 
         # Create to scalar points on the curve
         mg = self.cp.mul_point(m, g)
@@ -37,18 +38,20 @@ class Pedersen:
 
         return c, r
 
-    def commit(self, m):
-        p, g, h = self.param
+    def commit(self, param, m):
+        p, g, h = param
 
         # Randomness of Z_p
-        r = random.randint(1, p-1)
+        r = number.getRandomRange(1, p-1)
 
-        c, _ = self.create_commit(m, r)
+        c, _ = self.create_commit((g, h), m, r)
 
         return c, r
 
-    def open(self, m, c, r):
-        o, _ = self.create_commit(m, r)
+    def open(self, param, m, c, r):
+        _, g, h = param
+
+        o, _ = self.create_commit((g, h), m, r)
 
         # Check if the commitment is valid
         if o == c:

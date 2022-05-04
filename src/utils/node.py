@@ -1,4 +1,6 @@
+import json
 import time
+from ecpy.curves import Curve, Point
 
 
 def get_broadcast_node(node_list):
@@ -10,7 +12,7 @@ def get_broadcast_node(node_list):
 def reset_all_node_msgs(node_list):
     for node in node_list:
         node.reset_node_message()
-    time.sleep(0.2)
+    time.sleep(0.1)
 
 
 def get_message(node):
@@ -19,9 +21,9 @@ def get_message(node):
     msg = node.get_node_message()
     node.reset_node_message()
 
-    time.sleep(0.1)
+    # time.sleep(0.1)
 
-    return msg
+    return json.loads(msg)
 
 
 def get_all_messages(self, num_messages):
@@ -43,38 +45,38 @@ def get_all_messages_arr(self, num_messages):
         for node in self.all_nodes:
             msg = node.get_node_message()
             if msg != "":
-                messages.append(msg)
+                messages.append(json.loads(msg))
                 node.reset_node_message()
             time.sleep(0.01)
 
     return messages
 
 
-def get_trimmed_info(self, node_info=str):
-    try:
-        info_array = []
+def unpack_commitments_x_arr(self, commits_x):
+    for i in range(len(commits_x)):
+        index = commits_x[i]["client_index"]
 
-        remove_braces = node_info.strip("[]")
-        temp_info = remove_braces.split(" ")
-        for info in temp_info:
-            remove_commas = info.strip(',')
-            remove_ticks = remove_commas.strip("'")
-            index, host, port = remove_ticks.split(":")
+        for j in range(len(commits_x[i]["commit_x"])):
+            commit_x = commits_x[i]["commit_x"][str(j)]
+            commit = commit_x["commit"]
+            big_x = commit_x["big_x"]
 
-            converted_port = int(port)
-
-            if(self.host == host and self.port == converted_port):
-                self.index = int(index)
-
-            info_tuple = (host, converted_port)
-            info_array.append(info_tuple)
-
-        print(info_array)
-        return info_array
-    except:
-        print(f"{self.id} has crashed when splitting node_info")
-        self.sock.close()
+            self.commitments[index].append(
+                Point(commit["x"], commit["y"], self.pd.cp))
+            self.big_xs[index].append(
+                Point(big_x["x"], big_x["y"], self.pd.cp))
 
 
-def add_index_to_node_info():
-    pass
+def unpack_commitments_x(self, commits_x):
+    for i in range(len(commits_x)):
+        index = commits_x[i]["client_index"]
+
+        for j in range(len(commits_x[i]["commit_x"])):
+            commit_x = commits_x[i]["commit_x"][j]
+            commit = commit_x["commit"]
+            big_x = commit_x["big_x"]
+
+            self.commitments[index].append(
+                Point(commit["x"], commit["y"], self.pd.cp))
+            self.big_xs[index].append(
+                Point(big_x["x"], big_x["y"], self.pd.cp))
