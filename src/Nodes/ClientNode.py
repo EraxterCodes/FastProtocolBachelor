@@ -306,18 +306,18 @@ class ClientNode (FastNode):
         v_s = self.sample_from_field_arr(8)
         w_1, w_2, w_3 = 0, 0, 0
 
-        if bit == 0:  # F_1
-            alpha = 1
-            w_2 = self.sample_from_field()
-            w_3 = self.sample_from_field()
-        elif bit_lvr == 1 and bit == 1:  # F_2
+        if bit == 1 and bit_lvr == True:  # F_2
             alpha = 2
             w_1 = self.sample_from_field()
             w_3 = self.sample_from_field()
-        else:  # F_3
+        elif bit == 1 and bit_lvr == False:  # F_3
             alpha = 3
             w_1 = self.sample_from_field()
             w_2 = self.sample_from_field()
+        else:  # F_1
+            alpha = 1
+            w_2 = self.sample_from_field()
+            w_3 = self.sample_from_field()
 
         c_div_g = curve.sub_point(c, self.g)
 
@@ -449,6 +449,10 @@ class ClientNode (FastNode):
             "Y_lvr": {
                 "x": big_y_lvr.x,
                 "y": big_y_lvr.y
+            },
+            "d_ir": {
+                "x": d_ir.x,
+                "y": d_ir.y
             }
         }
 
@@ -473,6 +477,8 @@ class ClientNode (FastNode):
 
         curve = self.pd.cp
 
+        new_dir = Point(nizk["d_ir"]["x"], nizk["d_ir"]["y"], curve)
+
         big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
         big_y_lvr = Point(nizk["Y_lvr"]["x"], nizk["Y_lvr"]["y"], curve)
 
@@ -491,7 +497,7 @@ class ClientNode (FastNode):
             gamma2, c_div_g), curve.mul_point(r4, self.h))
 
         t_5_p = curve.add_point(curve.mul_point(
-            gamma2, d_ir), curve.mul_point(r5, self.g))
+            gamma2, new_dir), curve.mul_point(r5, self.g))
 
         t_6_p = curve.add_point(curve.mul_point(
             gamma2, v), curve.mul_point(r6, self.g))
@@ -500,7 +506,7 @@ class ClientNode (FastNode):
             gamma3, c_div_g), curve.mul_point(r7, self.h))
 
         t_8_p = curve.add_point(curve.mul_point(
-            gamma3, d_ir), curve.mul_point(r8, big_y_lvr))
+            gamma3, new_dir), curve.mul_point(r8, big_y_lvr))
 
         t_9_p = curve.add_point(curve.mul_point(
             gamma3, big_x_lvr), curve.mul_point(r9, self.g))
@@ -525,7 +531,7 @@ class ClientNode (FastNode):
         #     print(f"Verify NIZK: t11 {t_11_p}")
 
         h = hash(self.concatenate_points(
-            [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
+            [self.h, c, big_y, v, self.g, big_x, c_div_g, new_dir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
 
         if h == gamma_res:
             return True
@@ -655,7 +661,7 @@ class ClientNode (FastNode):
                 previous_vetos_points[self.index].append(v)
 
                 nizk = self.generate_afv_nizk(
-                    self.bits[i], self.bits[lvr], previous_vetos_points[self.index][lvr], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][lvr], self.big_xs[self.index][lvr], self.bit_commitments[i][1], self.small_xs[i], veto_randomness[lvr], r_hat, self.small_xs[lvr])
+                    self.bits[i], previous_vetos[lvr], previous_vetos_points[self.index][lvr], self.bit_commitments[i][0], v, self.big_ys[self.index][i], self.big_xs[self.index][i], self.big_ys[self.index][lvr], self.big_xs[self.index][lvr], self.bit_commitments[i][1], self.small_xs[i], veto_randomness[lvr], r_hat, self.small_xs[lvr])
 
                 nizk_msg = {
                     "v_ir": {
