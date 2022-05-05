@@ -16,6 +16,7 @@ class ClientNode (FastNode):
         self.bc_node = None  # gets set in setup
 
         self.bid = bid
+        self.bid_commitment = None
 
         self.p = 0
         self.h = Point(0, 0, self.pd.cp, check=False)
@@ -62,33 +63,31 @@ class ClientNode (FastNode):
             self.connect_to_clients(node)
             time.sleep(0.01)
 
-    def veto_output(self):
+    def veto_output(self): #This is nono
         self.send_to_nodes(({"winner": self.vetos}), exclude=[self.bc_node])
 
         winner = get_all_messages_arr(self, len(self.clients))
 
-        first_win = winner[0]["winner"]
 
-        for win in winner:
-            if win["winner"] != first_win:
-                print("OH NOOO")
-                break
-
-        if self.bits == first_win:
+        if self.bits == self.vetos:
             print(f"{self.id} won")
             self.send_win_proof()
+
 
     def send_win_proof(self):
         # P_w opens the commitment, sends it to the smart contract
         # sends (output, sid, P_w, b_w, r_bw, {sig_sk, (b_w)}
         # Make the smart contract do work | Broadcast node
 
-        output = bit_to_int(self.vetos)  # Decimal winning bid
-        sid = self.id
-        p_w = self.index
-        b_w = self.bits
-        r_bw = None  # Should be computed in step b og stage 1 in setup. Maybe
-        signed_b_w = None
+        Proof_of_winning = {
+            "Label": "OUTPUT",
+            "sid": self.id,
+            "p_w": self.index,
+            "b_w": self.bid,
+            "r_bw": self.bid_commit[1],  # Should be computed in step b og stage 1 in setup. Maybe
+            "signed_b_w": ""
+        }
+        self.send_to_node(self.bc_node, Proof_of_winning)
 
     def run(self):
         accept_connections_thread = threading.Thread(

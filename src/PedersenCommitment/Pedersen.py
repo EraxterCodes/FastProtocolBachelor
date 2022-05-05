@@ -48,8 +48,8 @@ class Pedersen:
 
         return c, r
 
-    def open(self, param, m, c, r):
-        _, g, h = param
+    def open(self, g, h, m, c, r):
+        # Check if the commitment is valid
 
         o, _ = self.create_commit((g, h), m, r)
 

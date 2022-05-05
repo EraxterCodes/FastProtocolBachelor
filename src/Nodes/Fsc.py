@@ -3,21 +3,42 @@ import threading
 import time
 from Infrastructure.Nodes.FastNode import FastNode
 from src.PedersenCommitment.Pedersen import Pedersen
+from src.utils.node import *
 
 
-class BroadcastNode (FastNode):
+class Fsc (FastNode):
     def __init__(self, host, port, id=None, nodes=list, callback=None, max_connections=0):
-        super(BroadcastNode, self).__init__(
+        super(Fsc, self).__init__(
             host, port, id, callback, max_connections)
         self.nodes = nodes
         self.received_bids = []
+        self.bid_commitments = []
+        
+        
 
     def receive_bids(self, client):
-        while(client.get_node_message() == ""):
-            time.sleep(0.1)
+        bids = get_message(client)
+        
 
         self.received_bids.append(
-            (client.id, client.get_node_message()))
+            (client.id, bids))
+
+        bid_commitment = get_message(client)
+        c_to_bid = Point(bid_commitment["commitment_to_bid"]["x"], bid_commitment["commitment_to_bid"]["y"], self.pd.cp)
+        index = bid_commitment["client_index"]
+        self.bid_commitments[index].append(c_to_bid)
+
+        opening = get_message(client)
+        self.verify_winning_bid(opening)
+        
+    def verify_winning_bid(self, opening):
+        # Verify winning bid
+        index = opening["p_w"]
+        c_to_bid = self.bid_commitments[index]
+        
+        print(self.bid_commitments)
+
+        print(f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])}") 
 
     def send_params(self, client):
         while(3 > len(self.received_bids)):
@@ -26,14 +47,14 @@ class BroadcastNode (FastNode):
         # sort received bids by client id
         self.received_bids.sort(key=lambda y: y[0])
 
-        # TODO THIS HAS TO BE CHANGED. WILL FAIL IF CLIENT IDS ARE NOT UNIQUE
         param = self.received_bids[int(client.id) - 1]
 
         sid = client.id  # Not true, since we use self.index
+        p = self.pd.param[0]
         g = self.pd.param[1]
         h = self.pd.param[2]
-        p = self.pd.param[0]
-        pk_c_array = []  # We currently dont implement comittee sooo
+        
+        pk_c_array = []  # We currently dont implement comittee 
         composed_msg = {
             "PARAM_FSC": param[1],
             "sid": sid,
@@ -50,6 +71,7 @@ class BroadcastNode (FastNode):
         }
 
         self.send_to_node(client, (composed_msg))
+        
 
     def accept_connections(self):
         while not self.terminate_flag.is_set():
@@ -88,6 +110,7 @@ class BroadcastNode (FastNode):
         for i in range(len(self.clients)):
             converted_clients.append(
                 {"client_index": i, "client_info": json.loads(self.clients[i])})
+            self.bid_commitments.append([])
 
         self.send_to_nodes({"node_info": converted_clients})
         print("Broadcast Finished")
