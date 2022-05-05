@@ -22,14 +22,14 @@ The best Bachelor since EMBA's Bachelor
 - [x] Get library for P2P
 - [x] P2P network with reliable messaging
 - [x] Find library for Pedersen commitments (ECPy) - Elliptic curve implementation works!
-- [ ] FPA
+- [x] FPA
   - [x] Stage 1
   - [x] Stage 2
     - [x] Veto, Before first veto
-  - [ ] Stage 3
-    - [ ] NIZK
+  - [x] Stage 3
+    - [x] NIZK
     - [x] Veto, after first veto
-  - [ ] Stage 4
+  - [x] Stage 4
 - [ ]  Paper
 - [ ] using ERC20 / UTXO 
   - [ ] Class for UTXO model
