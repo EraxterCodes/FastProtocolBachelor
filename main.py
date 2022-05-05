@@ -1,5 +1,5 @@
 from src.Nodes.ClientNode import ClientNode
-from src.Nodes.BroadcastNode import BroadcastNode
+from src.Nodes.Fsc import Fsc
 import time
 
 selfinput = False
@@ -19,6 +19,7 @@ else:
     if manyclients:
         Node1 = ClientNode("127.0.0.1", 8003, 42, 1)
         Node2 = ClientNode("127.0.0.1", 8005, 1000, 2)
+        
         Node3 = ClientNode("127.0.0.1", 8007, 6116, 3)
         Node4 = ClientNode("127.0.0.1", 8009, 634, 4)
         Node5 = ClientNode("127.0.0.1", 8011, 2348, 5)
@@ -29,14 +30,14 @@ else:
         Client_Node_list = [Node1, Node2, Node3,
                             Node4, Node5, Node6, Node7, Node8]
     else:
-        Node1 = ClientNode("127.0.0.1", 8003, 42, 1)
-        Node2 = ClientNode("127.0.0.1", 8005, 1000, 2)
-        Node3 = ClientNode("127.0.0.1", 8007, 9999, 3)
+        Node1 = ClientNode("127.0.0.1", 8003, 100, 1)
+        Node2 = ClientNode("127.0.0.1", 8005, 200, 2)
+        Node3 = ClientNode("127.0.0.1", 8007, 50, 3)
 
         Client_Node_list = [Node1, Node2, Node3]
 
 
-broadcastNode = BroadcastNode("127.0.0.1", 8001, "Broadcast", Client_Node_list)
+broadcastNode = Fsc("127.0.0.1", 8001, "Broadcast", Client_Node_list)
 broadcastNode.start()
 
 for n in Client_Node_list:

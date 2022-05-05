@@ -19,7 +19,7 @@ def bid_decomposition(self):
 
 def setup(self):
     # Stage 1
-    # change (secret)
+    # change 
     change = 0.1
     # fee: work
     work = 0.1
@@ -30,8 +30,8 @@ def setup(self):
         "work": work
     }
 
-    # (a) send to smart contract (BroadcastNode)
-    self.send_to_node(self.bc_node, (bid_param))  # Not a dict
+    # (a) send to smart contract FSC
+    self.send_to_node(self.bc_node, (bid_param)) 
 
     self.contractparams = get_message(self.bc_node)
 
@@ -45,14 +45,6 @@ def setup(self):
     # (b) compute bit commitments
     bid_decomposition(self)
 
-    # (c) build UTXO for confidential transaction - skippable
-    # (d) compute r_out, we think it's for range proof - skippable
-    # (e) Uses stuff from C - SKIP
-    # (f) Compute shares of g^bi and h^rbi, Use distribution from PVSS protocol with committee - skippable?
-    # (g) ?
-    # (h) ?
-    # (i) ?
-    # secret_key =
 
     # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
     commit_x_dict = {}
@@ -74,16 +66,24 @@ def setup(self):
         }
         commit_x_dict[i] = temp_dict
 
-    reset_all_node_msgs(self.all_nodes)
+    self.bid_commit = self.pd.commit((self.p, self.g, self.h), self.bid)
+
+    commitment_to_bid = {
+        "commitment_to_bid": {
+            "x": self.bid_commit[0].x,
+            "y": self.bid_commit[0].y 
+        },
+        "client_index": self.index
+    }
 
     commits_w_index = {
-        "client_index": int(self.index),
+        "client_index": self.index,
         "commit_x": commit_x_dict
     }
 
-    # maybe also send identification of yourself along ?
     self.send_to_nodes(
         (commits_w_index), exclude=[self.bc_node])
+    self.send_to_node(self.bc_node,commitment_to_bid)
 
     for i in range(len(self.clients) + 1):
         self.commitments.append([])  # add room for another client
