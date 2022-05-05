@@ -13,35 +13,34 @@ class Fsc (FastNode):
         self.nodes = nodes
         self.received_bids = []
         self.bid_commitments = []
-        
-        
 
     def receive_bids(self, client):
         bids = get_message(client)
-        
 
         self.received_bids.append(
             (client.id, bids))
 
         bid_commitment = get_message(client)
-        c_to_bid = Point(bid_commitment["commitment_to_bid"]["x"], bid_commitment["commitment_to_bid"]["y"], self.pd.cp)
+        c_to_bid = Point(bid_commitment["commitment_to_bid"]["x"],
+                         bid_commitment["commitment_to_bid"]["y"], self.pd.cp)
         index = bid_commitment["client_index"]
         self.bid_commitments[index].append(c_to_bid)
 
         opening = get_message(client)
         self.verify_winning_bid(opening)
-        
+
     def verify_winning_bid(self, opening):
         # Verify winning bid
         index = opening["p_w"]
         c_to_bid = self.bid_commitments[index]
-        
+
         print(self.bid_commitments)
 
-        print(f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])}") 
+        print(
+            f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])}")
 
     def send_params(self, client):
-        while(3 > len(self.received_bids)):
+        while(len(self.nodes) > len(self.received_bids)):
             time.sleep(0.1)
 
         # sort received bids by client id
@@ -53,8 +52,8 @@ class Fsc (FastNode):
         p = self.pd.param[0]
         g = self.pd.param[1]
         h = self.pd.param[2]
-        
-        pk_c_array = []  # We currently dont implement comittee 
+
+        pk_c_array = []  # We currently dont implement comittee
         composed_msg = {
             "PARAM_FSC": param[1],
             "sid": sid,
@@ -71,7 +70,6 @@ class Fsc (FastNode):
         }
 
         self.send_to_node(client, (composed_msg))
-        
 
     def accept_connections(self):
         while not self.terminate_flag.is_set():
@@ -102,7 +100,7 @@ class Fsc (FastNode):
 
             self.clients.append(node_info)
 
-            if len(self.clients) == 3:
+            if len(self.clients) == len(self.nodes):
                 break
 
         converted_clients = []

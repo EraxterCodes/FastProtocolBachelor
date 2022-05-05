@@ -2,7 +2,7 @@ from src.Nodes.ClientNode import ClientNode
 from src.Nodes.Fsc import Fsc
 import time
 
-selfinput = False
+selfinput = True
 manyclients = False
 Client_Node_list = []
 
@@ -19,7 +19,6 @@ else:
     if manyclients:
         Node1 = ClientNode("127.0.0.1", 8003, 42, 1)
         Node2 = ClientNode("127.0.0.1", 8005, 1000, 2)
-        
         Node3 = ClientNode("127.0.0.1", 8007, 6116, 3)
         Node4 = ClientNode("127.0.0.1", 8009, 634, 4)
         Node5 = ClientNode("127.0.0.1", 8011, 2348, 5)
