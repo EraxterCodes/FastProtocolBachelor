@@ -2,7 +2,7 @@ from src.Nodes.ClientNode import ClientNode
 from src.Nodes.Fsc import Fsc
 import time
 
-selfinput = True
+selfinput = False
 manyclients = False
 Client_Node_list = []
 

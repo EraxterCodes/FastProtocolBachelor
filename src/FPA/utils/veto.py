@@ -4,6 +4,46 @@ from ecpy.curves import Point
 from src.FPA.utils.nizk_bfv import *
 from src.FPA.utils.nizk_afv import *
 from src.utils.node import *
+import threading
+from multiprocessing import Process
+
+Threadtoggle = False
+
+def afv_nizk_thread(args):
+    self, vs, i, lvr, previous_vetos_points, v_arr = args
+
+    party = vs["index"]
+    v_to_i = Point(vs["v_ir"]["x"], vs
+                    ["v_ir"]["y"], self.pd.cp)
+
+    previous_vetos_points[party].append(v_to_i)
+
+    nizk_verification = verify_afv_nizk(
+        self, vs["AV"], self.commitments[party][i], v_to_i, self.big_xs[party][i], self.big_xs[party][lvr], previous_vetos_points[party][lvr])
+
+    if not nizk_verification:
+        # Go to recovery with the index of the party that sent the wrong NIZK
+        print(f"NIZK verification failed for {party}")
+    else:
+        v_arr.append(v_to_i)
+
+def bfv_nizk_thread(args):
+    self, vs, i, previous_vetos_points, v_arr = args
+
+    party = vs["index"]
+    v_to_i = Point(vs["v_ir"]["x"], vs
+                    ["v_ir"]["y"], self.pd.cp)
+
+    previous_vetos_points[party].append(v_to_i)
+
+    nizk_verification = verify_bfv_nizk(self,
+                                        vs["BV"], v_to_i, self.commitments[party][i], self.big_xs[party][i])
+
+    if not nizk_verification:
+        # Go to recovery with the index of the party that sent the wrong NIZK
+        print(f"NIZK verification failed for {party}")
+    else:
+        v_arr.append(v_to_i)
 
 
 def veto(self):
@@ -55,21 +95,33 @@ def veto(self):
 
             vs = get_all_messages_arr(self, len(self.clients))
 
-            for j in range(len(self.clients)):
-                party = vs[j]["index"]
-                v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
-                               ["v_ir"]["y"], self.pd.cp)
+            if Threadtoggle:
+                process_list = []
+                for j in range(len(self.clients)):
+                    param_thread = Process(target=bfv_nizk_thread, args=((self, vs[j], i, previous_vetos_points, v_arr), ))
+                    param_thread.start()
+                    param_thread.join()
+                    process_list.append(param_thread)
+                    
+            else:
+                for j in range(len(self.clients)):
+                    party = vs[j]["index"]
+                    v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
+                                ["v_ir"]["y"], self.pd.cp)
 
-                previous_vetos_points[party].append(v_to_i)
+                    previous_vetos_points[party].append(v_to_i)
 
-                nizk_verification = verify_bfv_nizk(self,
-                                                    vs[j]["BV"], v_to_i, self.commitments[party][i], self.big_xs[party][i])
+                    nizk_verification = verify_bfv_nizk(self,
+                                                        vs[j]["BV"], v_to_i, self.commitments[party][i], self.big_xs[party][i])
 
-                if not nizk_verification:
-                    # Go to recovery with the index of the party that sent the wrong NIZK
-                    print(f"NIZK verification failed for {party}")
-                else:
-                    v_arr.append(v_to_i)
+                    if not nizk_verification:
+                        # Go to recovery with the index of the party that sent the wrong NIZK
+                        print(f"NIZK verification failed for {party}")
+                    else:
+                        v_arr.append(v_to_i)
+
+            while len(v_arr) != len(self.clients) + 1:
+                time.sleep(0.1)
 
             point = self.g
 
@@ -124,22 +176,27 @@ def veto(self):
             time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
 
             vs = get_all_messages_arr(self, len(self.clients))
+            
+            if Threadtoggle :
+                for j in range(len(self.clients)):
+                    param_thread = threading.Thread(target=afv_nizk_thread, args=((self, vs[j], i,lvr, previous_vetos_points, v_arr), ))
+                    param_thread.start()
+            else:
+                for j in range(len(self.clients)):
+                    party = vs[j]["index"]
+                    v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
+                                ["v_ir"]["y"], self.pd.cp)
 
-            for j in range(len(self.clients)):
-                party = vs[j]["index"]
-                v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
-                               ["v_ir"]["y"], self.pd.cp)
+                    previous_vetos_points[party].append(v_to_i)
 
-                previous_vetos_points[party].append(v_to_i)
+                    nizk_verification = verify_afv_nizk(
+                        self, vs[j]["AV"], self.commitments[party][i], v_to_i, self.big_xs[party][i], self.big_xs[party][lvr], previous_vetos_points[party][lvr])
 
-                nizk_verification = verify_afv_nizk(
-                    self, vs[j]["AV"], self.commitments[party][i], v_to_i, self.big_xs[party][i], self.big_xs[party][lvr], previous_vetos_points[party][lvr])
-
-                if not nizk_verification:
-                    # Go to recovery with the index of the party that sent the wrong NIZK
-                    print(f"NIZK verification failed for {party}")
-                else:
-                    v_arr.append(v_to_i)
+                    if not nizk_verification:
+                        # Go to recovery with the index of the party that sent the wrong NIZK
+                        print(f"NIZK verification failed for {party}")
+                    else:
+                        v_arr.append(v_to_i)
 
             point = self.g
 
@@ -155,3 +212,4 @@ def veto(self):
             print(i)
 
         time.sleep(0.1)
+

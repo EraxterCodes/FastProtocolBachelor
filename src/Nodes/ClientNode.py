@@ -90,6 +90,7 @@ class ClientNode (FastNode):
         self.send_to_node(self.bc_node, Proof_of_winning)
 
     def run(self):
+        start = time.time()
         accept_connections_thread = threading.Thread(
             target=self.accept_connections)
         accept_connections_thread.start()
@@ -101,3 +102,5 @@ class ClientNode (FastNode):
         self.veto_output()
 
         print("finished")
+        end = time.time()
+        print (str(end - start))
