@@ -1,4 +1,6 @@
-from src.Nodes.BroadcastNode import BroadcastNode
+from src.Nodes.Fsc import Fsc
 
-smartcontract = BroadcastNode("127.0.0.1", 8001, "Broadcast")
+parties = int(input("How many parties?: "))
+
+smartcontract = Fsc("127.0.0.1", 8001, "Broadcast", parties)
 smartcontract.start()

@@ -36,7 +36,7 @@ else:
         Client_Node_list = [Node1, Node2, Node3]
 
 
-broadcastNode = Fsc("127.0.0.1", 8001, "Broadcast", Client_Node_list)
+broadcastNode = Fsc("127.0.0.1", 8001, "Broadcast", len(Client_Node_list))
 broadcastNode.start()
 
 for n in Client_Node_list:

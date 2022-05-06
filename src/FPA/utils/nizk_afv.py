@@ -1,3 +1,4 @@
+import hashlib
 from ecpy.curves import Point
 from src.utils.utils import *
 
@@ -56,8 +57,10 @@ def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, b
     t_11 = curve.add_point(curve.mul_point(
         w_3, big_x), curve.mul_point(v_s[8], self.g))
 
-    h = hash(concatenate_points(
-        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])) % self.p
+    concatenated_points = concatenate_points(
+        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])
+
+    h = int(hashlib.sha256(concatenated_points.encode()).hexdigest(), 16) % self.p
 
     if alpha == 1:  # F_1
         gamma1 = (h - (w_1 + w_2 + w_3)) % self.p
@@ -201,8 +204,9 @@ def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, d_ir):
     t_11_p = curve.add_point(curve.mul_point(
         gamma3, big_x), curve.mul_point(r11, self.g))
 
-    h = hash(concatenate_points(
-        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
+    concatenated_points = concatenate_points(
+        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])
+    h = int(hashlib.sha256(concatenated_points.encode()).hexdigest(), 16) % self.p
 
     if h == gamma_res:
         return True

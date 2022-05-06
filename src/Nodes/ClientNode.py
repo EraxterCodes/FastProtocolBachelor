@@ -63,16 +63,16 @@ class ClientNode (FastNode):
             self.connect_to_clients(node)
             time.sleep(0.01)
 
-    def veto_output(self): #This is nono
+    def veto_output(self):  # This is nono
         self.send_to_nodes(({"winner": self.vetos}), exclude=[self.bc_node])
 
         winner = get_all_messages_arr(self, len(self.clients))
 
-
         if self.bits == self.vetos:
-            print(f"{self.id} won")
+            print("Winner is: " + str(self.index))
             self.send_win_proof()
-
+        else:
+            exit(0)
 
     def send_win_proof(self):
         # P_w opens the commitment, sends it to the smart contract
@@ -84,18 +84,20 @@ class ClientNode (FastNode):
             "sid": self.id,
             "p_w": self.index,
             "b_w": self.bid,
-            "r_bw": self.bid_commit[1],  # Should be computed in step b og stage 1 in setup. Maybe
+            # Should be computed in step b og stage 1 in setup. Maybe
+            "r_bw": self.bid_commit[1],
             "signed_b_w": ""
         }
         self.send_to_node(self.bc_node, Proof_of_winning)
 
     def run(self):
-        start = time.time()
         accept_connections_thread = threading.Thread(
             target=self.accept_connections)
         accept_connections_thread.start()
 
         self.connect_to_nodes()
+
+        start = time.time()
 
         fpa(self)
 
@@ -103,4 +105,4 @@ class ClientNode (FastNode):
 
         print("finished")
         end = time.time()
-        print (str(end - start))
+        print(str(end - start))

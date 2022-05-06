@@ -19,7 +19,7 @@ def bid_decomposition(self):
 
 def setup(self):
     # Stage 1
-    # change 
+    # change
     change = 0.1
     # fee: work
     work = 0.1
@@ -27,11 +27,12 @@ def setup(self):
     bid_param = {
         "bid": self.bid,
         "change": change,
-        "work": work
+        "work": work,
+        "index": self.index
     }
 
     # (a) send to smart contract FSC
-    self.send_to_node(self.bc_node, (bid_param)) 
+    self.send_to_node(self.bc_node, (bid_param))
 
     self.contractparams = get_message(self.bc_node)
 
@@ -44,7 +45,6 @@ def setup(self):
 
     # (b) compute bit commitments
     bid_decomposition(self)
-
 
     # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
     commit_x_dict = {}
@@ -71,7 +71,7 @@ def setup(self):
     commitment_to_bid = {
         "commitment_to_bid": {
             "x": self.bid_commit[0].x,
-            "y": self.bid_commit[0].y 
+            "y": self.bid_commit[0].y
         },
         "client_index": self.index
     }
@@ -83,7 +83,7 @@ def setup(self):
 
     self.send_to_nodes(
         (commits_w_index), exclude=[self.bc_node])
-    self.send_to_node(self.bc_node,commitment_to_bid)
+    self.send_to_node(self.bc_node, commitment_to_bid)
 
     for i in range(len(self.clients) + 1):
         self.commitments.append([])  # add room for another client

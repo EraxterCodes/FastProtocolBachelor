@@ -1,6 +1,5 @@
 from src.Nodes.ClientNode import ClientNode
 
-input("Press Enter to start the client...")
 bid = input("Bid of client: ")
 port = input("Port of client: ")
 

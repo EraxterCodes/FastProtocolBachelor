@@ -1,5 +1,6 @@
 from ecpy.curves import Point
 from src.utils.utils import *
+import hashlib
 
 
 def generate_bfv_nizk(self, bit, c, v, big_y, big_x, r, x, r_bar):
@@ -32,8 +33,10 @@ def generate_bfv_nizk(self, bit, c, v, big_y, big_x, r, x, r_bar):
     t_5 = curve.add_point(curve.mul_point(
         w_2, v), curve.mul_point(v_s[4], self.g))
 
-    h = hash(concatenate_points(
-        [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])) % self.p
+    concatenated_points = concatenate_points(
+        [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1, t_2, t_3, t_4, t_5])
+
+    h = int(hashlib.sha256(concatenated_points.encode()).hexdigest(), 16) % self.p
 
     if alpha == 1:  # F_1
         gamma1 = (h - (w_1 + w_2)) % self.p
@@ -109,8 +112,10 @@ def verify_bfv_nizk(self, nizk, v, c, big_x):
         gamma2, v), curve.mul_point(r5, self.g))
 
     # HAS TO BE MODULO P
-    h = hash(concatenate_points(
-        [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p])) % self.p
+    concatenated_points = concatenate_points(
+        [self.h, c, big_y, v, self.g, big_x, c_div_g, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p])
+
+    h = int(hashlib.sha256(concatenated_points.encode()).hexdigest(), 16) % self.p
 
     # Check if gamma = H
     if h == gamma_res:
