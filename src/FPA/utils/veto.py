@@ -196,6 +196,6 @@ def veto(self):
             else:
                 self.vetos.append(0)
 
-            print(i)
+            print(f"Veto round {i}")
 
         time.sleep(0.01)  # Saves 3,2 seconds insted of time.sleep(0,1)

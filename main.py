@@ -22,13 +22,15 @@ else:
         Node2 = ClientNode("127.0.0.1", 8005, 123)
         Node3 = ClientNode("127.0.0.1", 8007, 99)
         Node4 = ClientNode("127.0.0.1", 8009, 100)
-        # Node5 = ClientNode("127.0.0.1", 8011, 2348)
-        # Node6 = ClientNode("127.0.0.1", 8013, 8434)
-        # Node7 = ClientNode("127.0.0.1", 8015, 2346)
-        # Node8 = ClientNode("127.0.0.1", 8017, 9999)
+        Node5 = ClientNode("127.0.0.1", 8011, 2348)
+        Node6 = ClientNode("127.0.0.1", 8013, 8434)
+        Node7 = ClientNode("127.0.0.1", 8015, 2346)
+        Node8 = ClientNode("127.0.0.1", 8017, 9999)
+        Node9 = ClientNode("127.0.0.1", 8019, 123)
+        Node10 = ClientNode("127.0.0.1", 8021, 542)
 
         Client_Node_list = [Node1, Node2, Node3,
-                            Node4]
+                            Node4, Node5, Node6, Node7, Node8]
     else:
         Node1 = ClientNode("127.0.0.1", 8003, 100)
         Node2 = ClientNode("127.0.0.1", 8005, 200)
@@ -41,4 +43,4 @@ broadcastNode.start()
 
 for n in Client_Node_list:
     n.start()
-    time.sleep(0.1)
+    time.sleep(0.05)

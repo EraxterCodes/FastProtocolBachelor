@@ -5,6 +5,10 @@ import time
 from ecpy.curves import Point
 
 
+def utf8len(s):
+    return len(s.encode('utf-8'))
+
+
 def get_broadcast_node(node_list):
     for node in node_list:
         if "Broadcast" in str(node):
@@ -47,7 +51,6 @@ def get_all_messages_arr(self, num_messages):
         for node in self.all_nodes:
             msg = node.get_node_message()
             if msg != "":
-                print(msg)
                 messages.append(json.loads(msg))
                 node.reset_node_message()
             time.sleep(0.01)
@@ -83,6 +86,18 @@ def unpack_commitments_x(self, commits_x):
                 Point(commit["x"], commit["y"], self.pd.cp))
             self.big_xs[index].append(
                 Point(big_x["x"], big_x["y"], self.pd.cp))
+
+
+def unpack_commitments_x2(self, commits_x):
+    for i in range(len(commits_x)):
+        index = commits_x[i]["index"]
+        commit = Point(commits_x[i]["commit"]["x"],
+                       commits_x[i]["commit"]["y"], self.pd.cp)
+        big_x = Point(commits_x[i]["big_x"]["x"],
+                      commits_x[i]["big_x"]["y"], self.pd.cp)
+
+        self.commitments[index].append(commit)
+        self.big_xs[index].append(big_x)
 
 
 def get_free_port():
