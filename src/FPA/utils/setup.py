@@ -92,14 +92,14 @@ def setup(self):
 
         self.send_to_nodes(commit_dict, exclude=[self.bc_node])
 
-        time.sleep(0.05)
+        time.sleep(0.01)
 
         commits = get_all_messages_arr(self, len(self.clients))
 
         unpack_commitments_x2(self, commits)
         unpack_commitments_x2(self, [commit_dict])
 
-        time.sleep(0.2)
+        time.sleep(0.05)
         print(f"Sending c and X, round {i}")
 
     self.bid_commit = self.pd.commit((self.p, self.g, self.h), self.bid)
