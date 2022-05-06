@@ -1,3 +1,4 @@
+import sys
 from src.FPA.fpa import fpa
 from src.utils.utils import *
 from Infrastructure.Nodes.FastNode import FastNode
@@ -39,6 +40,8 @@ class ClientNode (FastNode):
 
         self.utxos = []
 
+        print(self.port)
+
     def connect_to_clients(self, node_info):
         host = node_info["client_info"]["host"]
         port = node_info["client_info"]["port"]
@@ -69,10 +72,8 @@ class ClientNode (FastNode):
         winner = get_all_messages_arr(self, len(self.clients))
 
         if self.bits == self.vetos:
-            print("Winner is: " + str(self.index))
+            print("You won! Sending win proof to FSC")
             self.send_win_proof()
-        else:
-            exit(0)
 
     def send_win_proof(self):
         # P_w opens the commitment, sends it to the smart contract
@@ -106,3 +107,4 @@ class ClientNode (FastNode):
         print("finished")
         end = time.time()
         print(str(end - start))
+        sys.exit()

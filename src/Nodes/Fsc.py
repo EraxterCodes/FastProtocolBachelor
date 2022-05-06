@@ -37,6 +37,8 @@ class Fsc (FastNode):
         print(
             f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])} : {index}")
 
+        quit()
+
     def send_params(self, client):
         while(self.nodes > len(self.received_bids)):
             time.sleep(0.1)

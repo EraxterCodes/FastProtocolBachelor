@@ -109,9 +109,6 @@ def veto(self):
                 else:
                     v_arr.append(v_to_i)
 
-            while len(v_arr) != len(self.clients) + 1:
-                time.sleep(0.1)
-
             point = self.g
 
             for j in range(len(v_arr)):
@@ -166,6 +163,8 @@ def veto(self):
 
             vs = get_all_messages_arr(self, len(self.clients))
 
+            start = time.time()
+
             for j in range(len(self.clients)):
                 party = vs[j]["index"]
                 v_to_i = Point(vs[j]["v_ir"]["x"], vs[j]
@@ -182,6 +181,10 @@ def veto(self):
                 else:
                     v_arr.append(v_to_i)
 
+            if i == 30:
+                end = time.time()
+                print(str(end - start))
+
             point = self.g
 
             for j in range(len(v_arr)):
@@ -195,4 +198,4 @@ def veto(self):
 
             print(i)
 
-        time.sleep(0.1)
+        time.sleep(0.01)  # Saves 3,2 seconds insted of time.sleep(0,1)

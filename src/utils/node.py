@@ -1,4 +1,6 @@
 import json
+from random import randint
+import socket
 import time
 from ecpy.curves import Point
 
@@ -80,3 +82,11 @@ def unpack_commitments_x(self, commits_x):
                 Point(commit["x"], commit["y"], self.pd.cp))
             self.big_xs[index].append(
                 Point(big_x["x"], big_x["y"], self.pd.cp))
+
+
+def get_free_port():
+    while True:
+        port = randint(32768, 61000)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if not (sock.connect_ex(('127.0.0.1', port)) == 0):
+            return port
