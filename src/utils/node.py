@@ -47,6 +47,7 @@ def get_all_messages_arr(self, num_messages):
         for node in self.all_nodes:
             msg = node.get_node_message()
             if msg != "":
+                print(msg)
                 messages.append(json.loads(msg))
                 node.reset_node_message()
             time.sleep(0.01)
@@ -90,3 +91,14 @@ def get_free_port():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if not (sock.connect_ex(('127.0.0.1', port)) == 0):
             return port
+
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+
+    ip = s.getsockname()[0]
+
+    s.close()
+
+    return ip

@@ -18,9 +18,6 @@ class FastNode (Node):
 
         self.coding_type = 'utf-8'
 
-        self.broadcast_host = "127.0.0.1"
-        self.broadcast_port = 8001
-
     def init_server(self):
         print("Initialisation of the Node on port: " +
               str(self.port) + " on node (" + self.id + ")")
@@ -41,7 +38,7 @@ class FastNode (Node):
                 if self.max_connections == 0 or len(self.nodes_inbound) < self.max_connections:
 
                     # Basic information exchange (not secure) of the id's of the nodes!
-                    connected_node_id = connection.recv(16384).decode(
+                    connected_node_id = connection.recv(32786).decode(
                         'utf-8')  # When a node is connected, it sends it id!
                     # Send my id to the connected node!
                     connection.send(self.id.encode('utf-8'))
@@ -106,7 +103,7 @@ class FastNode (Node):
             # Send my id to the connected node!
             sock.send(self.id.encode('utf-8'))
             # When a node is connected, it sends it id!
-            connected_node_id = sock.recv(16384).decode('utf-8')
+            connected_node_id = sock.recv(32786).decode('utf-8')
 
             for node in self.nodes_inbound:
                 if node.host == host and node.id == connected_node_id:

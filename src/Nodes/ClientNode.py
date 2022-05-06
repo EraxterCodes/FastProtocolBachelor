@@ -9,7 +9,7 @@ import time
 
 
 class ClientNode (FastNode):
-    def __init__(self, host, port, bid, id=None, callback=None, max_connections=0):
+    def __init__(self, host, port, bid, bc_ip="127.0.0.1", id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(
             host, port, id, callback, max_connections)
 
@@ -40,7 +40,8 @@ class ClientNode (FastNode):
 
         self.utxos = []
 
-        print(self.port)
+        self.broadcast_host = bc_ip
+        self.broadcast_port = 8001
 
     def connect_to_clients(self, node_info):
         host = node_info["client_info"]["host"]
