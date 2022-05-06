@@ -177,11 +177,15 @@ function startAuction() public returns (bool) {
 ```
 
 ## Things we miss:
-### Calculate commit for bid and send it
+### (FIXED) Calculate commit for bid and send it
 We're still missing this part:
 ![Commit verification](/img/verify_commit.png)
 (Essentially it's just the commit to the bid, which also has to be sent to the smart contract.)
 
-### Fix, such that client only sends to broadcast node
+### (FIXED) Fix, such that client only sends to broadcast node
 Currently it is possible to listen on others connection like showcased below: p1 is somehow getting p2's bid
 ![Listen-on-others-connections](/img/Listen-on-others-connection.png)
+
+### Computing commits in rounds
+When sending commitments in the setup phase, the message is very large. Sometimes it doesn't get send over the network. A fix to this, is to split up the messages and send them in batches. I.e. calculate 1/4 of the commitments and sending them or 1/2.
+
