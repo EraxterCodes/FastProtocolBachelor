@@ -1,6 +1,9 @@
 from src.Nodes.Fsc import Fsc
+from src.utils.node import get_ip
 
 parties = int(input("How many parties?: "))
 
-smartcontract = Fsc("172.20.10.2", 8001, "Broadcast", parties)
+ip = get_ip()
+
+smartcontract = Fsc(ip, 8001, "Broadcast", parties)
 smartcontract.start()

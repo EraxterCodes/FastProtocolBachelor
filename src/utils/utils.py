@@ -6,7 +6,7 @@ def sample_from_field(p):
     return number.getRandomRange(1, p-1)
 
 
-def sample_from_field_arr(amount, p):
+def sample_from_field_arr(amount: int, p):
     lst = [None]
     for i in range(amount):
         lst.append(sample_from_field(p))

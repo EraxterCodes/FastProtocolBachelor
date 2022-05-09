@@ -1,9 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from ecpy.curves import Point
 from src.utils.utils import *
 import hashlib
 
+if TYPE_CHECKING:
+    from src.Nodes.ClientNode import ClientNode
 
-def generate_bfv_nizk(self, bit, c, v, big_y, big_x, r, x, r_bar):
+
+def generate_bfv_nizk(self: ClientNode, bit, c, v, big_y, big_x, r, x, r_bar):
     curve = self.pd.cp
 
     v_s = sample_from_field_arr(4, self.p)
@@ -77,7 +82,7 @@ def generate_bfv_nizk(self, bit, c, v, big_y, big_x, r, x, r_bar):
     }
 
 
-def verify_bfv_nizk(self, nizk, v, c, big_x):
+def verify_bfv_nizk(self: ClientNode, nizk, v, c, big_x):
     gamma1 = nizk["gamma1"]
     gamma2 = nizk["gamma2"]
     r1 = nizk["r1"]

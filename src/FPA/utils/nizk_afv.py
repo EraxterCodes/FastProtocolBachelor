@@ -1,9 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import hashlib
 from ecpy.curves import Point
 from src.utils.utils import *
 
+if TYPE_CHECKING:
+    from src.Nodes.ClientNode import ClientNode
 
-def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, big_x_lvr, r, x, r_hat_lvr, r_hat, x_lvr):
+
+def generate_afv_nizk(self: ClientNode, bit: int, bit_lvr: int, d_ir: Point, c: Point, v: Point, big_y: Point, big_x: Point, big_y_lvr: Point, big_x_lvr: Point, r: int, x: Point, r_hat_lvr: int, r_hat: int, x_lvr: Point):
     curve = self.pd.cp
 
     v_s = sample_from_field_arr(8, self.p)
@@ -145,7 +150,7 @@ def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, b
     }
 
 
-def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, d_ir):
+def verify_afv_nizk(self: ClientNode, nizk: dict, c: Point, v: Point, big_x: Point, big_x_lvr: Point, d_ir: Point):
     gamma1 = nizk["gamma1"]
     gamma2 = nizk["gamma2"]
     gamma3 = nizk["gamma3"]
