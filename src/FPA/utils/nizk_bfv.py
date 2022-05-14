@@ -94,7 +94,6 @@ def verify_bfv_nizk(nizk: dict, v: Point, c: Point, big_x: Point, curve: Curve, 
     # THIS HAS TO BE MODULO P
     gamma_res = (gamma1 + gamma2) % p
 
-    # This one should've been broadcasted earlier
     big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
 
     c_div_g = curve.sub_point(c, g)
