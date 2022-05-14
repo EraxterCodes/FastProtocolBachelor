@@ -54,12 +54,22 @@ class FastNodeConnection(NodeConnection):
     def get_node_message(self):
         return self.message
 
+    def recvall(self, sock, n):
+        # Helper function to recv n bytes or return None if EOF is hit
+        data = bytearray()
+        while len(data) < n:
+            packet = sock.recv(n - len(data))
+            if not packet:
+                return None
+            data.extend(packet)
+        return data
+
     def run(self):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         while not self.terminate_flag.is_set():
             try:
-                chunk = self.sock.recv(16384).decode(self.coding_type)
+                chunk = self.recvall(self.sock, 65536)
 
                 if chunk != "":
                     self.message = chunk
