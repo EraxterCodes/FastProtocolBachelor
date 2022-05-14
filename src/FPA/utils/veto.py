@@ -8,7 +8,7 @@ from src.FPA.utils.nizk_afv import *
 from src.utils.node import *
 import threading
 
-execute_threads = True
+execute_threads = False
 
 if TYPE_CHECKING:
     from src.Nodes.ClientNode import ClientNode
@@ -85,7 +85,7 @@ def veto(self: ClientNode):
             self.send_to_nodes(
                 (nizk_msg), exclude=[self.bc_node])
 
-            time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
+            time.sleep(0.01)
 
             vs = get_all_messages_arr(self, len(self.clients))
 
@@ -185,7 +185,7 @@ def veto(self: ClientNode):
             self.send_to_nodes(
                 (nizk_msg), exclude=[self.bc_node])
 
-            time.sleep(0.01)  # Can be adjusted to 0.01 for improved speed
+            time.sleep(0.01) 
 
             vs = get_all_messages_arr(self, len(self.clients))
 
@@ -257,4 +257,4 @@ def veto(self: ClientNode):
 
         print(f"Round {i}")
 
-        time.sleep(0.01)  # Saves 3,2 seconds insted of time.sleep(0,1)
+        time.sleep(0.01) 

@@ -98,7 +98,6 @@ def setup(self: ClientNode):
 
     time.sleep(0.2)
 
-    # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
     try:
         for i in range(len(self.big_xs)):
             self.big_ys.append([])
@@ -120,4 +119,3 @@ def setup(self: ClientNode):
     except:
         print(
             f"Failed when creating Y's for {self.id} - Big X's: {len(self.big_xs)}")
-    # verify c_j for each other party p_j, skipped atm

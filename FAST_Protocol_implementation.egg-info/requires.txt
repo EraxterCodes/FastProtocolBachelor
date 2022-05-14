@@ -1,0 +1,3 @@
+ecpy
+p2pnetwork
+pycryptodome

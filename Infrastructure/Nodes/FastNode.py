@@ -128,3 +128,21 @@ class FastNode (Node):
 
     def create_new_connection(self, connection, id, host, port):
         return FastNodeConnection(self, connection, id, host, port)
+
+    def send_to_node(self, n: FastNodeConnection, data) -> None:
+        """ Send the data to the node n if it exists."""
+        self.message_count_send += 1
+        if n in self.all_nodes:
+            n.send(data)
+        else:
+            self.debug_print("Node send_to_node: Could not send the data, node is not found!")
+
+    def send_to_nodes(self, data, exclude: list[FastNodeConnection] = []) -> None:
+        """ Send a message to all the nodes that are connected with this node. data is a python variable which is
+            converted to JSON that is send over to the other node. exclude list gives all the nodes to which this
+            data should not be sent."""
+        nodes = filter(lambda node: node not in exclude, self.all_nodes)
+        for n in nodes:
+            self.send_to_node(n, data)
+
+    

@@ -3,7 +3,6 @@ from src.FPA.fpa import fpa
 from src.utils.utils import *
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.node import *
-from ecdsa import SigningKey, VerifyingKey
 import threading
 import time
 
@@ -23,9 +22,6 @@ class ClientNode (FastNode):
         self.h = Point(0, 0, self.pd.cp, check=False)
         self.g = Point(0, 0, self.pd.cp, check=False)
 
-        self.sk = SigningKey.generate()
-        self.vk = self.sk.verifying_key
-
         self.bit_commitments = []
         self.bits = []
 
@@ -37,8 +33,6 @@ class ClientNode (FastNode):
         self.commitments = []
 
         self.contractparams = None
-
-        self.utxos = []
 
         self.broadcast_host = bc_ip
         self.broadcast_port = 8001
@@ -67,7 +61,7 @@ class ClientNode (FastNode):
             self.connect_to_clients(node)
             time.sleep(0.01)
 
-    def veto_output(self):  # This is nono
+    def veto_output(self):
         self.send_to_nodes(({"winner": self.vetos}), exclude=[self.bc_node])
 
         winner = get_all_messages_arr(self, len(self.clients))

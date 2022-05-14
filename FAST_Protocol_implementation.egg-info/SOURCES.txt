@@ -1,0 +1,7 @@
+README.md
+setup.py
+FAST_Protocol_implementation.egg-info/PKG-INFO
+FAST_Protocol_implementation.egg-info/SOURCES.txt
+FAST_Protocol_implementation.egg-info/dependency_links.txt
+FAST_Protocol_implementation.egg-info/requires.txt
+FAST_Protocol_implementation.egg-info/top_level.txt

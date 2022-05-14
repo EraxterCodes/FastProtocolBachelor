@@ -43,12 +43,12 @@ class Fsc (FastNode):
         while(self.nodes > len(self.received_bids)):
             time.sleep(0.1)
 
-        sid = client.id  # Not true, since we use self.index
+        sid = client.id 
         p = self.pd.param[0]
         g = self.pd.param[1]
         h = self.pd.param[2]
 
-        pk_c_array = []  # We currently dont implement comittee
+        pk_c_array = [] 
         composed_msg = {
             "sid": sid,
             "g": {
