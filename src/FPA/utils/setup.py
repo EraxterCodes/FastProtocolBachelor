@@ -54,6 +54,8 @@ def setup(self: ClientNode):
         self.commitments.append([])  # add room for another client
         self.big_xs.append([])  # add room for another client
 
+    send_c_time = time.time()
+
     for i in range(len(self.bit_commitments)):
         x = number.getRandomRange(1, self.p - 1)
         self.small_xs.append(x)
@@ -83,6 +85,9 @@ def setup(self: ClientNode):
 
         time.sleep(0.1)
         print(f"Sending c and X, round {i}")
+
+    end_c_time = time.time()
+    print(f"Sending c and X took {end_c_time - send_c_time} seconds")
 
     self.bid_commit = self.pd.commit((self.p, self.g, self.h), self.bid)
 

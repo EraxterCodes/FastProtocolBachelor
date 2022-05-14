@@ -54,6 +54,8 @@ def veto(self: ClientNode):
     print(
         f"{self.id} small_xs: {len(self.small_xs)}, big_ys: {len(self.big_ys[self.index])}")
 
+    veto_time_start = time.time()
+
     for i in range(len(self.bit_commitments)):
         if bfv:  # Before first veto
             r_hat = number.getRandomRange(1, self.p - 1)
@@ -88,6 +90,8 @@ def veto(self: ClientNode):
             time.sleep(0.01)
 
             vs = get_all_messages_arr(self, len(self.clients))
+
+            bfv_time = time.time()
 
             if execute_threads:
                 thread_args = []
@@ -136,6 +140,10 @@ def veto(self: ClientNode):
                         print(f"NIZK verification failed for {party}")
                     else:
                         v_arr[j] = v_to_i
+
+            if i == 17:
+                bfv_end = time.time()
+                print(str(bfv_end - bfv_time))
 
             point = self.g
 
@@ -258,3 +266,6 @@ def veto(self: ClientNode):
         print(f"Round {i}")
 
         time.sleep(0.01)
+
+    veto_end_time = time.time()
+    print("Veto time: " + str(veto_end_time - veto_time_start))
