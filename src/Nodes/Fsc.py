@@ -13,6 +13,7 @@ class Fsc (FastNode):
         self.nodes = nodes
         self.received_bids = []
         self.bid_commitments = []
+        self.sock.settimeout(None)
 
     def receive_bids(self, client):
         bids = get_message(client)

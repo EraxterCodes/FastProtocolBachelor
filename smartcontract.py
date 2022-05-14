@@ -6,5 +6,5 @@ parties = int(input("How many parties?: "))
 ip = get_ip()
 print(ip)
 
-smartcontract = Fsc("25.32.252.190", 8001, "Broadcast", parties)
+smartcontract = Fsc("127.0.0.1", 8001, "Broadcast", parties)
 smartcontract.start()

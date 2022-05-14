@@ -60,18 +60,20 @@ elif int(auction_type) == 2:
 
     if int(contract_auction) == 1:
         parties = int(input("How many parties?: "))
+        print(f"Parties can connect to: {ip}")
 
         smartcontract = Fsc(ip, 8001, "Broadcast", parties)
         smartcontract.start()
     elif int(contract_auction) == 2:
         # Will always assume that Smartcontract is on port 8001.
+        print(f"Your ip: {ip}")
         bid = input("Bid of client: ")
 
         port = get_free_port()
 
         smartcontract_ip = input("Enter IP of smartcontract: ")
 
-        client = ClientNode(ip, port, int(bid), "25.32.252.190")
+        client = ClientNode(ip, port, int(bid), smartcontract_ip)
         client.start()
 
 
