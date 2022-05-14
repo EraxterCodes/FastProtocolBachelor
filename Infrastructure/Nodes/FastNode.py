@@ -23,7 +23,7 @@ class FastNode (Node):
               str(self.port) + " on node (" + self.id + ")")
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
-        self.sock.settimeout(None)
+        self.sock.settimeout(20)
         self.sock.listen()
 
     def accept_connections(self):
@@ -86,12 +86,10 @@ class FastNode (Node):
 
     def connect_with_node(self, host, port, reconnect=False):
         if host == self.host and port == self.port:
-            # print("connect_with_node: Cannot connect with yourself!!")
             return False
 
         for node in self.nodes_outbound:
             if node.host == host and node.port == port:
-                # print("connect_with_node: Already connected with this node (" + node.id + ").")
                 return True
 
         try:
@@ -107,7 +105,6 @@ class FastNode (Node):
 
             for node in self.nodes_inbound:
                 if node.host == host and node.id == connected_node_id:
-                    # print("connect_with_node: This node (" + node.id + ") is already connected with us.")
                     return True
 
             thread_client = self.create_new_connection(
@@ -131,31 +128,3 @@ class FastNode (Node):
 
     def create_new_connection(self, connection, id, host, port):
         return FastNodeConnection(self, connection, id, host, port)
-
-    def outbound_node_connected(self, connected_node):
-        pass
-        # print("outbound_node_connected: " + connected_node.id)
-
-    def inbound_node_connected(self, connected_node):
-        pass
-        # print("inbound_node_connected: " + connected_node.id)
-
-    def inbound_node_disconnected(self, connected_node):
-        pass
-        # print("inbound_node_disconnected: " + connected_node.id)
-
-    def outbound_node_disconnected(self, connected_node):
-        pass
-        # print("outbound_node_disconnected: " + connected_node.id)
-
-    def node_message(self, connected_node, data):
-        print("To: " + str(self.id) + " node_message from " +
-              connected_node.id + ": " + str(data))
-
-    def node_disconnect_with_outbound_node(self, connected_node):
-        pass
-        # print("node wants to disconnect with oher outbound node: " + connected_node.id)
-
-    def node_request_to_stop(self):
-        pass
-        # print("node is requested to stop!")

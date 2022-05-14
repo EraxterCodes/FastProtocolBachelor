@@ -60,13 +60,8 @@ class FastNodeConnection(NodeConnection):
             try:
                 chunk = self.sock.recv(16384).decode(self.coding_type)
 
-                # Has a lot of print statements for debugging
                 if chunk != "":
-                    # self.main_node.node_message( self, chunk)
                     self.message = chunk
-
-                # Doesn't have a lot of print statements
-                # self.message = chunk
 
             except socket.timeout:
                 self.main_node.debug_print("NodeConnection: timeout")

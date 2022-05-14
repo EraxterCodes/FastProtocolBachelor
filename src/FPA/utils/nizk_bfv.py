@@ -96,7 +96,6 @@ def verify_bfv_nizk(self: ClientNode, nizk, v, c, big_x):
 
     curve = self.pd.cp
 
-    # This one should've been broadcasted earlier
     big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
 
     c_div_g = curve.sub_point(c, self.g)
