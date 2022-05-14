@@ -38,6 +38,9 @@ class Fsc (FastNode):
         print(
             f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])} : {index}, bid: {opening['b_w']}")
 
+        end = time.time()
+        print(f"Executed in {str(end - self.time_start)} seconds")
+
         quit()
 
     def send_params(self, client):
@@ -108,6 +111,8 @@ class Fsc (FastNode):
 
         self.send_to_nodes({"node_info": converted_clients})
         print("Broadcast Finished")
+
+        self.time_start = time.time()
 
     def run(self):
         accept_connections_thread = threading.Thread(

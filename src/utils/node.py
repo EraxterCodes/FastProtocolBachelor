@@ -51,6 +51,7 @@ def get_all_messages_arr(self, num_messages):
         for node in self.all_nodes:
             msg = node.get_node_message()
             if msg != "":
+
                 messages.append(json.loads(msg))
                 node.reset_node_message()
             time.sleep(0.01)
