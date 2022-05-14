@@ -36,7 +36,7 @@ class Fsc (FastNode):
         c_to_bid = self.bid_commitments[index]
 
         print(
-            f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])} : {index}")
+            f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])} : {index}, bid: {opening['b_w']}")
 
         quit()
 
@@ -44,12 +44,12 @@ class Fsc (FastNode):
         while(self.nodes > len(self.received_bids)):
             time.sleep(0.1)
 
-        sid = client.id 
+        sid = client.id
         p = self.pd.param[0]
         g = self.pd.param[1]
         h = self.pd.param[2]
 
-        pk_c_array = [] 
+        pk_c_array = []
         composed_msg = {
             "sid": sid,
             "g": {
