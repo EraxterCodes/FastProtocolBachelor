@@ -185,7 +185,7 @@ def veto(self: ClientNode):
             self.send_to_nodes(
                 (nizk_msg), exclude=[self.bc_node])
 
-            time.sleep(0.01) 
+            time.sleep(0.05) 
 
             vs = get_all_messages_arr(self, len(self.clients))
 

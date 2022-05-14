@@ -66,12 +66,14 @@ elif int(auction_type) == 2:
         smartcontract.start()
     elif int(contract_auction) == 2:
         # Will always assume that Smartcontract is on port 8001.
+        os.system(clear_command)
         print(f"Your ip: {ip}")
-        bid = input("Bid of client: ")
 
         port = get_free_port()
 
         smartcontract_ip = input("Enter IP of smartcontract: ")
+
+        bid = input("Bid of client: ")
 
         client = ClientNode(ip, port, int(bid), smartcontract_ip)
         client.start()
