@@ -21,7 +21,6 @@ class Pedersen:
         # Random scalar from G (Blinding factor)
         r = sample_from_field(p)
 
-        # How the fuck is this possible? g is generator and r is integer?
         h = self.cp.mul_point(r, g)
 
         return p, g, h

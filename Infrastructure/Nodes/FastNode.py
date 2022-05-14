@@ -39,7 +39,7 @@ class FastNode (Node):
 
                     # Basic information exchange (not secure) of the id's of the nodes!
                     connected_node_id = connection.recv(32786).decode(
-                        'utf-8')  # When a node is connected, it sends it id!
+                        'utf-8')  # When a node is connecte, it sends it id!
                     # Send my id to the connected node!
                     connection.send(self.id.encode('utf-8'))
 

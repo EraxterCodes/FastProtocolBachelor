@@ -1,10 +1,15 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from Crypto.Util import number
 import time
 from ecdsa.curves import *
 from src.utils.node import *
 
+if TYPE_CHECKING:
+    from src.Nodes.ClientNode import ClientNode
 
-def bid_decomposition(self):
+
+def bid_decomposition(self: ClientNode):
     bits = [int(digit) for digit in bin(self.bid)[2:]]
 
     numtoprepend = 32 - len(bits)
@@ -17,17 +22,12 @@ def bid_decomposition(self):
         self.bit_commitments.append(commitment)
 
 
-def setup(self):
+def setup(self: ClientNode):
     # Stage 1
-    # change
-    change = 0.1
-    # fee: work
-    work = 0.1
+
     # build secret deposit
     bid_param = {
-        "bid": self.bid,
-        "change": change,
-        "work": work,
+        "PARAM": "PARAM",
         "index": self.index
     }
 
@@ -44,30 +44,12 @@ def setup(self):
                    self.contractparams["g"]["y"], self.pd.cp)
 
     reset_all_node_msgs(self.all_nodes)
+    time.sleep(0.2)
 
     # (b) compute bit commitments
     bid_decomposition(self)
 
     # Stage 2: Compute all big X's and send commits along with X to other nodes. Is used for stage three in veto
-    # commit_x_dict = {}
-    # for i in range(len(self.bit_commitments)):
-    #     x = number.getRandomRange(1, self.p - 1)
-    #     self.small_xs.append(x)
-
-    #     big_x = self.pd.cp.mul_point(x, self.g)
-
-    #     temp_dict = {
-    #         "commit": {
-    #             "x": self.bit_commitments[i][0].x,
-    #             "y": self.bit_commitments[i][0].y
-    #         },
-    #         "big_x": {
-    #             "x": big_x.x,
-    #             "y": big_x.y
-    #         }
-    #     }
-    #     commit_x_dict[i] = temp_dict
-
     for i in range(len(self.clients) + 1):
         self.commitments.append([])  # add room for another client
         self.big_xs.append([])  # add room for another client
@@ -99,7 +81,7 @@ def setup(self):
         unpack_commitments_x2(self, commits)
         unpack_commitments_x2(self, [commit_dict])
 
-        time.sleep(0.05)
+        time.sleep(0.1)
         print(f"Sending c and X, round {i}")
 
     self.bid_commit = self.pd.commit((self.p, self.g, self.h), self.bid)
@@ -112,31 +94,9 @@ def setup(self):
         "client_index": self.index
     }
 
-    # commits_w_index = {
-    #     "client_index": self.index,
-    #     "commit_x": commit_x_dict
-    # }
-
-    # print(utf8len(str(commits_w_index)))
-
-    # self.send_to_nodes(
-    #     (commits_w_index), exclude=[self.bc_node])
     self.send_to_node(self.bc_node, commitment_to_bid)
 
     time.sleep(0.2)
-
-    # print(self.commitments)
-
-    # commit_and_X_arr = get_all_messages_arr(self, len(self.clients))
-
-    # time.sleep(0.5)
-
-    # unpack_commitments_x(self, [commits_w_index])
-    # unpack_commitments_x_arr(self, commit_and_X_arr)
-
-    # time.sleep(0.2)
-
-    # unpack_commitment_and_x(self, commit_and_X_array)
 
     # TODO: Stage 3 of setup we now send the array containing commitments and big X's maybe make a helper method to unravel it again
     try:

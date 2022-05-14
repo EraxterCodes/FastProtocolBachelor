@@ -17,12 +17,13 @@ class FastNodeConnection(NodeConnection):
     def send(self, data):
         if isinstance(data, str):
             try:
-                self.sock.send(data.encode(self.coding_type))
+                self.sock.sendall(data.encode(
+                    self.coding_type))  # Changed this
 
-            except Exception as e:  # Fixed issue #19: When sending is corrupted, close the connection
+            except Exception as e:
                 self.main_node.debug_print(
                     "nodeconnection send: Error sending data to node: " + str(e))
-                self.stop()  # Stopping node due to failure
+                self.stop()
 
         elif isinstance(data, dict):
             try:
