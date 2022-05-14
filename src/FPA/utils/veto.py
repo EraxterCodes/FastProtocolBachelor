@@ -182,10 +182,87 @@ def veto(self: ClientNode):
                 "index": self.index,
             }
 
+            # AV_1 = {
+            #     "index": self.index,
+            #     "v_ir": {
+            #         "x": v.x,
+            #         "y": v.y,
+            #     },
+            #     "AV": {
+            #         "gamma1": nizk["gamma1"],
+            #         "gamma2": nizk["gamma2"],
+            #         "gamma3": nizk["gamma3"],
+            #         "r1": nizk["r1"],
+            #         "r2": nizk["r2"],
+            #         "r3": nizk["r3"],
+            #         "r4": nizk["r4"],
+            #         "r5": nizk["r5"],
+            #     }
+            # }
+
+            # vs = [None] * (len(self.clients) + 1)
+
+            # self.send_to_nodes((AV_1), exclude=[self.bc_node])
+
+            # time.sleep(0.05)
+
+            # vs_av_1 = get_all_messages_arr(self, len(self.clients))
+
+            # for j in range(len(vs_av_1)):
+            #     index = vs_av_1[j]["index"]
+
+            #     print(vs_av_1[j]["v_ir"])
+
+            #     v_ir = vs_av_1[j]["v_ir"]
+
+            #     temp_av_dict = {
+            #         "AV": vs_av_1[j]["AV"],
+            #         "index": vs_av_1[j]["index"],
+            #         "v_ir": {
+            #             "x": v_ir["x"],
+            #             "y": v_ir["y"],
+            #         },
+            #     }
+
+            #     vs[index] = temp_av_dict
+
+            # AV_2 = {
+            #     "index": self.index,
+            #     "AV": {
+            #         "r6": nizk["r6"],
+            #         "r7": nizk["r7"],
+            #         "r8": nizk["r8"],
+            #         "r9": nizk["r9"],
+            #         "r10": nizk["r10"],
+            #         "r11": nizk["r11"],
+            #         "Y_lvr": {
+            #             "x": nizk["Y_lvr"]["x"],
+            #             "y": nizk["Y_lvr"]["y"],
+            #         },
+            #         "Y": {
+            #             "x": nizk["Y"]["x"],
+            #             "y": nizk["Y"]["y"],
+            #         }
+            #     }
+            # }
+
+            # self.send_to_nodes((AV_2), exclude=[self.bc_node])
+
+            # time.sleep(0.05)
+
+            # vs_av_2 = get_all_messages_arr(self, len(self.clients))
+
+            # for j in range(len(vs_av_2)):
+            #     index = vs_av_2[j]["index"]
+
+            #     vs[index]["AV"].update(vs_av_2[j]["AV"])
+
+            # vs.remove(None)
+
             self.send_to_nodes(
                 (nizk_msg), exclude=[self.bc_node])
 
-            time.sleep(0.05) 
+            time.sleep(0.05)
 
             vs = get_all_messages_arr(self, len(self.clients))
 
@@ -257,4 +334,4 @@ def veto(self: ClientNode):
 
         print(f"Round {i}")
 
-        time.sleep(0.01) 
+        time.sleep(0.01)
