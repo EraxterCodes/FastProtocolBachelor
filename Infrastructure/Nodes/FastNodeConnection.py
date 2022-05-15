@@ -8,7 +8,11 @@ class FastNodeConnection(NodeConnection):
     def __init__(self, main_node, sock, id, host, port):
         super(FastNodeConnection, self).__init__(
             main_node, sock, id, host, port)
-        self.sock.settimeout(None)
+
+        self.sock.settimeout(12)
+
+        if "8001" in str(main_node) or port == 8001:  # Don't set timeout for FSC
+            self.sock.settimeout(None)
 
         self.coding_type = 'utf-8'
 
@@ -61,11 +65,11 @@ class FastNodeConnection(NodeConnection):
             try:
                 chunk = self.sock.recv(16384).decode(self.coding_type)
 
-                if chunk != "":
-                    self.message = chunk
+                self.message = chunk
 
             except socket.timeout:
-                self.main_node.debug_print("NodeConnection: timeout")
+                print(self)
+                self.terminate_flag.set()
 
             except Exception as e:
                 self.terminate_flag.set()  # Exception occurred terminating the connection
