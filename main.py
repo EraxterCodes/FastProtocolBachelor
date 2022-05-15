@@ -7,6 +7,9 @@ import os
 selfinput = True
 Client_Node_list = []
 
+
+
+
 clear_command = 'cls'
 if os.name == 'nt':
     clear_command = 'cls'
@@ -14,6 +17,14 @@ else:
     clear_command = 'clear'
 
 os.system(clear_command)
+
+def getBid(party_id):
+    bid = input(f"Bid for party {party_id}:")
+    while int(bid) > 4294967295 or int(bid) < 0:
+        os.system(clear_command)
+        bid = input("Bids have to be between 0 and 4294967295: please select a new bid: ")
+        
+    return bid
 
 auction_type = input("Type 1 to run automatic auction or 2 to run custom auction: ")
 
@@ -27,19 +38,19 @@ if int(auction_type) == 1:
         os.system(clear_command)
         Num_Client = input("How many clients?: ")
         for i in range(int(Num_Client)):
-            id = i+1
-
-            Bid_Input = input(f"Bid for party: ID {str(id)}: ")
+            
+            os.system(clear_command)
+            Bid_Input = getBid(str(i))
             Client_Node_list.append(ClientNode(
-                "127.0.0.1", 8003 + (i*2), int(Bid_Input), id))
+                "127.0.0.1", get_free_port(), int(Bid_Input)))
 
     else:
         os.system(clear_command)
-        Bid_Input1 = input("Bid for party 1: ")
+        Bid_Input1 = getBid("1")
         os.system(clear_command)
-        Bid_Input2 = input("Bid for party 2: ")
+        Bid_Input2 = getBid("2")
         os.system(clear_command)
-        Bid_Input3 = input("Bid for party 3: ")
+        Bid_Input3 = getBid("3")
         os.system(clear_command)
         Node1 = ClientNode("127.0.0.1", get_free_port(), int(Bid_Input1))
         Node2 = ClientNode("127.0.0.1", get_free_port(), int(Bid_Input2))
@@ -73,7 +84,7 @@ elif int(auction_type) == 2:
 
         smartcontract_ip = input("Enter IP of smartcontract: ")
 
-        bid = input("Bid of client: ")
+        bid = getBid("")
 
         client = ClientNode(ip, port, int(bid), smartcontract_ip)
         client.start()
