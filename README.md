@@ -38,8 +38,8 @@ The best Bachelor since EMBA's Bachelor
     - [x] NIZK
     - [x] Veto, after first veto
   - [x] Stage 4
-- [ ] NIZK multiprocessing / multithreads
-- [ ]  Paper
+- [x] NIZK multiprocessing / multithreads
+- [x]  Paper
 - [ ] using ERC20 / UTXO 
   - [ ] Class for UTXO model
 - [ ] GUI
