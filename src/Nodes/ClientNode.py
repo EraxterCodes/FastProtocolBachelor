@@ -93,13 +93,9 @@ class ClientNode (FastNode):
 
         self.connect_to_nodes()
 
-        start = time.time()
-
         fpa(self)
 
         self.veto_output()
 
         print("finished")
-        end = time.time()
-        print(str(end - start))
         sys.exit()
