@@ -1,5 +1,11 @@
 # 🏃🏽 FASTProtocol
 
+## How to launch
+First, ensure you have the correct packages installed by running `python setup.py install`. When all dependencies are installed, run `python main.py` and then the protocol will start. From here, follow the steps given in the terminal, to run the specific protocol type.
+
+<hline>
+
+
 _Fair Auctions via Secret Transactions_
 The best Bachelor since EMBA's Bachelor
 - [🏃🏽 FASTProtocol](#-fastprotocol)
