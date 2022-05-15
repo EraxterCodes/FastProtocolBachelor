@@ -13,9 +13,11 @@ The best Bachelor since EMBA's Bachelor
     - [Stage 4, output](#stage-4-output)
     - [Recovery](#recovery)
     - [Smart Contract](#smart-contract)
+    - [Multiprocessing / Multithreads for NIZK](#multiprocessing--multithreads-for-nizk)
   - [Things we miss:](#things-we-miss)
-    - [Calculate commit for bid and send it](#calculate-commit-for-bid-and-send-it)
-    - [Fix, such that client only sends to broadcast node](#fix-such-that-client-only-sends-to-broadcast-node)
+    - [(FIXED) Calculate commit for bid and send it](#fixed-calculate-commit-for-bid-and-send-it)
+    - [(FIXED) Fix, such that client only sends to broadcast node](#fixed-fix-such-that-client-only-sends-to-broadcast-node)
+    - [Send commits to nodes in fragments](#send-commits-to-nodes-in-fragments)
 
 
 ## TODO:
@@ -30,6 +32,7 @@ The best Bachelor since EMBA's Bachelor
     - [x] NIZK
     - [x] Veto, after first veto
   - [x] Stage 4
+- [ ] NIZK multiprocessing / multithreads
 - [ ]  Paper
 - [ ] using ERC20 / UTXO 
   - [ ] Class for UTXO model
@@ -176,12 +179,20 @@ function startAuction() public returns (bool) {
 }
 ```
 
+### Multiprocessing / Multithreads for NIZK
+Currently when runing the protocol the NIZK calulation grows O(n) (linear) when adding a new node. Calculating the nizk is done sequentially, which can take a long time. We propose adding multiprocessing in pools (Or multi threads) to calculate the NIZK in parallel.
+
 ## Things we miss:
-### Calculate commit for bid and send it
+### (FIXED) Calculate commit for bid and send it
 We're still missing this part:
 ![Commit verification](/img/verify_commit.png)
 (Essentially it's just the commit to the bid, which also has to be sent to the smart contract.)
 
-### Fix, such that client only sends to broadcast node
+### (FIXED) Fix, such that client only sends to broadcast node
 Currently it is possible to listen on others connection like showcased below: p1 is somehow getting p2's bid
 ![Listen-on-others-connections](/img/Listen-on-others-connection.png)
+
+### Send commits to nodes in fragments
+Currently we're sending the commits to the nodes as one big array. However, we often get (Especially when running many nodes) errors that all X's and Y's are not send correctly. We believe this is because the messages are too big to be send and then never arrive, or arrive in broken fragments.
+
+A fix to this would be calculating the commits in fragments, and then sending them to the nodes. I.e. calculating 1/4 or 1/2 of the commitments and then sending them. Then the node receives and unpacks and then repeat until all commits are received.

@@ -1,14 +1,14 @@
+import sys
 from src.FPA.fpa import fpa
 from src.utils.utils import *
 from Infrastructure.Nodes.FastNode import FastNode
 from src.utils.node import *
-from ecdsa import SigningKey, VerifyingKey
 import threading
 import time
 
 
 class ClientNode (FastNode):
-    def __init__(self, host, port, bid, id=None, callback=None, max_connections=0):
+    def __init__(self, host, port, bid, bc_ip="127.0.0.1", id=None, callback=None, max_connections=0):
         super(ClientNode, self).__init__(
             host, port, id, callback, max_connections)
 
@@ -22,9 +22,6 @@ class ClientNode (FastNode):
         self.h = Point(0, 0, self.pd.cp, check=False)
         self.g = Point(0, 0, self.pd.cp, check=False)
 
-        self.sk = SigningKey.generate()
-        self.vk = self.sk.verifying_key
-
         self.bit_commitments = []
         self.bits = []
 
@@ -37,7 +34,8 @@ class ClientNode (FastNode):
 
         self.contractparams = None
 
-        self.utxos = []
+        self.broadcast_host = bc_ip
+        self.broadcast_port = 8001
 
     def connect_to_clients(self, node_info):
         host = node_info["client_info"]["host"]
@@ -63,16 +61,14 @@ class ClientNode (FastNode):
             self.connect_to_clients(node)
             time.sleep(0.01)
 
-    def veto_output(self): #This is nono
+    def veto_output(self):
         self.send_to_nodes(({"winner": self.vetos}), exclude=[self.bc_node])
 
         winner = get_all_messages_arr(self, len(self.clients))
 
-
         if self.bits == self.vetos:
-            print(f"{self.id} won")
+            print("You won! Sending win proof to FSC")
             self.send_win_proof()
-
 
     def send_win_proof(self):
         # P_w opens the commitment, sends it to the smart contract
@@ -84,7 +80,8 @@ class ClientNode (FastNode):
             "sid": self.id,
             "p_w": self.index,
             "b_w": self.bid,
-            "r_bw": self.bid_commit[1],  # Should be computed in step b og stage 1 in setup. Maybe
+            # Should be computed in step b og stage 1 in setup. Maybe
+            "r_bw": self.bid_commit[1],
             "signed_b_w": ""
         }
         self.send_to_node(self.bc_node, Proof_of_winning)
@@ -101,3 +98,4 @@ class ClientNode (FastNode):
         self.veto_output()
 
         print("finished")
+        sys.exit()

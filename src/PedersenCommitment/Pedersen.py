@@ -9,8 +9,6 @@ class Pedersen:
         self.param = self.setup()
 
     def setup(self):
-        # 2^256
-        size = 2**self.cp.size
 
         # Order of the group to sample Z_p from
         p = self.cp.order
@@ -21,7 +19,6 @@ class Pedersen:
         # Random scalar from G (Blinding factor)
         r = sample_from_field(p)
 
-        # How the fuck is this possible? g is generator and r is integer?
         h = self.cp.mul_point(r, g)
 
         return p, g, h
@@ -29,11 +26,11 @@ class Pedersen:
     def create_commit(self, param, m, r):
         g, h = param
 
-        # Create to scalar points on the curve
+       
         mg = self.cp.mul_point(m, g)
         rh = self.cp.mul_point(r, h)
 
-        # Commitment which is the two points on the curve
+        # Commitment which is the sum of the 2 points.  
         c = self.cp.add_point(mg, rh)
 
         return c, r

@@ -1,0 +1,10 @@
+Metadata-Version: 1.2
+Name: FAST-Protocol-implementation
+Version: 1.0
+Summary: some description
+Home-page: github.com
+Author: Benjamin Y. S. Kjaer, Oliver H. Joergensen, Silas P. Nielsen
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.6

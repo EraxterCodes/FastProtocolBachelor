@@ -7,56 +7,53 @@ from src.utils.node import *
 
 
 class Fsc (FastNode):
-    def __init__(self, host, port, id=None, nodes=list, callback=None, max_connections=0):
+    def __init__(self, host, port, id=None, nodes=int, callback=None, max_connections=0):
         super(Fsc, self).__init__(
             host, port, id, callback, max_connections)
         self.nodes = nodes
         self.received_bids = []
         self.bid_commitments = []
-        
-        
+        self.sock.settimeout(None)
 
     def receive_bids(self, client):
         bids = get_message(client)
-        
 
-        self.received_bids.append(
-            (client.id, bids))
+        index = bids["index"]
+        self.received_bids[index] = bids
 
         bid_commitment = get_message(client)
-        c_to_bid = Point(bid_commitment["commitment_to_bid"]["x"], bid_commitment["commitment_to_bid"]["y"], self.pd.cp)
+        c_to_bid = Point(bid_commitment["commitment_to_bid"]["x"],
+                         bid_commitment["commitment_to_bid"]["y"], self.pd.cp)
         index = bid_commitment["client_index"]
         self.bid_commitments[index].append(c_to_bid)
 
         opening = get_message(client)
         self.verify_winning_bid(opening)
-        
+
     def verify_winning_bid(self, opening):
         # Verify winning bid
         index = opening["p_w"]
         c_to_bid = self.bid_commitments[index]
-        
-        print(self.bid_commitments)
 
-        print(f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])}") 
+        print(
+            f"verify winning bid = {self.pd.open(self.pd.param[1], self.pd.param[2], opening['b_w'], c_to_bid[0], opening['r_bw'])} : {index}, bid: {opening['b_w']}")
+
+        end = time.time()
+        print(f"Executed in {str(end - self.time_start)} seconds")
+
+        quit()
 
     def send_params(self, client):
-        while(3 > len(self.received_bids)):
+        while(self.nodes > len(self.received_bids)):
             time.sleep(0.1)
 
-        # sort received bids by client id
-        self.received_bids.sort(key=lambda y: y[0])
-
-        param = self.received_bids[int(client.id) - 1]
-
-        sid = client.id  # Not true, since we use self.index
+        sid = client.id
         p = self.pd.param[0]
         g = self.pd.param[1]
         h = self.pd.param[2]
-        
-        pk_c_array = []  # We currently dont implement comittee 
+
+        pk_c_array = []
         composed_msg = {
-            "PARAM_FSC": param[1],
             "sid": sid,
             "g": {
                 "x": g.x,
@@ -71,17 +68,16 @@ class Fsc (FastNode):
         }
 
         self.send_to_node(client, (composed_msg))
-        
 
     def accept_connections(self):
         while not self.terminate_flag.is_set():
             connection, client_address = self.sock.accept()
             print(f"Broadcast connected with {str(client_address)}")
 
-            connected_node_id = connection.recv(16384).decode(self.coding_type)
+            connected_node_id = connection.recv(65534).decode(self.coding_type)
             connection.send(self.id.encode(self.coding_type))
 
-            node_info = connection.recv(16384).decode(self.coding_type)
+            node_info = connection.recv(65534).decode(self.coding_type)
 
             thread_client = self.create_new_connection(
                 connection, connected_node_id, client_address[0], client_address[1])
@@ -102,7 +98,7 @@ class Fsc (FastNode):
 
             self.clients.append(node_info)
 
-            if len(self.clients) == 3:
+            if len(self.clients) == self.nodes:
                 break
 
         converted_clients = []
@@ -111,9 +107,12 @@ class Fsc (FastNode):
             converted_clients.append(
                 {"client_index": i, "client_info": json.loads(self.clients[i])})
             self.bid_commitments.append([])
+            self.received_bids.append([])
 
         self.send_to_nodes({"node_info": converted_clients})
         print("Broadcast Finished")
+
+        self.time_start = time.time()
 
     def run(self):
         accept_connections_thread = threading.Thread(

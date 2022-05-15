@@ -1,8 +1,14 @@
-from ecpy.curves import Point
+from __future__ import annotations
+from typing import TYPE_CHECKING
+import hashlib
+from ecpy.curves import Point, Curve
 from src.utils.utils import *
 
+if TYPE_CHECKING:
+    from src.Nodes.ClientNode import ClientNode
 
-def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, big_x_lvr, r, x, r_hat_lvr, r_hat, x_lvr):
+
+def generate_afv_nizk(self: ClientNode, bit: int, bit_lvr: int, d_ir: Point, c: Point, v: Point, big_y: Point, big_x: Point, big_y_lvr: Point, big_x_lvr: Point, r: int, x: Point, r_hat_lvr: int, r_hat: int, x_lvr: Point):
     curve = self.pd.cp
 
     v_s = sample_from_field_arr(8, self.p)
@@ -56,8 +62,10 @@ def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, b
     t_11 = curve.add_point(curve.mul_point(
         w_3, big_x), curve.mul_point(v_s[8], self.g))
 
-    h = hash(concatenate_points(
-        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])) % self.p
+    concatenated_points = concatenate_points(
+        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11])
+
+    h = int(hashlib.sha256(concatenated_points.encode()).hexdigest(), 16) % self.p
 
     if alpha == 1:  # F_1
         gamma1 = (h - (w_1 + w_2 + w_3)) % self.p
@@ -142,7 +150,7 @@ def generate_afv_nizk(self, bit, bit_lvr, d_ir, c, v, big_y, big_x, big_y_lvr, b
     }
 
 
-def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, d_ir):
+def verify_afv_nizk(nizk: dict, c: Point, v: Point, big_x: Point, big_x_lvr: Point, d_ir: Point, curve: Curve, p: int, g: Point, h: Point):
     gamma1 = nizk["gamma1"]
     gamma2 = nizk["gamma2"]
     gamma3 = nizk["gamma3"]
@@ -159,50 +167,49 @@ def verify_afv_nizk(self, nizk, c, v, big_x, big_x_lvr, d_ir):
     r11 = nizk["r11"]
 
     # THIS HAS TO BE MODULO P, paper doesn't mention it
-    gamma_res = (gamma1 + gamma2 + gamma3) % self.p
-
-    curve = self.pd.cp
+    gamma_res = (gamma1 + gamma2 + gamma3) % p
 
     big_y = Point(nizk["Y"]["x"], nizk["Y"]["y"], curve)
     big_y_lvr = Point(nizk["Y_lvr"]["x"], nizk["Y_lvr"]["y"], curve)
 
-    c_div_g = curve.sub_point(c, self.g)
+    c_div_g = curve.sub_point(c, g)
 
     t_1_p = curve.add_point(curve.mul_point(
-        gamma1, c), curve.mul_point(r1, self.h))
+        gamma1, c), curve.mul_point(r1, h))
 
     t_2_p = curve.add_point(curve.mul_point(
         gamma1, v), curve.mul_point(r2, big_y))
 
     t_3_p = curve.add_point(curve.mul_point(
-        gamma1, big_x), curve.mul_point(r3, self.g))
+        gamma1, big_x), curve.mul_point(r3, g))
 
     t_4_p = curve.add_point(curve.mul_point(
-        gamma2, c_div_g), curve.mul_point(r4, self.h))
+        gamma2, c_div_g), curve.mul_point(r4, h))
 
     t_5_p = curve.add_point(curve.mul_point(
-        gamma2, d_ir), curve.mul_point(r5, self.g))
+        gamma2, d_ir), curve.mul_point(r5, g))
 
     t_6_p = curve.add_point(curve.mul_point(
-        gamma2, v), curve.mul_point(r6, self.g))
+        gamma2, v), curve.mul_point(r6, g))
 
     t_7_p = curve.add_point(curve.mul_point(
-        gamma3, c_div_g), curve.mul_point(r7, self.h))
+        gamma3, c_div_g), curve.mul_point(r7, h))
 
     t_8_p = curve.add_point(curve.mul_point(
         gamma3, d_ir), curve.mul_point(r8, big_y_lvr))
 
     t_9_p = curve.add_point(curve.mul_point(
-        gamma3, big_x_lvr), curve.mul_point(r9, self.g))
+        gamma3, big_x_lvr), curve.mul_point(r9, g))
 
     t_10_p = curve.add_point(curve.mul_point(
         gamma3, v), curve.mul_point(r10, big_y))
 
     t_11_p = curve.add_point(curve.mul_point(
-        gamma3, big_x), curve.mul_point(r11, self.g))
+        gamma3, big_x), curve.mul_point(r11, g))
 
-    h = hash(concatenate_points(
-        [self.h, c, big_y, v, self.g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])) % self.p
+    concatenated_points = concatenate_points(
+        [h, c, big_y, v, g, big_x, c_div_g, d_ir, big_y_lvr, big_x_lvr, t_1_p, t_2_p, t_3_p, t_4_p, t_5_p, t_6_p, t_7_p, t_8_p, t_9_p, t_10_p, t_11_p])
+    h = int(hashlib.sha256(concatenated_points.encode()).hexdigest(), 16) % p
 
     if h == gamma_res:
         return True
