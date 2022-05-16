@@ -68,7 +68,6 @@ class FastNodeConnection(NodeConnection):
                 self.message = chunk
 
             except socket.timeout:
-                print(self)
                 self.terminate_flag.set()
 
             except Exception as e:
