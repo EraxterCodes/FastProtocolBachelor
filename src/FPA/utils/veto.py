@@ -41,6 +41,7 @@ def bfv_nizk_thread(args):
 
 
 def veto(self: ClientNode):
+    print("Starting veto phase")
     bfv = True  # Before First Veto
 
     previous_vetos = []
@@ -50,9 +51,6 @@ def veto(self: ClientNode):
 
     for i in range(len(self.clients) + 1):
         previous_vetos_points.append([])
-
-    print(
-        f"{self.id} small_xs: {len(self.small_xs)}, big_ys: {len(self.big_ys[self.index])}")
 
     for i in range(len(self.bit_commitments)):
         if bfv:  # Before first veto
